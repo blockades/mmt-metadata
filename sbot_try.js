@@ -19,13 +19,11 @@ ssbClient(function (err, sbot) {
     lastKnownModification: 'root', 
 
     // the actual metadata
-    date:     '2018-04-19 07:09',
+    // note - no date, amounts or recieve addresses - for this we have a better 
+    // source of truth
     rate:           5000,
     cosigners:      ['ssbpublickey1', 'ssbpublickey2']
     description:    'this is just an example',
-    recieveAddress: 'blahblah'
-    amount: 53000,
-    fee:10
   }
 
   //addPayment(sbot, payment)
