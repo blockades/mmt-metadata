@@ -3,21 +3,51 @@
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 
+// will hold current payments
+var payments = {}
+
 ssbClient(function (err, sbot) {
   console.log('Ready')
 
-  var payment = {weekEnding:'somedate',rate:5000,cosigner1:'ssbpublickey1',cosigner2:'ssbpublickey2',notes:'this is just an example',fee:0.001}
+
+  var payment = {
+    
+    // the 'key' would be a bitcoin transaction id
+    key: 'd5f2a6a8cd1e8c35466cfec16551', 
+    // this would be msg.key of the last 'version' of this entry that we know of
+    // in this case its the first that we know of
+    lastKnownModification: 'root', 
+
+    // the actual metadata
+    date:     '2018-04-19 07:09',
+    rate:           5000,
+    cosigners:      ['ssbpublickey1', 'ssbpublickey2']
+    description:    'this is just an example',
+    recieveAddress: 'blahblah'
+    amount: 53000,
+    fee:10
+  }
 
   //addPayment(sbot, payment)
 
-  //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
-  pull(sbot.messagesByType({ type: 'addMmtPaymentTest', live: true }), pull.drain(processMsg))
+  var paymentModification {
+
+    key: 'd5f2a6a8cd1e8c35466cfec16551', 
+    lastKnownModification = 'ssbkey',
+
+    description = 'actually i wanted to write this'
+  }
+
+  //addPayment(sbot, paymentModification)
+  
+  pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
+  //pull(sbot.messagesByType({ type: 'addMmtPaymentTest', live: true }), pull.drain(processMsg))
   
   sbot.close()  
 })
 
 function testPublish() {
-  //publish a message
+  //publish a test message
   sbot.publish({ type: 'testtype', text: 'hello, scuttleverse' }, function (err, msg) {
     console.log(msg.key) 
     console.log(msg.value.author)
@@ -31,8 +61,25 @@ function processMsg (msg) {
    // is this the right way to handle no more messages?
   try {
     if (msg) 
-      console.log(msg.value.content)
-      //payments.push(msg.value.content.payment)
+      switch(msg.value.content.type) {
+        
+        case 'addMmtPaymentTest':
+          console.log('Adding:')
+          console.log(msg.value.content)
+
+          // if we've never seen this transaction before, add it
+          if (!payments[msg.value.content.payment.key]) {
+            payments[msg.value.content.payment.key] = msg.value.content.payment
+          } else {
+            // what to do here?
+            // suppose two people add different descriptions of a payment... 
+          }
+          break
+        // case 'modifyMmtPaymentTest':
+        //    console.log('Modifying:')
+           
+      }
+
   } catch(e) {
     console.error('no more messages')
     return false
@@ -44,14 +91,13 @@ function pullWithFeedStream() {
   pull(
       sbot.createFeedStream(),
       pull.collect(function (err, msgs) {
-        //msgs[0].key == hash(msgs[0].value)
-        // msgs[0].value...
         console.log(msgs[1].key)
         console.log(msgs[1].value)
 
       })
     )
 }
+
 
 
 
@@ -68,14 +114,14 @@ function addPayment(sbot, paymentToAdd) {
 }
 
 
-function modifyPayment(sbot, originalPaymentKey, modifiedPayment) {
-  
-  sbot.publish({ type: 'modifyMmtPaymentTest', originalPaymentKey, modifiedPayment: modifiedPayment }, function (err, msg) {
-    console.log('Adding modified payment:')
-    console.log(msg.key) 
-    console.log(msg.value.author)
-    console.log(msg.value.content)
-
-  })
-
-}
+// function modifyPayment(sbot, modifiedPayment) {
+//   
+//   sbot.publish({ type: 'modifyMmtPaymentTest', modifiedPayment: modifiedPayment }, function (err, msg) {
+//     console.log('Adding modified payment:')
+//     console.log(msg.key) 
+//     console.log(msg.value.author)
+//     console.log(msg.value.content)
+//
+//   })
+//
+// }
