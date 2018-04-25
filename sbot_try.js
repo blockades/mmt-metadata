@@ -32,6 +32,7 @@ function processMsg (msg) {
   try {
     if (msg) 
       console.log(msg.value.content)
+      //payments.push(msg.value.content.payment)
   } catch(e) {
     console.error('no more messages')
     return false
