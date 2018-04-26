@@ -130,6 +130,6 @@ function addPaymentComment(sbot, paymentComment) {
 function displayPayments() {
 
   console.log('payments now looks like this:')
-  console.log(payments)
+  console.log(JSON.stringify(payments, null, 4))
 
 }

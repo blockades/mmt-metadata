@@ -1,8 +1,8 @@
 {
-  "name": "sbot_try",
+  "name": "mmt-metadata",
   "version": "1.0.0",
   "description": "first stab at fiddling with sbot",
-  "main": "sbot_try.js",
+  "main": "mmt-metadata.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
