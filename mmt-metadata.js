@@ -218,7 +218,7 @@ ssbClient(function (err, sbot) {
   // )
   
   // drain lets us process stuff as it comes
-  pull(sbot.createLogStream({ live: true }), pull.drain(function (message){
+  pull(sbot.messagesByType({ live: true, type: "addMmtPaymentTest" }), pull.drain(function (message){
     try {
       if (message.value.content) { 
         // attempt to decrypt message
