@@ -170,12 +170,12 @@ ssbClient(function (err, sbot) {
   
   // in most cases we want all cosigners as recipients, but for partially signed 
   // transactions we would want only those who are designated to sign
-  var recipients = [cosigners[0].ssbPubkey]
-  sbot.whoami( function(err,msg) {
+  var recipients = [cosigners[0].ssbPubKey]
+  
+  //sbot.whoami( function(err,msg) {
     //console.log('whoami',msg)
-    recipients = [ msg.id ]
-  })
-  //var recipients = sbot.whoami
+  //  recipients = [ msg.id ]
+  //})
 
   // an example payment to add to the db
   var payment = {
