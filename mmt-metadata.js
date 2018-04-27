@@ -1,19 +1,37 @@
 
 // todo:
+//   save db locally (as json file?)
+//   make less ugly
+//   speed up somehow -scanning messages takes ages making debugging slow
 //   electron front end
-//   encrypt messages
-//   interact with wallet
+//   interact with wallet either electrum locally or bitcoin on a server
 //   re-write rates tool into node
+//   make more modular -split into many tiny node modules
 
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 
-var count = 0
 
 // will hold current payments
 var payments = {}
 
 var verbose = true
+
+var cosigners = [
+  {
+    name: 'alice', // i think theres away to grab this from ssb's 'about'
+                  // message.  probably avatar image as well
+    // this is my own public key (which one could get using ssb-keys, key.id) 
+    // you wont be able to decrypt messages made using this script without your
+    // own public key
+    ssbPubKey: '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519',
+    // this will be an array of bitcoin addresses, which we will pop off and not reuse.
+    addresses: ['bc1sdfljsdl','bc1ldskfjsdfl']
+
+  }
+  // other cosigners will be added here
+]
+
 
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
@@ -21,11 +39,12 @@ ssbClient(function (err, sbot) {
   // In order for messages to be encrypted we need to specify recipients
   // there can be a maximum of 7, which means if we wanted more we need multiple 
   // messages
-  //
-  // in order to use this script you need to set this to your own public key
-  // or make new one for test perposes
-  var recipients = ['@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519']
+  
+  // in most cases we want all cosigners as recipients, but for partially signed 
+  // transactions we would want only those who are designated to sign
+  var recipients = [cosigners[0].ssbPubkey]
 
+  // an example payment to add to the db
   var payment = {
     
     // the 'key' would be a bitcoin transaction id
@@ -42,30 +61,62 @@ ssbClient(function (err, sbot) {
 
   // addPayment(sbot, payment, recipients)
 
+  // an example payment comment to add to the db
   var paymentComment = {
 
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
 
     comment: 'this payment was a mistake'
   }
+  
 
   // addPaymentComment(sbot, paymentComment, recipients)
-  
+    
   //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
+  
+  // collect waits till we have everything then give us an array
+  // pull(
+  //   sbot.createLogStream(),
+  //   pull.collect(function (err, msgs) {
+  //     msgs.forEach( function (item,index) {
+  //       decryptAndProcess(sbot,item)
+  //     } )
+  //   })
+  // )
+  
+  // drain lets us process stuff as it comes
+  pull(sbot.createLogStream({ live: true }), pull.drain(function (message){
+    try {
+      if (message.value.content) { 
+        // attempt to decrypt message
+        try {
+          sbot.private.unbox(message.value.content, function (err, msg) {
+            if (msg) {    
+              //console.log('decrypted a message')
+              //console.log(msg)
+              processMsg(msg)
+            }
+            //console.log('eer: ', err)
+          })
+        } catch(e) {
+          console.log('error while decrypting')
+        }
 
-  pull(
-    sbot.createLogStream(),
-    pull.collect(function (err, msgs) {
-      msgs.forEach( function (item,index) {
-        decryptAndProcess(sbot,item)
-      } )
-    })
-  )
-  //pull(sbot.messagesByType({ type: 'addMmtPaymentTest', live: true }), pull.drain(processMsg))
+      }
+    } catch(e) {
+      displayPayments()
+      
+
+      sbot.close()
+      // why?
+      return false
+    }
+
+  }))
   
 
-  sbot.close()  
 })
+
 
 function testPublish() {
   //publish a test message
@@ -79,83 +130,35 @@ function testPublish() {
 }
 
 
-function decryptAndProcess (sbot,msg){
-      sbot.private.unbox(msg, function (err, msg) { 
-        if (msg) {       
-          switch(msg.value.content.type) {
-          
-            case 'addMmtPaymentTest':
-              if (verbose) { 
-                console.log('Found a payment:')
-                console.log(msg.value.content)
-              }
 
-              // if we've never seen this transaction before, add it
-              if (!payments[msg.value.content.payment.key]) {
-                payments[msg.value.content.payment.key] = msg.value.content.payment
-              } else {
-                // what to do here?
-              }
-              break
-            
-            case 'modifyMmtPaymentTest':
-              if (verbose) {
-                console.log('Found a payment comment:')
-                console.log(msg.value.content)
-              }
-              payments[msg.value.content.paymentComment.key].comments.push( {
-                author: msg.value.author,
-                comment: msg.value.content.paymentComment.comment
-              } )
-          }  
-        } 
-      })
-}
+function processMsg (msg) {
+  // process an unencrypted message  
+  switch(msg.type) {
+  
+    case 'addMmtPaymentTest':
+      if (verbose) { 
+        console.log('Found a payment:')
+        //console.log(msg)
+      }
 
-function processMsg (message) {
-   // process a message from the drain 
-   // is this the right way to handle the end of the message stream?
-  try {
-    count++
-    console.log(count)
-    if (message)
-      console.log(message)
-      // attempt to decrypt message 
-      sbot.private.unbox(message, function (err, msg) { 
-        if (msg) {       
-          switch(msg.value.content.type) {
-          
-            case 'addMmtPaymentTest':
-              if (verbose) { 
-                console.log('Found a payment:')
-                console.log(msg.value.content)
-              }
-
-              // if we've never seen this transaction before, add it
-              if (!payments[msg.value.content.payment.key]) {
-                payments[msg.value.content.payment.key] = msg.value.content.payment
-              } else {
-                // what to do here?
-              }
-              break
-            
-            case 'modifyMmtPaymentTest':
-              if (verbose) {
-                console.log('Found a payment comment:')
-                console.log(msg.value.content)
-              }
-              payments[msg.value.content.paymentComment.key].comments.push( {
-                author: msg.value.author,
-                comment: msg.value.content.paymentComment.comment
-              } )
-          }  
-        } 
-      })
-  } catch(e) {
-    // when we've processed all messagese
-    displayPayments()
-    return false
-  }
+      // if we've never seen this transaction before, add it
+      if (!payments[msg.payment.key]) {
+        payments[msg.payment.key] = msg.payment
+      } else {
+        // what to do here?
+      }
+      break
+    
+    case 'modifyMmtPaymentTest':
+      if (verbose) {
+        console.log('Found a payment comment:')
+      }
+      payments[msg.paymentComment.key].comments.push( {
+        // todo get the order from higher up and pass it to this function
+        //author: msg.value.author,
+        comment: msg.paymentComment.comment
+      } )
+  }  
 }
 
 function pullWithFeedStream() {
@@ -177,7 +180,7 @@ function addPayment(sbot, paymentToAdd, recipients) {
   
   sbot.private.publish({ type: 'addMmtPaymentTest', payment: paymentToAdd }, recipients, function (err, msg) {
     if (verbose) {
-      console.log('Adding payment:')
+      console.log('Added payment:')
       console.log(JSON.stringify(msg, null, 4)) 
     }
   })
@@ -189,7 +192,7 @@ function addPaymentComment(sbot, paymentComment, recipients) {
 
   sbot.private.publish({ type: 'modifyMmtPaymentTest', paymentComment: paymentComment }, recipients, function (err, msg) {
     if (verbose) {
-      console.log('Adding payment Comment:')
+      console.log('Added payment Comment:')
       console.log(JSON.stringify(msg, null, 4)) 
     }
   })
@@ -197,8 +200,22 @@ function addPaymentComment(sbot, paymentComment, recipients) {
 }
 
 function displayPayments() {
-
+  // this would be the place to create a snazzy html table
   console.log('payments now looks like this:')
   console.log(JSON.stringify(payments, null, 4))
+  
+}
+
+function exampleDecryptMessage() {
+
+  // this is an example of decrypting a message that i know worked for me
+  // (it wont work for you as its for me but shows the idea)
+  sbot.get('%69q4XMVlrwG3GAeykTQLiU/oZlRvF7bRZFAR1CmECIA=.sha256', function(err,msg) {
+    if (err) console.error(err)
+    sbot.private.unbox(msg.content, function (err,msg) { 
+      if (err) console.error(err)
+      console.log(msg)
+    })
+  })
 
 }

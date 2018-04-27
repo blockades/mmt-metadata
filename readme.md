@@ -7,3 +7,6 @@ Multi-sig wallets such as Electrum do not allow us to see cosigners in payment h
 This project will use secure-scuttlebutt to store this information, as well as to provide a mechanism for sending and viewing partially signed transactions.
 
 Currently its a work in progress.
+
+* [pull-stream docs](https://pull-stream.github.io/)
+* [Scuttlebot API - Scuttlebot](https://scuttlebot.io/apis/scuttlebot/ssb.html)
