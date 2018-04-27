@@ -119,6 +119,7 @@ function addPaymentComment(sbot, paymentComment, recipients) {
 
 function displayPayments() {
   // this would be the place to create a snazzy html table
+  
   console.log('payments now looks like this:')
   console.log(JSON.stringify(payments, null, 4))
   
@@ -155,6 +156,8 @@ function writeDbLocally() {
     if(err) throw err
   })
 }
+
+  $("#putStuffHere").html('<h1> hello</h1>') 
 
 payments = readDbLocally()
 // if the file didnt exist yet (sort this out)
