@@ -22,7 +22,8 @@ var cosigners = [
   {
     name: 'alice', // i think theres away to grab this from ssb's 'about'
                   // message.  probably avatar image as well
-    // this is my own public key (which one could get using ssb-keys, key.id) 
+    // this is my own public key (which one could get using sbot.whoami)
+    // or create new ones with ssb-keys
     // you wont be able to decrypt messages made using this script without your
     // own public key
     ssbPubKey: '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519',
@@ -170,6 +171,11 @@ ssbClient(function (err, sbot) {
   // in most cases we want all cosigners as recipients, but for partially signed 
   // transactions we would want only those who are designated to sign
   var recipients = [cosigners[0].ssbPubkey]
+  sbot.whoami( function(err,msg) {
+    //console.log('whoami',msg)
+    var recipients = msg.id
+  })
+  //var recipients = sbot.whoami
 
   // an example payment to add to the db
   var payment = {

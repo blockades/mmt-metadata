@@ -12,6 +12,7 @@
     "fs": "0.0.1-security",
     "pull-stream": "^3.6.7",
     "sbot": "0.0.3",
-    "ssb-client": "^4.5.7"
+    "ssb-client": "^4.5.7",
+    "ssb-keys": "^7.0.14"
   }
 }
