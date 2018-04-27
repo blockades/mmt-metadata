@@ -173,7 +173,7 @@ ssbClient(function (err, sbot) {
   var recipients = [cosigners[0].ssbPubkey]
   sbot.whoami( function(err,msg) {
     //console.log('whoami',msg)
-    var recipients = msg.id
+    recipients = [ msg.id ]
   })
   //var recipients = sbot.whoami
 
