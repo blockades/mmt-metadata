@@ -1,6 +1,5 @@
 
 // todo:
-//   save db locally (as json file?)
 //   make less ugly
 //   speed up somehow -scanning messages takes ages making debugging slow
 //   electron front end
@@ -10,9 +9,11 @@
 
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
+var fs = require('fs');
 
-
+var localDbFile = './localdb.json'
 // will hold current payments
+// yes i know global variables bad im gonna tidy it up
 var payments = {}
 
 var verbose = true
@@ -33,89 +34,6 @@ var cosigners = [
 ]
 
 
-ssbClient(function (err, sbot) {
-  if (verbose) console.log('ssb ready.')
-
-  // In order for messages to be encrypted we need to specify recipients
-  // there can be a maximum of 7, which means if we wanted more we need multiple 
-  // messages
-  
-  // in most cases we want all cosigners as recipients, but for partially signed 
-  // transactions we would want only those who are designated to sign
-  var recipients = [cosigners[0].ssbPubkey]
-
-  // an example payment to add to the db
-  var payment = {
-    
-    // the 'key' would be a bitcoin transaction id
-    key: 'd5f2a6a8cd1e8c35466cfec16551', 
-
-    // the actual metadata
-    // note - no date, amounts or recieve addresses - for this we have a better 
-    // source of truth
-    rate:           5000,
-    cosigners:      ['ssbpublickey1', 'ssbpublickey2'],
-    description:    'this is just an example',
-    comments:       []
-  }
-
-  // addPayment(sbot, payment, recipients)
-
-  // an example payment comment to add to the db
-  var paymentComment = {
-
-    key: 'd5f2a6a8cd1e8c35466cfec16551', 
-
-    comment: 'this payment was a mistake'
-  }
-  
-
-  // addPaymentComment(sbot, paymentComment, recipients)
-    
-  //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
-  
-  // collect waits till we have everything then give us an array
-  // pull(
-  //   sbot.createLogStream(),
-  //   pull.collect(function (err, msgs) {
-  //     msgs.forEach( function (item,index) {
-  //       decryptAndProcess(sbot,item)
-  //     } )
-  //   })
-  // )
-  
-  // drain lets us process stuff as it comes
-  pull(sbot.createLogStream({ live: true }), pull.drain(function (message){
-    try {
-      if (message.value.content) { 
-        // attempt to decrypt message
-        try {
-          sbot.private.unbox(message.value.content, function (err, msg) {
-            if (msg) {    
-              //console.log('decrypted a message')
-              //console.log(msg)
-              processMsg(msg)
-            }
-            //console.log('eer: ', err)
-          })
-        } catch(e) {
-          console.log('error while decrypting')
-        }
-
-      }
-    } catch(e) {
-      displayPayments()
-      
-
-      sbot.close()
-      // why?
-      return false
-    }
-
-  }))
-  
-
-})
 
 
 function testPublish() {
@@ -219,3 +137,109 @@ function exampleDecryptMessage() {
   })
 
 }
+
+function readDbLocally() {
+  // for now just use a file as db is not likely to get big
+  fs.readFile(localDbFile,function(err,content){
+    if(err) {  return {}
+    } else { 
+      if (verbose) console.log('read locally: ',JSON.stringify(JSON.parse(content),null,4))
+      return JSON.parse(content) }
+  
+  })
+}
+
+function writeDbLocally() {
+  if (verbose) console.log('writing locally')
+  fs.writeFile(localDbFile,JSON.stringify(payments),function(err){
+    if(err) throw err
+  })
+}
+
+payments = readDbLocally()
+// if the file didnt exist yet (sort this out)
+if (typeof(payments) === 'undefined') payments = {}
+
+ssbClient(function (err, sbot) {
+  if (verbose) console.log('ssb ready.')
+
+  // In order for messages to be encrypted we need to specify recipients
+  // there can be a maximum of 7, which means if we wanted more we need multiple 
+  // messages
+  
+  // in most cases we want all cosigners as recipients, but for partially signed 
+  // transactions we would want only those who are designated to sign
+  var recipients = [cosigners[0].ssbPubkey]
+
+  // an example payment to add to the db
+  var payment = {
+    
+    // the 'key' would be a bitcoin transaction id
+    key: 'd5f2a6a8cd1e8c35466cfec16551', 
+
+    // the actual metadata
+    // note - no date, amounts or recieve addresses - for this we have a better 
+    // source of truth
+    rate:           5000,
+    cosigners:      ['ssbpublickey1', 'ssbpublickey2'],
+    description:    'this is just an example',
+    comments:       []
+  }
+
+  // addPayment(sbot, payment, recipients)
+
+  // an example payment comment to add to the db
+  var paymentComment = {
+
+    key: 'd5f2a6a8cd1e8c35466cfec16551', 
+
+    comment: 'this payment was a mistake'
+  }
+  
+
+  // addPaymentComment(sbot, paymentComment, recipients)
+    
+  //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
+  
+  // collect waits till we have everything then give us an array
+  // pull(
+  //   sbot.createLogStream(),
+  //   pull.collect(function (err, msgs) {
+  //     msgs.forEach( function (item,index) {
+  //       decryptAndProcess(sbot,item)
+  //     } )
+  //   })
+  // )
+  
+  // drain lets us process stuff as it comes
+  pull(sbot.createLogStream({ live: true }), pull.drain(function (message){
+    try {
+      if (message.value.content) { 
+        // attempt to decrypt message
+        try {
+          sbot.private.unbox(message.value.content, function (err, msg) {
+            if (msg) {    
+              //console.log('decrypted a message')
+              //console.log(msg)
+              processMsg(msg)
+            }
+            //console.log('eer: ', err)
+          })
+        } catch(e) {
+          console.log('error while decrypting')
+        }
+
+      }
+    } catch(e) {
+      displayPayments()
+      writeDbLocally()    
+
+      sbot.close()
+      // why?
+      return false
+    }
+
+  }))
+  
+
+})
