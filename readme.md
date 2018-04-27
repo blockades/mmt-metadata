@@ -5,7 +5,12 @@ Using ssb to record metadata associated with multi-signature bitcoin transaction
 
 Multi-sig wallets such as Electrum do not allow us to see cosigners in payment history, or to share payment descriptions and other notes.
 
-This project will use secure-scuttlebutt to store this information, as well as to provide a mechanism for sending and viewing partially signed transactions.
+What this project should do: (can be separated into smaller modules)
+
+- Use secure-scuttlebutt for sharing information between holders of the wallet 
+- Provide shared access to payment meta-data
+- Provide a mechanism for sending and viewing partially signed transactions.
+- Provide a mechanism for sharing public keys when initiating the wallet.
 
 Currently its a work in progress.
 
