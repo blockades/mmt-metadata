@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "electron": "^1.4.6",
     "fs": "0.0.1-security",
     "pull-stream": "^3.6.7",
     "sbot": "0.0.3",
