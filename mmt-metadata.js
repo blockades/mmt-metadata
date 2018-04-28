@@ -13,8 +13,10 @@ var fs = require('fs');
 
 var localDbFile = './localdb.json'
 // will hold current payments
+
+
 // yes i know global variables bad im gonna tidy it up
-var payments = {}
+//var payments = {}
 
 var verbose = true
 
@@ -56,16 +58,21 @@ function processMsg (msg) {
     case 'addMmtPaymentTest':
       if (verbose) { 
         console.log('Found a payment:')
-        $("#putStuffHere").append("<p class='payment'>" + msg.payment.key + "</p>")
+        $("#putStuffHere").append("<tr><td>" + msg.payment.key + "</td><td>"+msg.payment.description+"</td></tr>")
         //console.log(msg)
       }
-
+      
+      payments = readDbLocally()
+      
       // if we've never seen this transaction before, add it
       if (!payments[msg.payment.key]) {
         payments[msg.payment.key] = msg.payment
       } else {
         // what to do here?
       }
+      
+      writeDbLocally(payments)
+
       break
     
     case 'modifyMmtPaymentTest':
@@ -142,31 +149,31 @@ function exampleDecryptMessage() {
 
 function readDbLocally() {
   // for now just use a file as db is not likely to get big
-  fs.readFile(localDbFile,function(err,content){
-    if(err) {  return {}
-    } else { 
-      if (verbose) console.log('read locally: ',JSON.stringify(JSON.parse(content),null,4))
-      return JSON.parse(content) }
-  
-  })
+  if (fs.existsSync(localDbFile)) {
+    payments = JSON.parse(fs.readFileSync(localDbFile))
+  } else {
+    payments = {}
+  }
+  return payments
 }
 
-function writeDbLocally() {
+
+
+function writeDbLocally(payments) {
   if (verbose) console.log('writing locally')
-  fs.writeFile(localDbFile,JSON.stringify(payments),function(err){
-    if(err) throw err
-  })
+  fs.writeFileSync(localDbFile,JSON.stringify(payments))
+  
 }
 
-  $("#putStuffHere").html('<h1> hello</h1>') 
 
-payments = readDbLocally()
+//payments = readDbLocally()
 // if the file didnt exist yet (sort this out)
 if (typeof(payments) === 'undefined') payments = {}
 
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
 
+  //$("#putStuffHere").append("<h1> hello</h1>") 
   // In order for messages to be encrypted we need to specify recipients
   // there can be a maximum of 7, which means if we wanted more we need multiple 
   // messages
@@ -215,6 +222,7 @@ ssbClient(function (err, sbot) {
   //   })
   // )
   
+  $("#putStuffHere").append("<table>")
   // drain lets us process stuff as it comes
   pull(sbot.messagesByType({ live: true, type: "addMmtPaymentTest" }), pull.drain(function (message){
     try {
@@ -235,10 +243,11 @@ ssbClient(function (err, sbot) {
 
       }
     } catch(e) {
-      displayPayments()
-      writeDbLocally()    
+      //displayPayments()
+      //writeDbLocally()    
 
-      sbot.close()
+       // $("#putStuffHere").append("<p class='payment'> finished</p>")
+      //sbot.close()
       // why?
       return false
     }
