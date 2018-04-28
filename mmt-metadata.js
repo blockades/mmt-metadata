@@ -56,6 +56,7 @@ function processMsg (msg) {
     case 'addMmtPaymentTest':
       if (verbose) { 
         console.log('Found a payment:')
+        $("#putStuffHere").append("<p class='payment'>" + msg.payment.key + "</p>")
         //console.log(msg)
       }
 
@@ -172,7 +173,7 @@ ssbClient(function (err, sbot) {
   
   // in most cases we want all cosigners as recipients, but for partially signed 
   // transactions we would want only those who are designated to sign
-  var recipients = [cosigners[0].ssbPubkey]
+  var recipients = [cosigners[0].ssbPubKey]
 
   // an example payment to add to the db
   var payment = {
@@ -215,7 +216,7 @@ ssbClient(function (err, sbot) {
   // )
   
   // drain lets us process stuff as it comes
-  pull(sbot.createLogStream({ live: true }), pull.drain(function (message){
+  pull(sbot.messagesByType({ live: true, type: "addMmtPaymentTest" }), pull.drain(function (message){
     try {
       if (message.value.content) { 
         // attempt to decrypt message
