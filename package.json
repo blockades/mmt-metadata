@@ -2,13 +2,14 @@
   "name": "mmt-metadata",
   "version": "1.0.0",
   "description": "first stab at fiddling with sbot",
-  "main": "mmt-metadata.js",
+  "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron main.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "electron": "^1.4.6",
     "fs": "0.0.1-security",
     "pull-stream": "^3.6.7",
     "sbot": "0.0.3",
