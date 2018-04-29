@@ -9,14 +9,12 @@
 
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
-var fs = require('fs');
+var fs = require('fs')
 
 var localDbFile = './localdb.json'
-// will hold current payments
 
-
-// yes i know global variables bad im gonna tidy it up
-//var payments = {}
+// will also include 'initiateMmtMultisigTest','shareMmtPublicKeyTest'
+const messageTypes = ['initiateMmtPaymentTest','addMmtPaymentCommentTest']
 
 var verbose = true
 
@@ -29,102 +27,97 @@ var cosigners = [
     // you wont be able to decrypt messages made using this script without your
     // own public key
     ssbPubKey: '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519',
-    // this will be an array of bitcoin addresses, which we will pop off and not reuse.
-    addresses: ['bc1sdfljsdl','bc1ldskfjsdfl']
 
   }
   // other cosigners will be added here
 ]
 
+function processMsg(msg,messageType) {
 
-
-
-function testPublish() {
-  //publish a test message
-  sbot.publish({ type: 'testtype', text: 'hello, scuttleverse' }, function (err, msg) {
-    if (verbose) { 
-      console.log(msg.key) 
-      console.log(msg.value.author)
-      console.log(msg.value.content)
-    }
-  })
-}
-
-
-
-function processMsg (msg) {
-  // process an unencrypted message  
-  switch(msg.type) {
-  
-    case 'addMmtPaymentTest':
-      if (verbose) { 
-        console.log('Found a payment:')
-        $("#putStuffHere").append("<tr><td>" + msg.payment.key + "</td><td>"+msg.payment.description+"</td></tr>")
-        //console.log(msg)
-      }
-      
-      payments = readDbLocally()
-      
-      // if we've never seen this transaction before, add it
-      if (!payments[msg.payment.key]) {
-        payments[msg.payment.key] = msg.payment
-      } else {
-        // what to do here?
-      }
-      
-      writeDbLocally(payments)
-
-      break
+    // todo: we need the author to be passed to this function
+    if (verbose) console.log('Found an initiate payment')
     
-    case 'modifyMmtPaymentTest':
-      if (verbose) {
-        console.log('Found a payment comment:')
-      }
-      payments[msg.paymentComment.key].comments.push( {
-        // todo get the order from higher up and pass it to this function
-        //author: msg.value.author,
-        comment: msg.paymentComment.comment
-      } )
-  }  
+    $("#putStuffHere").append("<tr><td>" + msg.payment.key + "</td><td>"+msg.payment.description+"</td></tr>")
+    
+    
+    payments = readDbLocally()
+    
+    // if we've never seen this transaction before, add it
+    if (!payments[msg.payment.key]) {
+      payments[msg.payment.key] = msg.payment
+    } else {
+      // what to do here?  this shouldnt happen
+    }
+    
+    writeDbLocally(payments)
 }
 
-function pullWithFeedStream() {
-  // not using this right now
-  pull(
-      sbot.createFeedStream(),
-      pull.collect(function (err, msgs) {
-        console.log(msgs[1].key)
-        console.log(msgs[1].value)
-
-      })
-    )
+function processInitiatePayment (msg) {
+    // todo: we need the author to be passed to this function
+    if (verbose) console.log('Found an initiate payment')
+    
+    $("#putStuffHere").append("<tr><td>" + msg.payment.key + "</td><td>"+msg.payment.description+"</td></tr>")
+    
+    
+    payments = readDbLocally()
+    
+    // if we've never seen this transaction before, add it
+    if (!payments[msg.payment.key]) {
+      payments[msg.payment.key] = msg.payment
+    } else {
+      // what to do here?  this shouldnt happen
+    }
+    
+    writeDbLocally(payments)
 }
 
-
-
-
-function addPayment(sbot, paymentToAdd, recipients) {
-  
-  sbot.private.publish({ type: 'addMmtPaymentTest', payment: paymentToAdd }, recipients, function (err, msg) {
+function processAddPaymentComment {
+    
+    // todo get the order from higher up and pass it to this function
     if (verbose) {
-      console.log('Added payment:')
+      console.log('Found a payment comment')
+    }
+
+    payments = readDbLocally()
+    // todo: check the comment doesnt already exist
+    payments[msg.paymentComment.key].comments.push( {
+      //author: msg.value.author,
+      comment: msg.paymentComment.comment
+    } )
+}  
+
+
+function publishMessage(sbot, messageType, content, recipients) {
+  sbot.private.publish({ type: messageType, content: content }, recipients, function (err, msg) {
+    if (verbose) {
+      console.log('Added ', messageType)
       console.log(JSON.stringify(msg, null, 4)) 
     }
   })
-
 }
 
-
-function addPaymentComment(sbot, paymentComment, recipients) {
-
-  sbot.private.publish({ type: 'modifyMmtPaymentTest', paymentComment: paymentComment }, recipients, function (err, msg) {
-    if (verbose) {
-      console.log('Added payment Comment:')
-      console.log(JSON.stringify(msg, null, 4)) 
-    }
-  })
-
-}
+// function initiatePayment(sbot, paymentToAdd, recipients) {
+//   // this message will be published when somebody initiates a payment for others to sign
+//   sbot.private.publish({ type: 'initiateMmtPaymentTest', payment: paymentToAdd }, recipients, function (err, msg) {
+//     if (verbose) {
+//       console.log('Added payment:')
+//       console.log(JSON.stringify(msg, null, 4)) 
+//     }
+//   })
+//
+// }
+//
+//
+// function addPaymentComment(sbot, paymentComment, recipients) {
+//
+//   sbot.private.publish({ type: 'modifyMmtPaymentTest', paymentComment: paymentComment }, recipients, function (err, msg) {
+//     if (verbose) {
+//       console.log('Added payment Comment:')
+//       console.log(JSON.stringify(msg, null, 4)) 
+//     }
+//   })
+//
+// }
 
 function displayPayments() {
   // this would be the place to create a snazzy html table
@@ -167,14 +160,51 @@ function writeDbLocally(payments) {
 }
 
 
-//payments = readDbLocally()
-// if the file didnt exist yet (sort this out)
-if (typeof(payments) === 'undefined') payments = {}
+function ProcessDecryptedMessage(payments, messageType) 
+  return function (err, msg) {
+  if (msg) {    
+    //console.log('decrypted a message')
+    //console.log(msg)
+    processMsg(msg,messageType)
+  }
+}
+decryptMessage(payments) {
+  return function (message){
+      try {
+        if (message.value.content) { 
+          // attempt to decrypt message
+          try {
+            // todo: how to pass the message author to this callback function?
+            sbot.private.unbox(message.value.content, ProcessDecryptedMessage(payments, messageType)) 
+          } catch(e) {
+            console.error('error while decrypting')
+          }
+
+        }
+      } catch(e) {
+        //displayPayments()
+        //writeDbLocally()    
+
+         // $("#putStuffHere").append("<p class='payment'> finished</p>")
+        //sbot.close()
+        // why?
+        return false
+      }
+
+    }
+}
+
+function drainMessages(payments) {
+  return function (messageType) {
+    // drain lets us process stuff as it comes
+    pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(decryptMessage(payments)))
+  } 
+}
+
 
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
 
-  //$("#putStuffHere").append("<h1> hello</h1>") 
   // In order for messages to be encrypted we need to specify recipients
   // there can be a maximum of 7, which means if we wanted more we need multiple 
   // messages
@@ -193,18 +223,18 @@ ssbClient(function (err, sbot) {
     
     // the 'key' would be a bitcoin transaction id
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
-
+    rawTransaction: 'a294b83........',
     // the actual metadata
     // note - no date, amounts or recieve addresses - for this we have a better 
     // source of truth
+
+    // this will be calculated at the time of initiating the payment
     rate:           5000,
-    cosigners:      ['ssbpublickey1', 'ssbpublickey2'],
-    description:    'this is just an example',
-    comments:       []
+    comment:       'bought a new pencil sharpener'
   }
 
-  // addPayment(sbot, payment, recipients)
-
+  // publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients) 
+  
   // an example payment comment to add to the db
   var paymentComment = {
 
@@ -214,7 +244,7 @@ ssbClient(function (err, sbot) {
   }
   
 
-  // addPaymentComment(sbot, paymentComment, recipients)
+  // publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
     
   //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
   
@@ -228,37 +258,11 @@ ssbClient(function (err, sbot) {
   //   })
   // )
   
+
+  payments = readDbLocally()
   $("#putStuffHere").append("<table>")
-  // drain lets us process stuff as it comes
-  pull(sbot.messagesByType({ live: true, type: "addMmtPaymentTest" }), pull.drain(function (message){
-    try {
-      if (message.value.content) { 
-        // attempt to decrypt message
-        try {
-          sbot.private.unbox(message.value.content, function (err, msg) {
-            if (msg) {    
-              //console.log('decrypted a message')
-              //console.log(msg)
-              processMsg(msg)
-            }
-            //console.log('eer: ', err)
-          })
-        } catch(e) {
-          console.log('error while decrypting')
-        }
+  messageTypes.foreach(drainMessages(payments)) 
 
-      }
-    } catch(e) {
-      //displayPayments()
-      //writeDbLocally()    
-
-       // $("#putStuffHere").append("<p class='payment'> finished</p>")
-      //sbot.close()
-      // why?
-      return false
-    }
-
-  }))
   
 
 })
