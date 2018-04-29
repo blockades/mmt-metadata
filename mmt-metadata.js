@@ -14,7 +14,7 @@ var fs = require('fs')
 var localDbFile = './localdb.json'
 
 // will also include 'initiateMmtMultisigTest','shareMmtPublicKeyTest'
-const messageTypes = ['initiateMmtPaymentTest','addMmtPaymentCommentTest']
+const messageTypes = ['unsignedMmtPaymentTest','addMmtPaymentCommentTest']
 
 var verbose = true
 
@@ -32,53 +32,42 @@ var cosigners = [
   // other cosigners will be added here
 ]
 
+
+var payments = {}
+
 function processMsg(msg,messageType) {
-
     // todo: we need the author to be passed to this function
-    if (verbose) console.log('Found an initiate payment')
+
+    if (verbose) console.log('Found a ', messageType)
     
-    $("#putStuffHere").append("<tr><td>" + msg.payment.key + "</td><td>"+msg.payment.description+"</td></tr>")
+    //payments = readDbLocally()
+    switch (messageType) {
+      case 'unsignedMmtPaymentTest':
+        // todo: validate that we dont have too many cosigners
+        // check if its already been added
+        //payments[msg.payment.key].cosigners.push(message.author)
     
-    
-    payments = readDbLocally()
-    
-    // if we've never seen this transaction before, add it
-    if (!payments[msg.payment.key]) {
-      payments[msg.payment.key] = msg.payment
-    } else {
-      // what to do here?  this shouldnt happen
-    }
-    
-    writeDbLocally(payments)
+        // todo: check if the transaction has already been signed and broadcast 
+        // (can we see it already) if not prompt the user to review and sign. 
+        // then if there are still more required cosigners, re-publish the 
+        // transaction to ssb, if not broadcast transaction.
+
+        if (msg.payment.comment) addPaymentComment(msg) 
+        if (msg.payment.rate) payments[msg.payment.key].rate = msg.payment.rate
+        
+        break
+      case 'addMmtPaymentCommentTest':
+        addPaymentComment(msg)
+      
+    } 
+    displayPayments()    
 }
 
-function processInitiatePayment (msg) {
-    // todo: we need the author to be passed to this function
-    if (verbose) console.log('Found an initiate payment')
-    
-    $("#putStuffHere").append("<tr><td>" + msg.payment.key + "</td><td>"+msg.payment.description+"</td></tr>")
-    
-    
-    payments = readDbLocally()
-    
-    // if we've never seen this transaction before, add it
-    if (!payments[msg.payment.key]) {
-      payments[msg.payment.key] = msg.payment
-    } else {
-      // what to do here?  this shouldnt happen
-    }
-    
-    writeDbLocally(payments)
-}
 
-function processAddPaymentComment {
+function addPaymentComment(msg) {
     
     // todo get the order from higher up and pass it to this function
-    if (verbose) {
-      console.log('Found a payment comment')
-    }
 
-    payments = readDbLocally()
     // todo: check the comment doesnt already exist
     payments[msg.paymentComment.key].comments.push( {
       //author: msg.value.author,
@@ -96,28 +85,6 @@ function publishMessage(sbot, messageType, content, recipients) {
   })
 }
 
-// function initiatePayment(sbot, paymentToAdd, recipients) {
-//   // this message will be published when somebody initiates a payment for others to sign
-//   sbot.private.publish({ type: 'initiateMmtPaymentTest', payment: paymentToAdd }, recipients, function (err, msg) {
-//     if (verbose) {
-//       console.log('Added payment:')
-//       console.log(JSON.stringify(msg, null, 4)) 
-//     }
-//   })
-//
-// }
-//
-//
-// function addPaymentComment(sbot, paymentComment, recipients) {
-//
-//   sbot.private.publish({ type: 'modifyMmtPaymentTest', paymentComment: paymentComment }, recipients, function (err, msg) {
-//     if (verbose) {
-//       console.log('Added payment Comment:')
-//       console.log(JSON.stringify(msg, null, 4)) 
-//     }
-//   })
-//
-// }
 
 function displayPayments() {
   // this would be the place to create a snazzy html table
@@ -127,40 +94,34 @@ function displayPayments() {
   
 }
 
-function exampleDecryptMessage() {
-
-  // this is an example of decrypting a message that i know worked for me
-  // (it wont work for you as its for me but shows the idea)
-  sbot.get('%69q4XMVlrwG3GAeykTQLiU/oZlRvF7bRZFAR1CmECIA=.sha256', function(err,msg) {
-    if (err) console.error(err)
-    sbot.private.unbox(msg.content, function (err,msg) { 
-      if (err) console.error(err)
-      console.log(msg)
-    })
-  })
-
-}
-
 function readDbLocally() {
+  
   // for now just use a file as db is not likely to get big
+
+  var paymentsFromFile = {}
+
+  // actually this should be async
   if (fs.existsSync(localDbFile)) {
-    payments = JSON.parse(fs.readFileSync(localDbFile))
-  } else {
-    payments = {}
-  }
-  return payments
+
+    paymentsFromFile = JSON.parse(fs.readFileSync(localDbFile))
+
+    // todo: this wont work, it will clobber arrays of cosigners and comments.
+    // this information will need to be parsed the same as the stuff coming from ssb
+    Object.keys(paymentsFromFile).forEach(key => result[key] = paymentsFromFile[key]);
+    Object.keys(payments).forEach(key => result[key] = payments[key]);
+
+  } 
+  return result
 }
 
-
-
-function writeDbLocally(payments) {
+function writeDbLocally() {
   if (verbose) console.log('writing locally')
   fs.writeFileSync(localDbFile,JSON.stringify(payments))
   
 }
 
-
-function ProcessDecryptedMessage(payments, messageType) 
+// a wrapper to pass on messageType (add author)
+function ProcessDecryptedMessage(messageType) 
   return function (err, msg) {
   if (msg) {    
     //console.log('decrypted a message')
@@ -168,14 +129,15 @@ function ProcessDecryptedMessage(payments, messageType)
     processMsg(msg,messageType)
   }
 }
-decryptMessage(payments) {
+
+function decryptMessage() {
   return function (message){
       try {
         if (message.value.content) { 
           // attempt to decrypt message
           try {
             // todo: how to pass the message author to this callback function?
-            sbot.private.unbox(message.value.content, ProcessDecryptedMessage(payments, messageType)) 
+            sbot.private.unbox(message.value.content, ProcessDecryptedMessage(messageType)) 
           } catch(e) {
             console.error('error while decrypting')
           }
@@ -192,13 +154,6 @@ decryptMessage(payments) {
       }
 
     }
-}
-
-function drainMessages(payments) {
-  return function (messageType) {
-    // drain lets us process stuff as it comes
-    pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(decryptMessage(payments)))
-  } 
 }
 
 
@@ -259,10 +214,13 @@ ssbClient(function (err, sbot) {
   // )
   
 
-  payments = readDbLocally()
-  $("#putStuffHere").append("<table>")
-  messageTypes.foreach(drainMessages(payments)) 
+  //payments = readDbLocally()
+  //$("#putStuffHere").append("<table>")
 
+  messageTypes.foreach(function (messageType) {
+    // drain lets us process stuff as it comes
+    pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(decryptMessage))
+  } )
   
 
 })
