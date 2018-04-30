@@ -1,6 +1,8 @@
 
 // todo:
 //   make less ugly
+//   error handling
+//   validation
 //   speed up somehow -scanning messages takes ages making debugging slow
 //   electron front end
 //   interact with wallet either electrum locally or bitcoin on a server
@@ -37,9 +39,9 @@ var payments = {}
 
 function processMsg(msg) {
     // todo: we need the author to be passed to this function
-//console.log(JSON.stringify(msg,null,4)
     if (verbose) console.log('Found a ', msg.type)
     
+console.log(JSON.stringify(msg,null,4))
     //payments = readDbLocally()
     switch (msg.type) {
       case 'unsignedMmtPaymentTest':
@@ -52,8 +54,8 @@ function processMsg(msg) {
         // then if there are still more required cosigners, re-publish the 
         // transaction to ssb, if not broadcast transaction.
 
-        if (msg.payment.comment) addPaymentComment(msg) 
-        if (msg.payment.rate) payments[msg.payment.key].rate = msg.payment.rate
+        if (msg.content.comment) addPaymentComment(msg) 
+        if (msg.content.rate) payments[msg.content.key].rate = msg.content.rate
         
         break
       case 'addMmtPaymentCommentTest':
@@ -69,9 +71,9 @@ function addPaymentComment(msg) {
     // todo get the order from higher up and pass it to this function
 
     // todo: check the comment doesnt already exist
-    payments[msg.paymentComment.key].comments.push( {
+    payments[msg.content.key].comments.push( {
       //author: msg.value.author,
-      comment: msg.paymentComment.comment
+      comment: msg.content.comment
     } )
 }  
 
