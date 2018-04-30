@@ -19,7 +19,7 @@ var localDbFile = './localdb.json'
 const messageTypes = ['unsignedMmtPaymentTest','addMmtPaymentCommentTest']
 
 var verbose = true
-var something = 'foundit'
+
 var cosigners = [
   {
     name: 'alice', // i think theres away to grab this from ssb's 'about'
@@ -37,47 +37,18 @@ var cosigners = [
 
 var payments = {}
 
-function processMsg(msg) {
-    // todo: we need the author to be passed to this function
-    if (verbose) console.log('Found a ', msg.type)
-    
-console.log(JSON.stringify(msg,null,4))
-    //payments = readDbLocally()
-    switch (msg.type) {
-      case 'unsignedMmtPaymentTest':
-        // todo: validate that we dont have too many cosigners
-        // check if its already been added
-        //payments[msg.payment.key].cosigners.push(message.author)
-    
-        // todo: check if the transaction has already been signed and broadcast 
-        // (can we see it already) if not prompt the user to review and sign. 
-        // then if there are still more required cosigners, re-publish the 
-        // transaction to ssb, if not broadcast transaction.
-
-        if (msg.content.comment) addPaymentComment(msg) 
-        if (msg.content.rate) payments[msg.content.key].rate = msg.content.rate
-        
-        break
-      case 'addMmtPaymentCommentTest':
-        addPaymentComment(msg)
-      
-    } 
-    displayPayments()    
-}
 
 
-function addPaymentComment(msg) {
-    // todo get the order from higher up and pass it to this function
+function addPaymentComment(msg, author) {
     
     // if we dont yet have this entry, define it
-    if (typeof payments[msg.content.key] === 'undefined') {
-      payments[msg.content.key] = {}
-      payments[msg.content.key].comments = []
-    }
+    if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
+    if (typeof payments[msg.content.key].comments === 'undefined')  payments[msg.content.key].comments = []
+    
 
     // todo: check the comment doesnt already exist
     payments[msg.content.key].comments.push( {
-      //author: msg.value.author,
+      author: author,
       comment: msg.content.comment
     } )
 }  
@@ -95,9 +66,20 @@ function publishMessage(sbot, messageType, content, recipients) {
 function displayPayments() {
   // this would be the place to create a snazzy html table
   
-  console.log('payments now looks like this:')
-  console.log(JSON.stringify(payments, null, 4))
+  // theres gotta be a better way to do this
+  $("#putStuffHere").html('<table class = "table">\n<tr>\n<th> Date </th>\n<th> Description and comments </th>\n<th> Rate </th>\n<th> Amount </th>\n<th> Recipient(s) </th>\n</tr>\n')
   
+  Object.keys(payments).forEach(function( index) {
+
+    $("#putStuffHere").append("<tr><td>" + payments[index].rate + "</td></tr>")
+  } )
+
+  $("#putStuffHere").append("</table>")
+
+  if (verbose) {
+    console.log('payments now looks like this:')
+    console.log(JSON.stringify(payments, null, 4))
+  } 
 }
 
 function readDbLocally() {
@@ -113,8 +95,11 @@ function readDbLocally() {
 
     // todo: this wont work, it will clobber arrays of cosigners and comments.
     // this information will need to be parsed the same as the stuff coming from ssb
-    Object.keys(paymentsFromFile).forEach(key => result[key] = paymentsFromFile[key]);
-    Object.keys(payments).forEach(key => result[key] = payments[key]);
+    Object.keys(paymentsFromFile).forEach(function(key) {
+      payments[key] = paymentsFromFile[key]
+    } )
+
+    //Object.keys(payments).forEach(key => result[key] = payments[key]);
 
   } 
   return result
@@ -126,22 +111,39 @@ function writeDbLocally() {
   
 }
 
-// a wrapper to pass on messageType (add author)
-function processDecryptedMessage(err, msg) {
+function processDecryptedMessage(err, msg,author) {
 
     if (msg) {    
       console.log('decrypted a message')
-      console.log(msg)
-      processMsg(msg)
+    
+      if (verbose) console.log('Found a ', msg.type)
+      
+      console.log(JSON.stringify(msg,null,4))
+      switch (msg.type) {
+        case 'unsignedMmtPaymentTest':
+          // todo: validate that we dont have too many cosigners
+          // check if its already been added
+          //payments[msg.payment.key].cosigners.push(message.author)
+      
+          // todo: check if the transaction has already been signed and broadcast 
+          // (can we see it already) if not prompt the user to review and sign. 
+          // then if there are still more required cosigners, re-publish the 
+          // transaction to ssb, if not broadcast transaction.
+          
+          if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
+
+          if (msg.content.comment) addPaymentComment(msg,author) 
+          if (msg.content.rate) payments[msg.content.key].rate = msg.content.rate
+          
+          break
+        
+        case 'addMmtPaymentCommentTest':
+          addPaymentComment(msg,author)
+        
+      } 
+      displayPayments()    
     }
 }
-
-
-// function decryptMessage (message) {
-//
-//
-// return 
-// }
 
 
 
@@ -155,7 +157,8 @@ ssbClient(function (err, sbot) {
   // in most cases we want all cosigners as recipients, but for partially signed 
   // transactions we would want only those who are designated to sign
   var recipients = [cosigners[0].ssbPubKey]
-  
+ 
+  // todo: sort out this callback function
   //sbot.whoami( function(err,msg) {
     //console.log('whoami',msg)
   //  recipients = [ msg.id ]
@@ -176,7 +179,7 @@ ssbClient(function (err, sbot) {
     comment:       'bought a new pencil sharpener'
   }
 
-  //publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients) 
+  //publishMessage(sbot, 'unsignedMmtPaymentTest', payment, recipients) 
   
   // an example payment comment to add to the db
   var paymentComment = {
@@ -189,21 +192,7 @@ ssbClient(function (err, sbot) {
 
   //publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
     
-  //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
-  
-  // collect waits till we have everything then give us an array
-  // pull(
-  //   sbot.createLogStream(),
-  //   pull.collect(function (err, msgs) {
-  //     msgs.forEach( function (item,index) {
-  //       decryptAndProcess(sbot,item)
-  //     } )
-  //   })
-  // )
-  
-
   //payments = readDbLocally()
-  //$("#putStuffHere").append("<table>")
 
   messageTypes.forEach(function (messageType) {
     // drain lets us process stuff as it comes
@@ -215,8 +204,9 @@ ssbClient(function (err, sbot) {
           // attempt to decrypt message
           try {
             console.log(message.value.content)
-            // todo: how to pass the message author to this callback function?
-            sbot.private.unbox(message.value.content, processDecryptedMessage) 
+            sbot.private.unbox(message.value.content, function(err,msg) {
+              processDecryptedMessage(err,msg,message.value.author)
+            }) 
           } catch(e) {
             console.error('error while decrypting',e)
           }
@@ -231,8 +221,6 @@ ssbClient(function (err, sbot) {
         // why?
         return false
       }
-}))
+    }))
   } )
-  
-
 })
