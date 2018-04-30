@@ -19,7 +19,7 @@ var localDbFile = './localdb.json'
 const messageTypes = ['unsignedMmtPaymentTest','addMmtPaymentCommentTest']
 
 var verbose = true
-
+var something = 'foundit'
 var cosigners = [
   {
     name: 'alice', // i think theres away to grab this from ssb's 'about'
@@ -67,8 +67,13 @@ console.log(JSON.stringify(msg,null,4))
 
 
 function addPaymentComment(msg) {
-    
     // todo get the order from higher up and pass it to this function
+    
+    // if we dont yet have this entry, define it
+    if (typeof payments[msg.content.key] === 'undefined') {
+      payments[msg.content.key] = {}
+      payments[msg.content.key].comments = []
+    }
 
     // todo: check the comment doesnt already exist
     payments[msg.content.key].comments.push( {
@@ -76,7 +81,6 @@ function addPaymentComment(msg) {
       comment: msg.content.comment
     } )
 }  
-
 
 function publishMessage(sbot, messageType, content, recipients) {
   sbot.private.publish({ type: messageType, content: content }, recipients, function (err, msg) {
@@ -205,7 +209,7 @@ ssbClient(function (err, sbot) {
     // drain lets us process stuff as it comes
     console.log(messageType)
     pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
-  console.log(JSON.stringify(message,null,4))
+    console.log(JSON.stringify(message,null,4))
       try {
         if (message.value.content) { 
           // attempt to decrypt message
