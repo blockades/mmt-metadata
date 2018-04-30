@@ -35,13 +35,13 @@ var cosigners = [
 
 var payments = {}
 
-function processMsg(msg,messageType) {
+function processMsg(msg) {
     // todo: we need the author to be passed to this function
-
-    if (verbose) console.log('Found a ', messageType)
+//console.log(JSON.stringify(msg,null,4)
+    if (verbose) console.log('Found a ', msg.type)
     
     //payments = readDbLocally()
-    switch (messageType) {
+    switch (msg.type) {
       case 'unsignedMmtPaymentTest':
         // todo: validate that we dont have too many cosigners
         // check if its already been added
@@ -121,40 +121,22 @@ function writeDbLocally() {
 }
 
 // a wrapper to pass on messageType (add author)
-function ProcessDecryptedMessage(messageType) 
-  return function (err, msg) {
-  if (msg) {    
-    //console.log('decrypted a message')
-    //console.log(msg)
-    processMsg(msg,messageType)
-  }
-}
+function processDecryptedMessage(err, msg) {
 
-function decryptMessage() {
-  return function (message){
-      try {
-        if (message.value.content) { 
-          // attempt to decrypt message
-          try {
-            // todo: how to pass the message author to this callback function?
-            sbot.private.unbox(message.value.content, ProcessDecryptedMessage(messageType)) 
-          } catch(e) {
-            console.error('error while decrypting')
-          }
-
-        }
-      } catch(e) {
-        //displayPayments()
-        //writeDbLocally()    
-
-         // $("#putStuffHere").append("<p class='payment'> finished</p>")
-        //sbot.close()
-        // why?
-        return false
-      }
-
+    if (msg) {    
+      console.log('decrypted a message')
+      console.log(msg)
+      processMsg(msg)
     }
 }
+
+
+// function decryptMessage (message) {
+//
+//
+// return 
+// }
+
 
 
 ssbClient(function (err, sbot) {
@@ -188,7 +170,7 @@ ssbClient(function (err, sbot) {
     comment:       'bought a new pencil sharpener'
   }
 
-  // publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients) 
+  //publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients) 
   
   // an example payment comment to add to the db
   var paymentComment = {
@@ -199,7 +181,7 @@ ssbClient(function (err, sbot) {
   }
   
 
-  // publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
+  //publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
     
   //pull(sbot.createLogStream({ live: true }), pull.drain(processMsg))
   
@@ -217,9 +199,33 @@ ssbClient(function (err, sbot) {
   //payments = readDbLocally()
   //$("#putStuffHere").append("<table>")
 
-  messageTypes.foreach(function (messageType) {
+  messageTypes.forEach(function (messageType) {
     // drain lets us process stuff as it comes
-    pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(decryptMessage))
+    console.log(messageType)
+    pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
+  console.log(JSON.stringify(message,null,4))
+      try {
+        if (message.value.content) { 
+          // attempt to decrypt message
+          try {
+            console.log(message.value.content)
+            // todo: how to pass the message author to this callback function?
+            sbot.private.unbox(message.value.content, processDecryptedMessage) 
+          } catch(e) {
+            console.error('error while decrypting',e)
+          }
+
+        }
+      } catch(e) {
+        //displayPayments()
+        //writeDbLocally()    
+
+         // $("#putStuffHere").append("<p class='payment'> finished</p>")
+        //sbot.close()
+        // why?
+        return false
+      }
+}))
   } )
   
 
