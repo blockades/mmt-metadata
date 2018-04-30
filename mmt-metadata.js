@@ -3,7 +3,6 @@
 //   make less ugly
 //   error handling
 //   validation
-//   speed up somehow -scanning messages takes ages making debugging slow
 //   electron front end
 //   interact with wallet either electrum locally or bitcoin on a server
 //   re-write rates tool into node
@@ -20,19 +19,17 @@ const messageTypes = ['unsignedMmtPaymentTest','addMmtPaymentCommentTest']
 
 var verbose = true
 
-var cosigners = [
-  {
-    name: 'alice', // i think theres away to grab this from ssb's 'about'
-                  // message.  probably avatar image as well
+var cosigners = {
+
     // this is my own public key (which one could get using sbot.whoami)
     // or create new ones with ssb-keys
     // you wont be able to decrypt messages made using this script without your
     // own public key
-    ssbPubKey: '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519',
 
-  }
-  // other cosigners will be added here
-]
+    '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519': {
+      name: 'alice'
+    }
+}
 
 
 var payments = {}
@@ -67,11 +64,25 @@ function displayPayments() {
   // this would be the place to create a snazzy html table
   
   // theres gotta be a better way to do this
+  // this is really ugly and doesnt work properly
   $("#putStuffHere").html('<table class = "table">\n<tr>\n<th> Date </th>\n<th> Description and comments </th>\n<th> Rate </th>\n<th> Amount </th>\n<th> Recipient(s) </th>\n</tr>\n')
   
   Object.keys(payments).forEach(function( index) {
 
-    $("#putStuffHere").append("<tr><td>" + payments[index].rate + "</td></tr>")
+    $("#putStuffHere").append("<tr>")
+    $("#putStuffHere").append("<td>somedate</td>")
+    
+    $("#putStuffHere").append("<td>")
+    payments[index].comments.forEach(function(comment){
+
+      $("#putStuffHere").append(comment.comment)
+    })
+
+    $("#putStuffHere").append("</td>")
+    $("#putStuffHere").append("<td>" + payments[index].rate + "</td>")
+    $("#putStuffHere").append("<td>someamount</td>")
+    $("#putStuffHere").append("<td>somerecipients</td>")
+    $("#putStuffHere").append("</tr>")
   } )
 
   $("#putStuffHere").append("</table>")
@@ -145,24 +156,7 @@ function processDecryptedMessage(err, msg,author) {
     }
 }
 
-
-
-ssbClient(function (err, sbot) {
-  if (verbose) console.log('ssb ready.')
-
-  // In order for messages to be encrypted we need to specify recipients
-  // there can be a maximum of 7, which means if we wanted more we need multiple 
-  // messages
-  
-  // in most cases we want all cosigners as recipients, but for partially signed 
-  // transactions we would want only those who are designated to sign
-  var recipients = [cosigners[0].ssbPubKey]
- 
-  // todo: sort out this callback function
-  //sbot.whoami( function(err,msg) {
-    //console.log('whoami',msg)
-  //  recipients = [ msg.id ]
-  //})
+function addExampleData(sbot, recipients) {
 
   // an example payment to add to the db
   var payment = {
@@ -179,7 +173,7 @@ ssbClient(function (err, sbot) {
     comment:       'bought a new pencil sharpener'
   }
 
-  //publishMessage(sbot, 'unsignedMmtPaymentTest', payment, recipients) 
+  publishMessage(sbot, 'unsignedMmtPaymentTest', payment, recipients) 
   
   // an example payment comment to add to the db
   var paymentComment = {
@@ -190,20 +184,39 @@ ssbClient(function (err, sbot) {
   }
   
 
-  //publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
-    
+  publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
+
+}
+
+ssbClient(function (err, sbot) {
+  if (verbose) console.log('ssb ready.')
+
+  // In order for messages to be encrypted we need to specify recipients
+  // there can be a maximum of 7, which means if we wanted more we need multiple 
+  // messages
+  
+  var recipients = Object.keys(cosigners)
+ 
+  // todo: sort out this callback function
+  //sbot.whoami( function(err,msg) {
+    //console.log('whoami',msg)
+  //  recipients = [ msg.id ]
+  //})
+
+
+  // uncomment this line to add example data to scuttlebutt 
+  // note that if this is run multiple times it will create multiply identical entries
+  //addExampleData(sbot, recipients)
+  
   //payments = readDbLocally()
 
   messageTypes.forEach(function (messageType) {
     // drain lets us process stuff as it comes
-    console.log(messageType)
     pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
-    console.log(JSON.stringify(message,null,4))
       try {
         if (message.value.content) { 
           // attempt to decrypt message
           try {
-            console.log(message.value.content)
             sbot.private.unbox(message.value.content, function(err,msg) {
               processDecryptedMessage(err,msg,message.value.author)
             }) 
