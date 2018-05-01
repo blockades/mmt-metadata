@@ -36,19 +36,6 @@ var payments = {}
 
 
 
-function addPaymentComment(msg, author) {
-    
-    // if we dont yet have this entry, define it
-    if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
-    if (typeof payments[msg.content.key].comments === 'undefined')  payments[msg.content.key].comments = []
-    
-
-    // todo: check the comment doesnt already exist
-    payments[msg.content.key].comments.push( {
-      author: author,
-      comment: msg.content.comment
-    } )
-}  
 
 function publishMessage(sbot, messageType, content, recipients) {
   sbot.private.publish({ type: messageType, content: content }, recipients, function (err, msg) {
@@ -125,7 +112,6 @@ function writeDbLocally() {
 function processDecryptedMessage(err, msg,author) {
 
     if (msg) {    
-      console.log('decrypted a message')
     
       if (verbose) console.log('Found a ', msg.type)
       
@@ -156,7 +142,41 @@ function processDecryptedMessage(err, msg,author) {
     }
 }
 
+function addPaymentComment(msg, author) {
+    
+    // if we dont yet have this entry, define it
+    if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
+    if (typeof payments[msg.content.key].comments === 'undefined')  payments[msg.content.key].comments = []
+    
+    // todo: check the comment doesnt already exist
+    payments[msg.content.key].comments.push( {
+      author: author,
+      comment: msg.content.comment
+    } )
+}  
+
 function addExampleData(sbot, recipients) {
+
+  // an example to initiate a wallet.  Note that the recipients for this message 
+  // should be the recipients for all future messages associated with this wallet
+
+  var initWallet {
+    walletName: 'the groovy gang wallet',
+    requiredCosigners: 2,
+    numberofCosigners: 6,
+    xpub: 'xpubblahblah....'
+  }
+
+  publishMessage(sbot, 'initiateMmtMultisigTest', initWallet, recipients)
+
+  // an example of sharing a public key to initiate a wallet   
+  
+  var pubKey {
+    keyOfInitMessageMmtTest: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+    xpub: 'xpubblahblah.....'
+  }
+
+  publishMessage(sbot, 'shareMmtPublicKeyTest', pubKey, recipients)
 
   // an example payment to add to the db
   var payment = {
