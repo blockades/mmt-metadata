@@ -136,7 +136,21 @@ function processDecryptedMessage(err, msg,author) {
         
         case 'addMmtPaymentCommentTest':
           addPaymentComment(msg,author)
-        
+          break
+
+        case 'initiateMmtMultisigTest':
+          //todo:
+          // walletName, requiredCosigners, xpub
+          // - we also need the number of recipients here to as this determines number of
+          // cosigners
+          // - we also need to store the message key as this is the wallet id.
+
+          break 
+      
+        case 'shareMmtPublicKeyTest':
+          // todo
+          // keyOfInitMessageMmtTest, xpub 
+      
       } 
       displayPayments()    
     }
@@ -163,7 +177,6 @@ function addExampleData(sbot, recipients) {
   var initWallet {
     walletName: 'the groovy gang wallet',
     requiredCosigners: 2,
-    numberofCosigners: 6,
     xpub: 'xpubblahblah....'
   }
 
@@ -172,7 +185,8 @@ function addExampleData(sbot, recipients) {
   // an example of sharing a public key to initiate a wallet   
   
   var pubKey {
-    keyOfInitMessageMmtTest: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+    // walletId is the key of the initiateMmtMultisig message as above
+    walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
     xpub: 'xpubblahblah.....'
   }
 
@@ -180,7 +194,7 @@ function addExampleData(sbot, recipients) {
 
   // an example payment to add to the db
   var payment = {
-    
+    walletId: '',
     // the 'key' would be a bitcoin transaction id
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
     rawTransaction: 'a294b83........',
@@ -197,7 +211,8 @@ function addExampleData(sbot, recipients) {
   
   // an example payment comment to add to the db
   var paymentComment = {
-
+    // not sure if wallet is needed here but will keep it for now
+    walletId = '',
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
 
     comment: 'this payment was a mistake'
@@ -237,6 +252,7 @@ ssbClient(function (err, sbot) {
         if (message.value.content) { 
           // attempt to decrypt message
           try {
+            // todo: we also need to pass the recipients and validate them
             sbot.private.unbox(message.value.content, function(err,msg) {
               processDecryptedMessage(err,msg,message.value.author)
             }) 

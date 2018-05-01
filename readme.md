@@ -26,13 +26,12 @@ This is only a proposal!  Its all subject to discussion and change...
 
 #### `initiateMmtMultisigTest` 
 
-This will be published one time per wallet by the person who initiates the wallet and will contain a name for the wallet, the number of cosigners and one bitcoin public key.  The list of recipients for this message will remain the same for all future messages related to this wallet.
+This will be published one time per wallet by the person who initiates the wallet and will contain a name for the wallet, the number of required cosigners and one bitcoin public key.  The list of recipients for this message will remain the same for all future messages related to this wallet, and also defines the number of cosigners.
 Example:
 ```
 content: {
   walletName: 'the groovy gang wallet',
   requiredCosigners: 2,
-  numberofCosigners: 6,
   xpub: 'xpubblahblah....'
 }
 ```
@@ -43,7 +42,7 @@ This will be published once per remaining group member to initiate the wallet.  
 Example:
 ```
 content: {
-  keyOfInitMessageMmtTest: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
   xpub: 'xpubblahblah.....'
 }
 ```
@@ -58,6 +57,7 @@ It could possibly also contain an identifier of the wallet, but it should be pos
 
 ```
 content: {
+  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
   // is the transaction id needed?  it can also be derived from the transaction data
   key: 'd5f2a6a8cd1e8c35466cfec16551', 
   rawTransaction: 'a294b83........',
@@ -73,6 +73,7 @@ This will be published any number of times to add notes and comments to payments
 Example:
 ```
 content: {
+  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
   key: 'd5f2a6a8cd1e8c35466cfec16551', 
   comment: 'this payment was a mistake'
 }
