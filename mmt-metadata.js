@@ -31,10 +31,11 @@ var cosigners = {
     }
 }
 
-
+// this is tempory
 var payments = {}
 
-
+// will be something like wallets[walletId].payments = {}
+var wallets = {}
 
 
 function publishMessage(sbot, messageType, content, recipients) {
@@ -140,21 +141,35 @@ function processDecryptedMessage(err, msg,author) {
 
         case 'initiateMmtMultisigTest':
           //todo:
-          // walletName, requiredCosigners, xpub
           // - we also need the number of recipients here to as this determines number of
           // cosigners
-          // - we also need to store the message key as this is the wallet id.
 
+          //if (typeof wallets[msg.key] === 'undefined') wallets[msg.key] = {}
+          // wallets[msg.key].name = msg.content.walletName
+          // wallets[msg.key].requiredCosigners = msg.content.requiredCosigners
+          //addXpub(msg,author,msg.key)
           break 
       
         case 'shareMmtPublicKeyTest':
           // todo
-          // keyOfInitMessageMmtTest, xpub 
-      
+          // addXpub(msg,author,msg.content.keyOfInitMessageMmtTest)
+          
       } 
       displayPayments()    
     }
 }
+
+
+function addXpub(msg,author,walletId) {
+
+    // todo validate duplicate entries, etc
+
+    // if (typeof wallets[walletId].publicKeys === 'undefined') wallets[walletId].publicKeys = []
+    // wallets[walletId].publicKeys.push( {
+    //   owner: author
+    //   xpub: msg.content.xpub
+    // } )
+}  
 
 function addPaymentComment(msg, author) {
     
