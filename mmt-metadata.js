@@ -161,27 +161,30 @@ function processDecryptedMessage(err, msg,author) {
 
 
 function addXpub(msg,author,walletId) {
-
-    // todo validate duplicate entries, etc
-
-    // if (typeof wallets[walletId].publicKeys === 'undefined') wallets[walletId].publicKeys = []
-    // wallets[walletId].publicKeys.push( {
-    //   owner: author
-    //   xpub: msg.content.xpub
-    // } )
+    
+    var xpubToAdd = {
+       owner: author
+       xpub: msg.content.xpub
+    }
+    
+    if (typeof wallets[walletId].publicKeys === 'undefined') wallets[walletId].publicKeys = []
+    
+    if (wallets[walletId].publicKeys.indexOf(xpubToAdd) === -1) wallets[walletId].publicKeys.push(xpubToAdd)
 }  
 
 function addPaymentComment(msg, author) {
     
     // if we dont yet have this entry, define it
     if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
-    if (typeof payments[msg.content.key].comments === 'undefined')  payments[msg.content.key].comments = []
+    if (typeof payments[msg.content.key].comments === 'undefined') payments[msg.content.key].comments = []
     
-    // todo: check the comment doesnt already exist
-    payments[msg.content.key].comments.push( {
+    var commentToAdd = {
       author: author,
       comment: msg.content.comment
-    } )
+    }
+  
+  if (payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
+    payments[msg.content.key].comments.push(commentToAdd)
 }  
 
 function addExampleData(sbot, recipients) {
