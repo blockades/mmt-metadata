@@ -14,8 +14,8 @@ var fs = require('fs')
 
 var localDbFile = './localdb.json'
 
-// will also include 'initiateMmtMultisigTest','shareMmtPublicKeyTest'
-const messageTypes = ['unsignedMmtPaymentTest','addMmtPaymentCommentTest']
+const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest', 
+                      'unsignedMmtPaymentTest','addMmtPaymentCommentTest']
 
 var verbose = true
 
@@ -32,25 +32,32 @@ var cosigners = {
 }
 
 // this is tempory
-var payments = {}
+//var payments = {}
 
 // will be something like wallets[walletId].payments = {}
 var wallets = {}
 
 
 function publishMessage(sbot, messageType, content, recipients) {
-  sbot.private.publish({ type: messageType, content: content }, recipients, function (err, msg) {
+  
+  // publish an encrypted message
+ 
+  // should recipients be embedded in 'content'?
+  sbot.private.publish({ type: messageType, content: content, recipients: recipients }, recipients, function (err, msg) {
     if (verbose) {
-      console.log('Added ', messageType)
+      console.log('Published: ', messageType)
       console.log(JSON.stringify(msg, null, 4)) 
     }
   })
+
+  // todo: should we also update db in memory and write to file when doing this?
 }
 
 
-function displayPayments() {
+function displayPayments(walletId) {
   // this would be the place to create a snazzy html table
   
+  var payments = wallets[walletId].payments
   // theres gotta be a better way to do this
   // this is really ugly and doesnt work properly
   $("#putStuffHere").html('<table class = "table">\n<tr>\n<th> Date </th>\n<th> Description and comments </th>\n<th> Rate </th>\n<th> Amount </th>\n<th> Recipient(s) </th>\n</tr>\n')
@@ -82,41 +89,53 @@ function displayPayments() {
 }
 
 function readDbLocally() {
-  
+  if (verbose) console.log('reading from local file.') 
   // for now just use a file as db is not likely to get big
 
-  var paymentsFromFile = {}
+  var dataFromFile = {}
 
-  // actually this should be async
   if (fs.existsSync(localDbFile)) {
 
-    paymentsFromFile = JSON.parse(fs.readFileSync(localDbFile))
+    dataFromFile = JSON.parse(fs.readFileSync(localDbFile))
 
     // todo: this wont work, it will clobber arrays of cosigners and comments.
     // this information will need to be parsed the same as the stuff coming from ssb
-    Object.keys(paymentsFromFile).forEach(function(key) {
-      payments[key] = paymentsFromFile[key]
-    } )
+    //Object.keys(paymentsFromFile).forEach(function(key) {
+    //  payments[key] = paymentsFromFile[key]
+    //} )
 
     //Object.keys(payments).forEach(key => result[key] = payments[key]);
 
   } 
-  return result
+  return dataFromFile
 }
 
 function writeDbLocally() {
-  if (verbose) console.log('writing locally')
-  fs.writeFileSync(localDbFile,JSON.stringify(payments))
+  if (verbose) console.log('writing to local file')
+  
+  // should use deepmerge
+  fs.writeFileSync(localDbFile,JSON.stringify(wallets))
   
 }
 
-function processDecryptedMessage(err, msg,author) {
+function processDecryptedMessage(err, msg,author, ssbKey) {
 
     if (msg) {    
     
-      if (verbose) console.log('Found a ', msg.type)
+      if (verbose) console.log('Found a ', msg.type, ' with key:', ssbKey) 
+      //if (verbose) console.log(JSON.stringify(msg,null,4))
       
-      console.log(JSON.stringify(msg,null,4))
+      var walletId = ''
+
+      if (msg.type === 'initiateMmtMultisigTest')  {
+        walletId = ssbKey
+      } else {
+        walletId = msg.content.walletId
+      }
+
+      // if we dont yet have this record, create it
+      if (typeof wallets[walletId] === 'undefined') wallets[walletId] = {}
+      
       switch (msg.type) {
         case 'unsignedMmtPaymentTest':
           // todo: validate that we dont have too many cosigners
@@ -128,15 +147,15 @@ function processDecryptedMessage(err, msg,author) {
           // then if there are still more required cosigners, re-publish the 
           // transaction to ssb, if not broadcast transaction.
           
-          if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
+          if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') wallets[walletId].payments[msg.content.key] = {}
 
-          if (msg.content.comment) addPaymentComment(msg,author) 
-          if (msg.content.rate) payments[msg.content.key].rate = msg.content.rate
+          if (msg.content.comment) addPaymentComment(msg, author, walletId) 
+          if (msg.content.rate) wallets[walletId].payments[msg.content.key].rate = msg.content.rate
           
           break
         
         case 'addMmtPaymentCommentTest':
-          addPaymentComment(msg,author)
+          addPaymentComment(msg,author,walletId)
           break
 
         case 'initiateMmtMultisigTest':
@@ -144,24 +163,26 @@ function processDecryptedMessage(err, msg,author) {
           // - we also need the number of recipients here to as this determines number of
           // cosigners
 
-          //if (typeof wallets[msg.key] === 'undefined') wallets[msg.key] = {}
-          // wallets[msg.key].name = msg.content.walletName
-          // wallets[msg.key].requiredCosigners = msg.content.requiredCosigners
-          //addXpub(msg,author,msg.key)
+          if (typeof wallets[ssbKey] === 'undefined') wallets[ssbKey] = {}
+          wallets[ssbKey].name = msg.content.walletName
+          wallets[ssbKey].requiredCosigners = msg.content.requiredCosigners
+          addXpub(msg,author,ssbKey,true)
           break 
       
         case 'shareMmtPublicKeyTest':
-          // todo
-          // addXpub(msg,author,msg.content.keyOfInitMessageMmtTest)
+          if (typeof wallets[msg.content.walletId] === 'undefined') wallets[walletId] = {}
+          addXpub(msg, author, msg.content.walletId,false)
           
       } 
-      displayPayments()    
+      displayPayments(walletId)    
+      // actually we should only do this once we've parse all entries
+      writeDbLocally()    
     }
 }
 
 
-function addXpub(msg,author,walletId) {
-    
+function addXpub(msg,author,walletId,initiator) {
+    // todo: if this is the initiator, make it the first item in the array
     var xpubToAdd = {
        owner: author,
        xpub: msg.content.xpub
@@ -169,22 +190,32 @@ function addXpub(msg,author,walletId) {
     
     if (typeof wallets[walletId].publicKeys === 'undefined') wallets[walletId].publicKeys = []
     
-    if (wallets[walletId].publicKeys.indexOf(xpubToAdd) === -1) wallets[walletId].publicKeys.push(xpubToAdd)
+    // only add if unique
+    if (wallets[walletId].publicKeys.indexOf(xpubToAdd) === -1) {
+      
+      // if this is the initiators public key, make sure it is the first item in the array
+      if (initiator) {
+        wallets[walletId].publicKeys = [xpubToAdd].concat(wallets[walletId].publicKeys)
+      } else {
+        wallets[walletId].publicKeys.push(xpubToAdd)
+      }    
+    }
 }  
 
-function addPaymentComment(msg, author) {
+function addPaymentComment(msg, author,walletId) {
     
     // if we dont yet have this entry, define it
-    if (typeof payments[msg.content.key] === 'undefined') payments[msg.content.key] = {}
-    if (typeof payments[msg.content.key].comments === 'undefined') payments[msg.content.key].comments = []
+    if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') wallets[walletId].payments[msg.content.key] = {}
+    if (typeof wallets[walletId].payments[msg.content.key].comments === 'undefined') wallets[walletId].payments[msg.content.key].comments = []
     
     var commentToAdd = {
       author: author,
       comment: msg.content.comment
     }
   
-  if (payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
-    payments[msg.content.key].comments.push(commentToAdd)
+  // only add if unique
+  if (wallets[walletId].payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
+    wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
 function addExampleData(sbot, recipients) {
@@ -198,13 +229,14 @@ function addExampleData(sbot, recipients) {
     xpub: 'xpubblahblah....'
   }
 
-  publishMessage(sbot, 'initiateMmtMultisigTest', initWallet, recipients)
+  //publishMessage(sbot, 'initiateMmtMultisigTest', initWallet, recipients)
 
   // an example of sharing a public key to initiate a wallet   
   
   var pubKey = {
     // walletId is the key of the initiateMmtMultisig message as above
-    walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+
+    walletId: '%2idi0F1cCzjhHKSh8gymzvP+LDiXbB/dv2x7mt47n5Q=.sha256',
     xpub: 'xpubblahblah.....'
   }
 
@@ -212,7 +244,7 @@ function addExampleData(sbot, recipients) {
 
   // an example payment to add to the db
   var payment = {
-    walletId: '',
+    walletId: '%2idi0F1cCzjhHKSh8gymzvP+LDiXbB/dv2x7mt47n5Q=.sha256',
     // the 'key' would be a bitcoin transaction id
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
     rawTransaction: 'a294b83........',
@@ -229,8 +261,8 @@ function addExampleData(sbot, recipients) {
   
   // an example payment comment to add to the db
   var paymentComment = {
-    // not sure if wallet is needed here but will keep it for now
-    walletId: '',
+    // not sure if wallet id is needed here but will keep it for now
+    walletId: '%2idi0F1cCzjhHKSh8gymzvP+LDiXbB/dv2x7mt47n5Q=.sha256',
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
 
     comment: 'this payment was a mistake'
@@ -261,7 +293,7 @@ ssbClient(function (err, sbot) {
   // note that if this is run multiple times it will create multiply identical entries
   //addExampleData(sbot, recipients)
   
-  //payments = readDbLocally()
+  wallets = readDbLocally()
 
   messageTypes.forEach(function (messageType) {
     // drain lets us process stuff as it comes
@@ -270,9 +302,10 @@ ssbClient(function (err, sbot) {
         if (message.value.content) { 
           // attempt to decrypt message
           try {
+            console.log(JSON.stringify(message,null,4))
             // todo: we also need to pass the recipients and validate them
-            sbot.private.unbox(message.value.content, function(err,msg) {
-              processDecryptedMessage(err,msg,message.value.author)
+            sbot.private.unbox(message.value.content, function(err, msg) {
+              processDecryptedMessage(err, msg, message.value.author, message.key)
             }) 
           } catch(e) {
             console.error('error while decrypting',e)
