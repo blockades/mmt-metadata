@@ -156,9 +156,14 @@ function addXpub(msg,author,walletId,initiator) {
     
     if (typeof wallets[walletId].publicKeys === 'undefined') wallets[walletId].publicKeys = []
     
+    var alreadyExists = false
     // only add if unique
-    if (wallets[walletId].publicKeys.indexOf(xpubToAdd) === -1) {
-      
+    wallets[walletId].publicKeys.forEach(function (item) {
+       if (item.xpub === xpubToAdd.xpub) alreadyExists = true
+    } )
+    
+    //if (wallets[walletId].publicKeys.indexOf(xpubToAdd) === -1) {
+    if (!alreadyExists) {  
       // if this is the initiators public key, make sure it is the first item in the array
       if (initiator) {
         wallets[walletId].publicKeys = [xpubToAdd].concat(wallets[walletId].publicKeys)
@@ -179,9 +184,18 @@ function addPaymentComment(msg, author,walletId) {
       comment: msg.content.comment
     }
   
-  // only add if unique
-  if (wallets[walletId].payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
-    wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
+    var alreadyExists = false
+
+    // todo: improve this by having a general function using object.keys 
+    //       or using one from a library like deep compare
+    // ---only add if unique
+    wallets[walletId].payments[msg.content.key].comments.forEach(function (item) {
+      if ((item.author == commentToAdd.xpub) && (item.comment == commentToAdd.comment  )) alreadyExists = true
+      if (alreadyExists) console.log('duplicate!') 
+    } )
+    //if (wallets[walletId].payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
+    if (!alreadyExists)
+      wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
 function addExampleData(sbot, recipients) {
