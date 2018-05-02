@@ -20,18 +20,6 @@ const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest',
 var verbose = true
 
 
-// this is tempory, it will be associated with a particular wallet
-var cosigners = {
-
-    // this is my own public key (which one could get using sbot.whoami)
-    // or create new ones with ssb-keys
-    // you wont be able to decrypt messages made using this script without your
-    // own public key
-
-    '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519': {
-      name: 'alice'
-    }
-}
 
 var wallets = {}
 
@@ -125,12 +113,13 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
           break
 
         case 'initiateMmtMultisigTest':
-          //todo:
-          // - we also need the number of recipients here to as this determines number of
-          // cosigners
 
           if (typeof wallets[ssbKey] === 'undefined') wallets[ssbKey] = {}
           wallets[ssbKey].name = msg.content.walletName
+          
+          wallets[ssbKey].cosigners = msg.recipients
+          // note number of cosigners is wallet[ssbKey].cosigners.length
+          // todo: validate requiredCosigners < cosigners.length
           wallets[ssbKey].requiredCosigners = msg.content.requiredCosigners
           addXpub(msg,author,ssbKey,true)
           break 
@@ -190,16 +179,29 @@ function addPaymentComment(msg, author,walletId) {
     //       or using one from a library like deep compare
     // ---only add if unique
     wallets[walletId].payments[msg.content.key].comments.forEach(function (item) {
-      if ((item.author == commentToAdd.xpub) && (item.comment == commentToAdd.comment  )) alreadyExists = true
-      if (alreadyExists) console.log('duplicate!') 
+      if ((item.author === commentToAdd.author) && (item.comment === commentToAdd.comment  )) alreadyExists = true
     } )
     //if (wallets[walletId].payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
     if (!alreadyExists)
       wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
-function addExampleData(sbot, recipients) {
+function addExampleData(sbot) {
 
+  var cosigners = {
+
+    // this is my own public key (which one could get using sbot.whoami)
+    // or create new a new one with ssb-keys
+    // you wont be able to decrypt messages made using this script without 
+    // changing this to your own public key
+
+    '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519': {
+      name: 'alice'
+    }
+  }
+  
+  var recipients = Object.keys(cosigners)
+  
   // an example to initiate a wallet.  Note that the recipients for this message 
   // should be the recipients for all future messages associated with this wallet
 
@@ -220,7 +222,7 @@ function addExampleData(sbot, recipients) {
     xpub: 'xpubblahblah.....'
   }
 
-  publishMessage(sbot, 'shareMmtPublicKeyTest', pubKey, recipients)
+  //publishMessage(sbot, 'shareMmtPublicKeyTest', pubKey, recipients)
 
   // an example payment to add to the db
   var payment = {
@@ -298,7 +300,6 @@ ssbClient(function (err, sbot) {
   // there can be a maximum of 7, which means if we wanted more we need multiple 
   // messages
   
-  var recipients = Object.keys(cosigners)
  
   // todo: sort out this callback function
   //sbot.whoami( function(err,msg) {
@@ -309,7 +310,7 @@ ssbClient(function (err, sbot) {
 
   // uncomment this line to add example data to scuttlebutt 
   // note that if this is run multiple times it will create multiply identical entries
-  //addExampleData(sbot, recipients)
+  //addExampleData(sbot)
   
   wallets = readDbLocally()
 
@@ -317,28 +318,29 @@ ssbClient(function (err, sbot) {
     // drain lets us process stuff as it comes
     pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
       try {
-        if (message.value.content) { 
-          // attempt to decrypt message
-          try {
-            console.log(JSON.stringify(message,null,4))
-            // todo: we also need to pass the recipients and validate them
-            sbot.private.unbox(message.value.content, function(err, msg) {
-              processDecryptedMessage(err, msg, message.value.author, message.key)
-            }) 
-          } catch(e) {
-            console.error('error while decrypting',e)
+          if (message.value)
+            if (message.value.content) { 
+              // attempt to decrypt message
+              try {
+                //console.log(JSON.stringify(message,null,4))
+                // todo: we also need to pass the recipients and validate them
+                sbot.private.unbox(message.value.content, function(err, msg) {
+                  processDecryptedMessage(err, msg, message.value.author, message.key)
+                }) 
+              } catch(e) {
+                console.error('error while decrypting',e)
+              }
+
           }
-
-        }
       } catch(e) {
-        //displayPayments()
-        //writeDbLocally()    
+        console.error(e)
 
-         // $("#putStuffHere").append("<p class='payment'> finished</p>")
-        //sbot.close()
-        // why?
-        return false
       }
+    }, function(err) {
+      if (err) console.error(err)
+      // this will only be reached if live = false.  which gives us a chance to tidy
+      // things up but then we dont find new messages
+      //sbot.close()
     }))
   } )
 })
