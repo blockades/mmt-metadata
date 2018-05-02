@@ -19,6 +19,8 @@ const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest',
 
 var verbose = true
 
+
+// this is tempory, it will be associated with a particular wallet
 var cosigners = {
 
     // this is my own public key (which one could get using sbot.whoami)
@@ -31,10 +33,6 @@ var cosigners = {
     }
 }
 
-// this is tempory
-//var payments = {}
-
-// will be something like wallets[walletId].payments = {}
 var wallets = {}
 
 
@@ -54,39 +52,6 @@ function publishMessage(sbot, messageType, content, recipients) {
 }
 
 
-function displayPayments(walletId) {
-  // this would be the place to create a snazzy html table
-  
-  var payments = wallets[walletId].payments
-  // theres gotta be a better way to do this
-  // this is really ugly and doesnt work properly
-  $("#putStuffHere").html('<table class = "table">\n<tr>\n<th> Date </th>\n<th> Description and comments </th>\n<th> Rate </th>\n<th> Amount </th>\n<th> Recipient(s) </th>\n</tr>\n')
-  
-  Object.keys(payments).forEach(function( index) {
-
-    $("#putStuffHere").append("<tr>")
-    $("#putStuffHere").append("<td>somedate</td>")
-    
-    $("#putStuffHere").append("<td>")
-    payments[index].comments.forEach(function(comment){
-
-      $("#putStuffHere").append(comment.comment)
-    })
-
-    $("#putStuffHere").append("</td>")
-    $("#putStuffHere").append("<td>" + payments[index].rate + "</td>")
-    $("#putStuffHere").append("<td>someamount</td>")
-    $("#putStuffHere").append("<td>somerecipients</td>")
-    $("#putStuffHere").append("</tr>")
-  } )
-
-  $("#putStuffHere").append("</table>")
-
-  if (verbose) {
-    console.log('payments now looks like this:')
-    console.log(JSON.stringify(payments, null, 4))
-  } 
-}
 
 function readDbLocally() {
   if (verbose) console.log('reading from local file.') 
@@ -114,7 +79,7 @@ function writeDbLocally() {
   if (verbose) console.log('writing to local file')
   
   // should use deepmerge
-  fs.writeFileSync(localDbFile,JSON.stringify(wallets))
+  fs.writeFileSync(localDbFile,JSON.stringify(wallets,null,4))
   
 }
 
@@ -126,7 +91,6 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
       //if (verbose) console.log(JSON.stringify(msg,null,4))
       
       var walletId = ''
-
       if (msg.type === 'initiateMmtMultisigTest')  {
         walletId = ssbKey
       } else {
@@ -147,6 +111,7 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
           // then if there are still more required cosigners, re-publish the 
           // transaction to ssb, if not broadcast transaction.
           
+          if (typeof wallets[walletId].payments === 'undefined') wallets[walletId].payments = {}
           if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') wallets[walletId].payments[msg.content.key] = {}
 
           if (msg.content.comment) addPaymentComment(msg, author, walletId) 
@@ -155,6 +120,7 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
           break
         
         case 'addMmtPaymentCommentTest':
+          if (typeof wallets[walletId].payments === 'undefined') wallets[walletId].payments = {}
           addPaymentComment(msg,author,walletId)
           break
 
@@ -272,6 +238,44 @@ function addExampleData(sbot, recipients) {
   publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients) 
 
 }
+
+function displayPayments(walletId) {
+  // this would be the place to create a snazzy html table
+  if (wallets[walletId].payments) {
+    var payments = wallets[walletId].payments
+    // theres gotta be a better way to do this
+    // this is really ugly and doesnt work properly
+    $("#putStuffHere").html('<table class = "table">\n<tr>\n<th> Date </th>\n<th> Description and comments </th>\n<th> Rate </th>\n<th> Amount </th>\n<th> Recipient(s) </th>\n</tr>\n')
+    
+    Object.keys(payments).forEach(function( index) {
+
+      $("#putStuffHere").append("<tr>")
+      $("#putStuffHere").append("<td>somedate</td>")
+      
+      $("#putStuffHere").append("<td>")
+      payments[index].comments.forEach(function(comment){
+
+        $("#putStuffHere").append(comment.comment)
+      })
+
+      $("#putStuffHere").append("</td>")
+      $("#putStuffHere").append("<td>" + payments[index].rate + "</td>")
+      $("#putStuffHere").append("<td>someamount</td>")
+      $("#putStuffHere").append("<td>somerecipients</td>")
+      $("#putStuffHere").append("</tr>")
+    } )
+
+    $("#putStuffHere").append("</table>")
+
+    if (verbose) {
+      console.log('payments now looks like this:')
+      console.log(JSON.stringify(payments, null, 4))
+    }
+  } else {
+    console.error('cant display payments as no payments associated with wallet')
+  }
+}
+
 
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
