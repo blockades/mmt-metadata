@@ -163,7 +163,7 @@ function processDecryptedMessage(err, msg,author) {
 function addXpub(msg,author,walletId) {
     
     var xpubToAdd = {
-       owner: author
+       owner: author,
        xpub: msg.content.xpub
     }
     
@@ -192,7 +192,7 @@ function addExampleData(sbot, recipients) {
   // an example to initiate a wallet.  Note that the recipients for this message 
   // should be the recipients for all future messages associated with this wallet
 
-  var initWallet {
+  var initWallet = {
     walletName: 'the groovy gang wallet',
     requiredCosigners: 2,
     xpub: 'xpubblahblah....'
@@ -202,7 +202,7 @@ function addExampleData(sbot, recipients) {
 
   // an example of sharing a public key to initiate a wallet   
   
-  var pubKey {
+  var pubKey = {
     // walletId is the key of the initiateMmtMultisig message as above
     walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
     xpub: 'xpubblahblah.....'
@@ -230,7 +230,7 @@ function addExampleData(sbot, recipients) {
   // an example payment comment to add to the db
   var paymentComment = {
     // not sure if wallet is needed here but will keep it for now
-    walletId = '',
+    walletId: '',
     key: 'd5f2a6a8cd1e8c35466cfec16551', 
 
     comment: 'this payment was a mistake'
