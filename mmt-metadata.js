@@ -186,20 +186,17 @@ function addPaymentComment(msg, author,walletId) {
       wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
-function addExampleData(sbot) {
+function addExampleData(sbot,me) {
 
-  var cosigners = {
-
-    // this is my own public key (which one could get using sbot.whoami)
-    // or create new a new one with ssb-keys
-    // you wont be able to decrypt messages made using this script without 
-    // changing this to your own public key
-
-    '@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519': {
-      name: 'alice'
-    }
+  // todo: could we get the name from ssb about message?
+  var cosigners = {}
+  cosigners[me] = {
+    name: 'alice'
   }
-  
+
+  // In order for messages to be encrypted we need to specify recipients
+  // there can be a maximum of 7, which means if we wanted more we need multiple 
+  // messages (todo: implement this of verify recipients.length < 8)
   var recipients = Object.keys(cosigners)
   
   // an example to initiate a wallet.  Note that the recipients for this message 
@@ -296,51 +293,51 @@ function displayPayments(walletId) {
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
 
-  // In order for messages to be encrypted we need to specify recipients
-  // there can be a maximum of 7, which means if we wanted more we need multiple 
-  // messages
   
- 
-  // todo: sort out this callback function
-  //sbot.whoami( function(err,msg) {
-    //console.log('whoami',msg)
-  //  recipients = [ msg.id ]
-  //})
+  // this assumes we already have an ssb identity. 
+  // if not we need to create one wiht ssb-keys (todo)
+  sbot.whoami( function(err,msg) {
+    if (err) console.error('Error running whoami.', err)
 
-
-  // uncomment this line to add example data to scuttlebutt 
-  // note that if this is run multiple times it will create multiply identical entries
-  //addExampleData(sbot)
+    var me = msg.id  
   
-  wallets = readDbLocally()
+    if (verbose) console.log('whoami: ',me)
 
-  messageTypes.forEach(function (messageType) {
-    // drain lets us process stuff as it comes
-    pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
-      try {
-          if (message.value)
-            if (message.value.content) { 
-              // attempt to decrypt message
-              try {
-                //console.log(JSON.stringify(message,null,4))
-                // todo: we also need to pass the recipients and validate them
-                sbot.private.unbox(message.value.content, function(err, msg) {
-                  processDecryptedMessage(err, msg, message.value.author, message.key)
-                }) 
-              } catch(e) {
-                console.error('error while decrypting',e)
-              }
 
-          }
-      } catch(e) {
-        console.error(e)
+    // uncomment this line to add example data to scuttlebutt 
+    // note that if this is run multiple times it will create multiply identical entries
+    //addExampleData(sbot, me)
+    
+    wallets = readDbLocally()
 
-      }
-    }, function(err) {
-      if (err) console.error(err)
-      // this will only be reached if live = false.  which gives us a chance to tidy
-      // things up but then we dont find new messages
-      //sbot.close()
-    }))
+    messageTypes.forEach(function (messageType) {
+      // drain lets us process stuff as it comes
+      pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
+        try {
+            if (message.value)
+              if (message.value.content) { 
+                // attempt to decrypt message
+                try {
+                  //console.log(JSON.stringify(message,null,4))
+                  // todo: we also need to pass the recipients and validate them
+                  sbot.private.unbox(message.value.content, function(err, msg) {
+                    processDecryptedMessage(err, msg, message.value.author, message.key)
+                  }) 
+                } catch(e) {
+                  console.error('error while decrypting',e)
+                }
+
+            }
+        } catch(e) {
+          console.error(e)
+
+        }
+      }, function(err) {
+        if (err) console.error(err)
+        // this will only be reached if live = false.  which gives us a chance to tidy
+        // things up but then we dont find new messages
+        //sbot.close()
+      }))
+    } )
   } )
 })
