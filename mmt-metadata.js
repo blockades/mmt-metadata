@@ -114,7 +114,13 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
 
         case 'initiateMmtMultisigTest':
 
-          if (typeof wallets[ssbKey] === 'undefined') wallets[ssbKey] = {}
+          if (typeof wallets[ssbKey] === 'undefined') {
+            // TODO:
+            // this wallet we dont yet know of, but we are invited to join
+            // since we are a recipient.  so this is the place do choose to
+            // accept the inivitation, generate a public key and publish it
+            wallets[ssbKey] = {}
+          }
           wallets[ssbKey].name = msg.content.walletName
           
           wallets[ssbKey].cosigners = msg.recipients
@@ -127,7 +133,11 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
         case 'shareMmtPublicKeyTest':
           if (typeof wallets[msg.content.walletId] === 'undefined') wallets[walletId] = {}
           addXpub(msg, author, msg.content.walletId,false)
-          
+          // TODO:
+          // check if the wallet is now 'complete', that is 
+          // if (wallets[walletId].publicKeys.length === msg.recipients.length)
+          // and if it is do something like wallets[walletId].isActive = true
+          // but why are these stored separetly?  fix this
       } 
       displayPayments(walletId)    
       // actually we should only do this once we've parse all entries
@@ -137,7 +147,7 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
 
 
 function addXpub(msg,author,walletId,initiator) {
-    // todo: if this is the initiator, make it the first item in the array
+    
     var xpubToAdd = {
        owner: author,
        xpub: msg.content.xpub
@@ -309,6 +319,9 @@ ssbClient(function (err, sbot) {
     //addExampleData(sbot, me)
     
     wallets = readDbLocally()
+
+    // todo:  run once with live:false, to find wallets.  then present choice of found 
+    // wallets or 'create new'
 
     messageTypes.forEach(function (messageType) {
       // drain lets us process stuff as it comes

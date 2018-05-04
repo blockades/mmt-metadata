@@ -81,9 +81,20 @@ content: {
 }
 ```
 
+### Installation and dependencies
 
+```
+npm install
+```
+sbot must be running.  Either you will need to be running an ssb client with sbot embedded such as Patchwork, or install sbot and run `sbot server`
+
+To run:
+```
+npm start
+```
 
 ### Relevant resources
 
 * [scuttlebot api docs](https://github.com/ssbc/scuttlebot/blob/master/api.md)
 * [pull-stream docs](https://pull-stream.github.io/)
+* [bitcoinjs-lib](https://github.com/bitcoinjs/bitcoinjs-lib)
