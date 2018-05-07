@@ -29,7 +29,8 @@ function publishMessage(sbot, messageType, content, recipients) {
   // publish an encrypted message
  
   // should recipients be embedded in 'content'?
-  sbot.private.publish({ type: messageType, content: content, recipients: recipients }, recipients, function (err, msg) {
+  sbot.private.publish({ type: messageType, content: content, recipients: recipients }
+    , recipients, function (err, msg) {
     if (verbose) {
       console.log('Published: ', messageType)
       console.log(JSON.stringify(msg, null, 4)) 
@@ -99,16 +100,20 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
           // then if there are still more required cosigners, re-publish the 
           // transaction to ssb, if not broadcast transaction.
           
-          if (typeof wallets[walletId].payments === 'undefined') wallets[walletId].payments = {}
-          if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') wallets[walletId].payments[msg.content.key] = {}
+          if (typeof wallets[walletId].payments === 'undefined') 
+            wallets[walletId].payments = {}
+          if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') 
+            wallets[walletId].payments[msg.content.key] = {}
 
           if (msg.content.comment) addPaymentComment(msg, author, walletId) 
-          if (msg.content.rate) wallets[walletId].payments[msg.content.key].rate = msg.content.rate
+          if (msg.content.rate) 
+            wallets[walletId].payments[msg.content.key].rate = msg.content.rate
           
           break
         
         case 'addMmtPaymentCommentTest':
-          if (typeof wallets[walletId].payments === 'undefined') wallets[walletId].payments = {}
+          if (typeof wallets[walletId].payments === 'undefined') 
+            wallets[walletId].payments = {}
           addPaymentComment(msg,author,walletId)
           break
 
@@ -131,7 +136,8 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
           break 
       
         case 'shareMmtPublicKeyTest':
-          if (typeof wallets[msg.content.walletId] === 'undefined') wallets[walletId] = {}
+          if (typeof wallets[msg.content.walletId] === 'undefined') 
+            wallets[walletId] = {}
           addXpub(msg, author, msg.content.walletId,false)
           // TODO:
           // check if the wallet is now 'complete', that is 
@@ -139,9 +145,9 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
           // and if it is do something like wallets[walletId].isActive = true
           // but why are these stored separetly?  fix this
       } 
+      
       displayPayments(walletId)    
-      // actually we should only do this once we've parse all entries
-      writeDbLocally()    
+      writeDbLocally() 
     }
 }
 
@@ -153,7 +159,8 @@ function addXpub(msg,author,walletId,initiator) {
        xpub: msg.content.xpub
     }
     
-    if (typeof wallets[walletId].publicKeys === 'undefined') wallets[walletId].publicKeys = []
+    if (typeof wallets[walletId].publicKeys === 'undefined') 
+      wallets[walletId].publicKeys = []
     
     var alreadyExists = false
     // only add if unique
@@ -175,8 +182,10 @@ function addXpub(msg,author,walletId,initiator) {
 function addPaymentComment(msg, author,walletId) {
     
     // if we dont yet have this entry, define it
-    if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') wallets[walletId].payments[msg.content.key] = {}
-    if (typeof wallets[walletId].payments[msg.content.key].comments === 'undefined') wallets[walletId].payments[msg.content.key].comments = []
+    if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') 
+      wallets[walletId].payments[msg.content.key] = {}
+    if (typeof wallets[walletId].payments[msg.content.key].comments === 'undefined') 
+      wallets[walletId].payments[msg.content.key].comments = []
     
     var commentToAdd = {
       author: author,
@@ -189,7 +198,8 @@ function addPaymentComment(msg, author,walletId) {
     //       or using one from a library like deep compare
     // ---only add if unique
     wallets[walletId].payments[msg.content.key].comments.forEach(function (item) {
-      if ((item.author === commentToAdd.author) && (item.comment === commentToAdd.comment  )) alreadyExists = true
+      if ((item.author === commentToAdd.author) && (item.comment === commentToAdd.comment  )) 
+        alreadyExists = true
     } )
     //if (wallets[walletId].payments[msg.content.key].comments.indexOf(commentToAdd) === -1) 
     if (!alreadyExists)
@@ -199,6 +209,7 @@ function addPaymentComment(msg, author,walletId) {
 function addExampleData(sbot,me) {
 
   // todo: could we get the name from ssb about message?
+  // using ssb-about? and maybe avatar,etc
   var cosigners = {}
   cosigners[me] = {
     name: 'alice'
@@ -266,29 +277,29 @@ function displayPayments(walletId) {
   // this would be the place to create a snazzy html table
   if (wallets[walletId].payments) {
     var payments = wallets[walletId].payments
-    // theres gotta be a better way to do this
-    // this is really ugly and doesnt work properly
-    $("#putStuffHere").html('<table class = "table">\n<tr>\n<th> Date </th>\n<th> Description and comments </th>\n<th> Rate </th>\n<th> Amount </th>\n<th> Recipient(s) </th>\n</tr>\n')
     
+    $("#paymentsTbody").html($(".unfilled").clone()) 
+
     Object.keys(payments).forEach(function( index) {
-
-      $("#putStuffHere").append("<tr>")
-      $("#putStuffHere").append("<td>somedate</td>")
-      
-      $("#putStuffHere").append("<td>")
-      payments[index].comments.forEach(function(comment){
-
-        $("#putStuffHere").append(comment.comment)
+    
+      var commentList = ""  
+      payments[index].comments.forEach(function(comment){    
+          // todo: resolve alias for comment.author and add it here
+          commentList += "<p>"
+          commentList += comment.comment 
+          commentList += "</p>"
       })
 
-      $("#putStuffHere").append("</td>")
-      $("#putStuffHere").append("<td>" + payments[index].rate + "</td>")
-      $("#putStuffHere").append("<td>someamount</td>")
-      $("#putStuffHere").append("<td>somerecipients</td>")
-      $("#putStuffHere").append("</tr>")
+      $(".unfilled").clone()
+        .find(".date").text("dateFromBlockchain").end()
+        .find(".comment").html(commentList).end()
+        .find(".rate").text(payments[index].rate).end()
+        .find(".amount").text("amountFromBlockchain").end()
+        .find(".recipients").text("recipeintsFromBlockchain").end()
+        .attr("class","index")
+      .insertAfter(".unfilled")
     } )
 
-    $("#putStuffHere").append("</table>")
 
     if (verbose) {
       console.log('payments now looks like this:')
@@ -322,10 +333,12 @@ ssbClient(function (err, sbot) {
 
     // todo:  run once with live:false, to find wallets.  then present choice of found 
     // wallets or 'create new'
-
+    var count = 0
     messageTypes.forEach(function (messageType) {
       // drain lets us process stuff as it comes
-      pull(sbot.messagesByType({ live: true, type: messageType }), pull.drain(function (message) {
+      pull(sbot.messagesByType({ live: false, type: messageType })
+        , pull.drain(function (message) {
+        
         try {
             if (message.value)
               if (message.value.content) { 
@@ -349,6 +362,13 @@ ssbClient(function (err, sbot) {
         if (err) console.error(err)
         // this will only be reached if live = false.  which gives us a chance to tidy
         // things up but then we dont find new messages
+        // count++
+        // if (count === messageTypes.length) {
+        //   writeDbLocally() 
+        //   // for now just use the first wallet 
+        //   var walletId = Object.keys(wallets)[0]
+        //   if (walletId) displayPayments(walletId)    
+        // }
         //sbot.close()
       }))
     } )
