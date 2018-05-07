@@ -28,7 +28,7 @@ function publishMessage(sbot, messageType, content, recipients) {
   
   // publish an encrypted message
  
-  // should recipients be embedded in 'content'?
+  // recipients are embedded in 'content'
   sbot.private.publish({ type: messageType, content: content, recipients: recipients }
     , recipients, function (err, msg) {
     if (verbose) {
@@ -78,7 +78,8 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
     
       if (verbose) console.log('Found a ', msg.type, ' with key:', ssbKey) 
       //if (verbose) console.log(JSON.stringify(msg,null,4))
-      
+     
+      // determine id for wallet
       var walletId = ''
       if (msg.type === 'initiateMmtMultisigTest')  {
         walletId = ssbKey

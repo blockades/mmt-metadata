@@ -1,0 +1,39 @@
+{
+    "%2idi0F1cCzjhHKSh8gymzvP+LDiXbB/dv2x7mt47n5Q=.sha256": {
+        "name": "the groovy gang wallet",
+        "requiredCosigners": 2,
+        "publicKeys": [
+            {
+                "owner": "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519",
+                "xpub": "xpubblahblah...."
+            }
+        ],
+        "payments": {
+            "d5f2a6a8cd1e8c35466cfec16551": {
+                "comments": [
+                    {
+                        "author": "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519",
+                        "comment": "bought a new pencil sharpener"
+                    },
+                    {
+                        "author": "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519",
+                        "comment": "this payment was a mistake"
+                    }
+                ],
+                "rate": 5000
+            },
+            "d5fsdffd1e8c35466cfe45dg": {
+                "comments": [
+                    {
+                        "author": "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519",
+                        "comment": "bought a cheese grater"
+                    }
+                ],
+                "rate": 5560
+            }
+        },
+        "cosigners": [
+            "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519"
+        ]
+    }
+}
