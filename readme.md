@@ -93,8 +93,25 @@ To run:
 npm start
 ```
 
+### Integration with electrum
+
+Setting up electrum is not yet automated, we will need to do:
+
+```
+electrum --testnet setconfig rpcport 8888
+electrum --testnet setconfig rpcuser spinach
+electrum --testnet setconfig rpcpassword test
+electrum --testnet daemon start 
+electrum --testnet -w ~/.electrum/testnet/wallets/walletfile daemon load_wallet 
+```
+and not to forget afterwards
+```
+electrum --testnet daemon stop 
+```
+
 ### Relevant resources
 
 * [scuttlebot api docs](https://github.com/ssbc/scuttlebot/blob/master/api.md)
 * [pull-stream docs](https://pull-stream.github.io/)
 * [bitcoinjs-lib](https://github.com/bitcoinjs/bitcoinjs-lib)
+* [electrum json rpc interface](http://docs.electrum.org/en/latest/merchant.html#jsonrpc-interface)

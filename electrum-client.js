@@ -36,13 +36,17 @@ const request = require('request');
 
 
 
-
 function electrumRequest (method, params, callback) {
 
   // username and pw should be read from config file
   // note: this is not the actual password which the wallet is encrypted
   //       with, its just for basic http authentication on a local machine
+  // 
   // TODO: 8888 is not the default port
+  //       by default electrum uses a random port, so we must set it with
+  //       electrum setconfig rpcport 8888
+  //       This needs to be automated.
+  
   var options = {  
       method: 'POST',
       json: {"id":"curltext","method":method,"params": params},
@@ -59,6 +63,26 @@ function electrumRequest (method, params, callback) {
 
 }
 
+
+function checkVersion (requiredVersion, callback) {
+  electrumRequest("version", [], function (err,output) {
+    callback(err, (output.result === requiredVersion))
+  })
+}
+
+
+function getMpk (callback) {
+  electrumRequest("getmpk", [], function (err,output) {
+    callback(err, output.result)
+  })
+}
+
+function createMultisig (num,pubKeys,callback) {
+  electrumRequest("createmultisig", { "num": num, "pubkeys": pubKeys }, function (err,output) {
+    callback(err, output.result)
+  })
+}
+
 function getTransaction (txid, callback) {
   // get a tx and deserialize it
   electrumRequest("gettransaction",{ "txid":txid }, function (err,output) {
@@ -68,6 +92,8 @@ function getTransaction (txid, callback) {
   })
 }
 
+
+// note this wont work with older electrum versions
 function getFeeRate (callback) {
   electrumRequest("getfeerate", [], function (err,output) {
     callback(err,output.result)
@@ -88,11 +114,29 @@ function payToMany (outputs, callback) {
   })
 }
 
-// an example request for history with no parameters
-electrumRequest("getfeerate",[], function (err,output) {
-  if (err) console.error(err)
+function history (callback) {
+  electrumRequest("history", [], function (err,output) {
+    callback(err,output.result)
+  })
+}
+
+checkVersion("3.1.3", function(err, output) {
+  if (output) { 
+    console.log("electrum version ok")
+  } else {
+    console.log("electrum version 3.1.3 required")
+  }
+})
+
+
+// this doesnt work (yet)
+var pubKeys = ["xpub661MyMwAqRbcFBNdNnwvkwHQqrnxN3BTEasFqixmS4qoNcxbjvqn4gN8tQNZd3sDTwht6Tuc6gPHnKBTxFxF6RDPF2kiY444nBoSaCYXURG",
+ "xpub661MyMwAqRbcF9Pn7tzxeXVFYgbe5ASGZUWD7HjwBvmQXtKzGPT58eiCdUKFo8oHpLe3mR3NoTs9EnB6B5UqjasnuPBeeFZGCyvAVFBMPMn"]
+createMultisig(1, pubKeys, function(err,output) {
+
   console.log(JSON.stringify(output,null,4))
 })
+
 
 // deserialize a tx
 //getTransaction('dc4c9bf17b2dff0fff82e2b7cc98b343c14479586a4b8099dc0c52c825176647',function (err,output) {
