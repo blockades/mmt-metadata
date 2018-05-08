@@ -54,13 +54,31 @@ function electrumRequest (method, params, callback) {
   }
 
   request(options, function(err,response,body) {
-    if (err) console.error(err)
-    callback(body)
+    callback(err,body)
   })
 
 }
 
+function getTransaction (txid, callback) {
+  // get a tx and deserialize it
+  electrumRequest("gettransaction",{ "txid":txid }, function (err,output) {
+    electrumRequest("deserialize", { "tx":output.result.hex }, function (err,output) {
+      callback(err,output)
+    })
+  })
+}
+
+
+
 // an example request for history with no parameters
-electrumRequest("history",[], function (output) {
+electrumRequest("history",[], function (err,output) {
+  if (err) console.error(err)
   console.log(JSON.stringify(output,null,4))
 })
+
+// deserialize a tx
+getTransaction('dc4c9bf17b2dff0fff82e2b7cc98b343c14479586a4b8099dc0c52c825176647',function (err,output) {
+  if (err) console.error(err)
+  console.log(JSON.stringify(output,null,4))
+} )
+
