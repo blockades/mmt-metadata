@@ -68,17 +68,35 @@ function getTransaction (txid, callback) {
   })
 }
 
+function getFeeRate (callback) {
+  electrumRequest("getfeerate", [], function (err,output) {
+    callback(err,output.result)
+  })
+}
 
+
+function payTo (desination, amount, callback) {
+  electrumRequest("payto", { "destination":destination, "amount":amount }, function (err,output) {
+    callback(err,output)
+  })
+}
+
+function payToMany (outputs, callback) {
+  // TODO: ouputs must be list of ["address", amount] --test this
+  electrumRequest("payto", { "outputs": outputs }, function (err,output) {
+    callback(err,output)
+  })
+}
 
 // an example request for history with no parameters
-electrumRequest("history",[], function (err,output) {
+electrumRequest("getfeerate",[], function (err,output) {
   if (err) console.error(err)
   console.log(JSON.stringify(output,null,4))
 })
 
 // deserialize a tx
-getTransaction('dc4c9bf17b2dff0fff82e2b7cc98b343c14479586a4b8099dc0c52c825176647',function (err,output) {
-  if (err) console.error(err)
-  console.log(JSON.stringify(output,null,4))
-} )
+//getTransaction('dc4c9bf17b2dff0fff82e2b7cc98b343c14479586a4b8099dc0c52c825176647',function (err,output) {
+//  if (err) console.error(err)
+//  console.log(JSON.stringify(output,null,4))
+//} )
 
