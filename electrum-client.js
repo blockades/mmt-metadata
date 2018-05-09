@@ -66,10 +66,18 @@ function electrumRequest (method, params, callback) {
 
 function checkVersion (requiredVersion, callback) {
   electrumRequest("version", [], function (err,output) {
-    callback(err, (output.result === requiredVersion))
+    var check = false
+    // are we actually connected to electrum?
+    if (output) if (output.result) check = (output.result === requiredVersion)
+    callback(err, check)
   })
 }
 
+function signTransaction(tx,password,callback {
+  electrumRequest("getmpk", {"tx": tx, "password": password }, function (err,output) {
+    callback(err, output.result)
+  })
+})
 
 function getMpk (callback) {
   electrumRequest("getmpk", [], function (err,output) {
@@ -77,6 +85,8 @@ function getMpk (callback) {
   })
 }
 
+// this can create a one-off multisig address,  not a multisig wallet
+// see https://gist.github.com/atweiden/7272732#file-2of3-md
 function createMultisig (num,pubKeys,callback) {
   electrumRequest("createmultisig", { "num": num, "pubkeys": pubKeys }, function (err,output) {
     callback(err, output.result)
@@ -100,6 +110,14 @@ function getFeeRate (callback) {
   })
 }
 
+function addRequest (amount,memo,expiration, callback) {
+  var p = { "amount": amount }
+  if (memo) p["memo"] = memo
+  if (expiration) p["expiration"] = expiration
+  electrumRequest("addrequest", p, function (err,output) {
+    callback(err,output.result)
+  })
+}
 
 function payTo (desination, amount, callback) {
   electrumRequest("payto", { "destination":destination, "amount":amount }, function (err,output) {
@@ -121,18 +139,18 @@ function history (callback) {
 }
 
 checkVersion("3.1.3", function(err, output) {
-  if (output) { 
-    console.log("electrum version ok")
+  if (err) { 
+    console.log("Error connecting to electrum")
   } else {
-    console.log("electrum version 3.1.3 required")
+    if (output) { 
+      console.log("electrum version ok")
+    } else {
+      console.log("electrum version 3.1.3 required")
+    }
   }
 })
 
-
-// this doesnt work (yet)
-var pubKeys = ["xpub661MyMwAqRbcFBNdNnwvkwHQqrnxN3BTEasFqixmS4qoNcxbjvqn4gN8tQNZd3sDTwht6Tuc6gPHnKBTxFxF6RDPF2kiY444nBoSaCYXURG",
- "xpub661MyMwAqRbcF9Pn7tzxeXVFYgbe5ASGZUWD7HjwBvmQXtKzGPT58eiCdUKFo8oHpLe3mR3NoTs9EnB6B5UqjasnuPBeeFZGCyvAVFBMPMn"]
-createMultisig(1, pubKeys, function(err,output) {
+addRequest(0, '', 0, function(err,output) {
 
   console.log(JSON.stringify(output,null,4))
 })
