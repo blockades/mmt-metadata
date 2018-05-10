@@ -3,6 +3,14 @@
 
 const request = require('request');
 
+var exec = require('child_process').exec
+
+const testnet = true
+
+var baseCommand = 'electrum '
+if (testnet) baseCommand += '--testnet '
+
+
 // things we probably need: (theres more but this is the basics)
 // addrequest          Create a payment request, using the first unused
 //                     address of the wallet
@@ -63,9 +71,55 @@ electrumRequest = function (method, params, callback) {
 
 }
 
+ec.setupElectrum = function (walletFile,callback) {
+  // could split this into separate function so we can switch
+  // wallets without restarting the daemon but this will do 
+  // for now.
 
+  // TODO: either just run these commands or check if they were
+  // allready run with getconfig
+  //electrum --testnet setconfig rpcport 8888
+  //electrum --testnet setconfig rpcuser spinach
+  //electrum --testnet setconfig rpcpassword test
+  
+
+  console.log('Starting electrum daemon')
+  var child = exec(baseCommand + 'daemon start', function(err, stdout, stderr) {
+      if (err) throw err
+      else {
+        console.log(stdout)
+        console.log('Electrum daemon stopped')
+      }
+  })
+
+  // '~/.electrum/testnet/wallets/testnetw daemon' 
+
+  var child = exec(baseCommand + '-w '+walletFile+' daemon load_wallet', function(err, stdout, stderr) {
+      if (err) throw err
+      else {
+        console.log(stdout)
+        console.log('Wallet '+walletFile+' loaded successfully')
+        callback(err,stdout)
+      }
+  })
+}
+
+
+ec.stopElectrum = function (walletFile,callback) {
+  console.log('Stopping electrum daemon')
+  var child = exec(baseCommand + 'daemon stop', function(err, stdout, stderr) {
+      if (err) throw err
+      else {
+        console.log(stdout)
+        console.log('Electrum daemon stopped successfully')
+      }
+  })
+}
+
+// should this be run as an external command so that we know even before 
+// starting daemon?
 ec.checkVersion = function (requiredVersion, callback) {
-  // todo: remove dots from version number, convert to int and compare
+  // todo: remove dots from version number, convert to int and do > 
   electrumRequest("version", [], function (err,output) {
     var check = false
     // are we actually connected to electrum?

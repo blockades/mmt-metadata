@@ -23,7 +23,8 @@ const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest',
 
 var verbose = true
 
-
+// this is temporary
+var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
 var wallets = {}
 
@@ -300,50 +301,52 @@ ssbClient(function (err, sbot) {
     
     wallets = readDbLocally()
 
-    //ec.parseHistory(wallets[walletId], function(err,output) {
-    //  console.log(JSON.stringify(output,null,4))
-    //})
-    
-    // todo:  run once with live:false, to find wallets.  then present choice of found 
-    // wallets or 'create new'
-    var count = 0
-    messageTypes.forEach(function (messageType) {
-      // drain lets us process stuff as it comes
-      pull(sbot.messagesByType({ live: false, type: messageType })
-        , pull.drain(function (message) {
-        
-        try {
-            if (message.value)
-              if (message.value.content) { 
-                // attempt to decrypt message
-                try {
-                  //console.log(JSON.stringify(message,null,4))
-                  // todo: we also need to pass the recipients and validate them
-                  sbot.private.unbox(message.value.content, function(err, msg) {
-                    processDecryptedMessage(err, msg, message.value.author, message.key)
-                  }) 
-                } catch(e) {
-                  console.error('error while decrypting',e)
-                }
+    ec.setupElectrum(walletFile, function (err,output) {
+      //ec.parseHistory(wallets[walletId], function(err,output) {
+      //  console.log(JSON.stringify(output,null,4))
+      //})
+      
+      // todo:  run once with live:false, to find wallets.  then present choice of found 
+      // wallets or 'create new'
+      var count = 0
+      messageTypes.forEach(function (messageType) {
+        // drain lets us process stuff as it comes
+        pull(sbot.messagesByType({ live: false, type: messageType })
+          , pull.drain(function (message) {
+          
+          try {
+              if (message.value)
+                if (message.value.content) { 
+                  // attempt to decrypt message
+                  try {
+                    //console.log(JSON.stringify(message,null,4))
+                    // todo: we also need to pass the recipients and validate them
+                    sbot.private.unbox(message.value.content, function(err, msg) {
+                      processDecryptedMessage(err, msg, message.value.author, message.key)
+                    }) 
+                  } catch(e) {
+                    console.error('error while decrypting',e)
+                  }
 
-            }
-        } catch(e) {
-          console.error(e)
+              }
+          } catch(e) {
+            console.error(e)
 
-        }
-      }, function(err) {
-        if (err) console.error(err)
-        // this will only be reached if live = false.  which gives us a chance to tidy
-        // things up but then we dont find new messages
-        // count++
-        // if (count === messageTypes.length) {
-        //   writeDbLocally() 
-        //   // for now just use the first wallet 
-        //   var walletId = Object.keys(wallets)[0]
-        //   if (walletId) electronInterface.displayPayments(wallets[walletId])    
-        // }
-        //sbot.close()
-      }))
+          }
+        }, function(err) {
+          if (err) console.error(err)
+          // this will only be reached if live = false.  which gives us a chance to tidy
+          // things up but then we dont find new messages
+          // count++
+          // if (count === messageTypes.length) {
+          //   writeDbLocally() 
+          //   // for now just use the first wallet 
+          //   var walletId = Object.keys(wallets)[0]
+          //   if (walletId) electronInterface.displayPayments(wallets[walletId])    
+          // }
+          //sbot.close()
+        }))
+     } )
     } )
   } )
 })
