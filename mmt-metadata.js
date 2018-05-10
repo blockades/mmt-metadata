@@ -12,7 +12,9 @@ var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
 
+
 var ec = require("./electrum-client.js")
+var electronInterface = require("./electron-interface.js")
 
 var localDbFile = './localdb.json'
 
@@ -149,7 +151,7 @@ processDecryptedMessage = function(err, msg,author, ssbKey) {
           // but why are these stored separetly?  fix this
       } 
       
-      displayPayments(walletId)    
+      electronInterface.displayPayments(wallets[walletId])    
       writeDbLocally() 
     }
 }
@@ -276,42 +278,6 @@ addExampleData = function(sbot,me) {
 
 }
 
-displayPayments = function(walletId) {
-  // this would be the place to create a snazzy html table
-  if (wallets[walletId].payments) {
-    var payments = wallets[walletId].payments
-    
-    $("#paymentsTbody").html($(".unfilled").clone()) 
-
-    Object.keys(payments).forEach(function( index) {
-    
-      var commentList = ""  
-      payments[index].comments.forEach(function(comment){    
-          // todo: resolve alias for comment.author and add it here
-          commentList += "<p>"
-          commentList += comment.comment 
-          commentList += "</p>"
-      })
-
-      $(".unfilled").clone()
-        .find(".date").text("dateFromBlockchain").end()
-        .find(".comment").html(commentList).end()
-        .find(".rate").text(payments[index].rate).end()
-        .find(".amount").text("amountFromBlockchain").end()
-        .find(".recipients").text("recipeintsFromBlockchain").end()
-        .attr("class","index")
-      .insertAfter(".unfilled")
-    } )
-
-
-    if (verbose) {
-      console.log('payments now looks like this:')
-      console.log(JSON.stringify(payments, null, 4))
-    }
-  } else {
-    console.error('cant display payments as no payments associated with wallet')
-  }
-}
 
 
 ssbClient(function (err, sbot) {
@@ -374,7 +340,7 @@ ssbClient(function (err, sbot) {
         //   writeDbLocally() 
         //   // for now just use the first wallet 
         //   var walletId = Object.keys(wallets)[0]
-        //   if (walletId) displayPayments(walletId)    
+        //   if (walletId) electronInterface.displayPayments(wallets[walletId])    
         // }
         //sbot.close()
       }))
