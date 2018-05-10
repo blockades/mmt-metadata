@@ -73,11 +73,11 @@ function checkVersion (requiredVersion, callback) {
   })
 }
 
-function signTransaction(tx,password,callback {
+function signTransaction(tx,password,callback) {
   electrumRequest("getmpk", {"tx": tx, "password": password }, function (err,output) {
     callback(err, output.result)
   })
-})
+}
 
 function getMpk (callback) {
   electrumRequest("getmpk", [], function (err,output) {
@@ -138,6 +138,30 @@ function history (callback) {
   })
 }
 
+function parseHistory (wallet, callback) {
+  history( function(err,output) {
+    if (output.transactions) 
+      output.transactions.forEach(function(transaction) {
+        if (typeof wallet.payments === 'undefined') 
+          wallet.payments = {}
+        if (typeof wallet.payments[transaction.txid] === 'undefined') 
+          wallet.payments[transaction.txid] = {}
+        wallet.payments[transaction.txid].amount = transaction.value.value
+        wallet.payments[transaction.txid].confirmations = transaction.confirmations
+      
+        // convert timestamp to seconds to use as javascript date
+        wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
+        
+        // copy transaction.label as comment?
+      
+      })
+    // could store balance as
+    //output.summary.end_balance.value
+    // or get it from getBalance
+    callback(err,wallet)
+  })
+}
+
 checkVersion("3.1.3", function(err, output) {
   if (err) { 
     console.log("Error connecting to electrum")
@@ -150,10 +174,11 @@ checkVersion("3.1.3", function(err, output) {
   }
 })
 
-addRequest(0, '', 0, function(err,output) {
+parseHistory({}, function(err,output) {
 
   console.log(JSON.stringify(output,null,4))
 })
+
 
 
 // deserialize a tx
