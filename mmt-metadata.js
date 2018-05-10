@@ -12,6 +12,8 @@ var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
 
+var ec = require("./electrum-client.js")
+
 var localDbFile = './localdb.json'
 
 const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest', 
@@ -24,7 +26,7 @@ var verbose = true
 var wallets = {}
 
 
-function publishMessage(sbot, messageType, content, recipients) {
+publishMessage = function (sbot, messageType, content, recipients) {
   
   // publish an encrypted message
  
@@ -42,7 +44,7 @@ function publishMessage(sbot, messageType, content, recipients) {
 
 
 
-function readDbLocally() {
+readDbLocally = function() {
   if (verbose) console.log('reading from local file.') 
   // for now just use a file as db is not likely to get big
 
@@ -64,7 +66,7 @@ function readDbLocally() {
   return dataFromFile
 }
 
-function writeDbLocally() {
+writeDbLocally = function() {
   if (verbose) console.log('writing to local file')
   
   // should use deepmerge
@@ -72,7 +74,7 @@ function writeDbLocally() {
   
 }
 
-function processDecryptedMessage(err, msg,author, ssbKey) {
+processDecryptedMessage = function(err, msg,author, ssbKey) {
 
     if (msg) {    
     
@@ -153,7 +155,7 @@ function processDecryptedMessage(err, msg,author, ssbKey) {
 }
 
 
-function addXpub(msg,author,walletId,initiator) {
+addXpub = function(msg,author,walletId,initiator) {
     
     var xpubToAdd = {
        owner: author,
@@ -180,7 +182,7 @@ function addXpub(msg,author,walletId,initiator) {
     }
 }  
 
-function addPaymentComment(msg, author,walletId) {
+addPaymentComment = function(msg, author,walletId) {
     
     // if we dont yet have this entry, define it
     if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') 
@@ -207,7 +209,7 @@ function addPaymentComment(msg, author,walletId) {
       wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
-function addExampleData(sbot,me) {
+addExampleData = function(sbot,me) {
 
   // todo: could we get the name from ssb about message?
   // using ssb-about? and maybe avatar,etc
@@ -274,7 +276,7 @@ function addExampleData(sbot,me) {
 
 }
 
-function displayPayments(walletId) {
+displayPayments = function(walletId) {
   // this would be the place to create a snazzy html table
   if (wallets[walletId].payments) {
     var payments = wallets[walletId].payments
@@ -332,6 +334,10 @@ ssbClient(function (err, sbot) {
     
     wallets = readDbLocally()
 
+    //ec.parseHistory(wallets[walletId], function(err,output) {
+    //  console.log(JSON.stringify(output,null,4))
+    //})
+    
     // todo:  run once with live:false, to find wallets.  then present choice of found 
     // wallets or 'create new'
     var count = 0

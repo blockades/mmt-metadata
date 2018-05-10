@@ -166,23 +166,19 @@ ec.parseHistory = function (wallet, callback) {
 
 
 // test 
-ec.checkVersion("3.1.3", function(err, output) {
-  if (err) { 
-    console.log("Error connecting to electrum")
-  } else {
-    if (output) { 
-      console.log("electrum version ok")
-    } else {
-      console.log("electrum version 3.1.3 required")
-    }
-  }
-})
+// ec.checkVersion("3.1.3", function(err, output) {
+//   if (err) { 
+//     console.log("Error connecting to electrum")
+//   } else {
+//     if (output) { 
+//       console.log("electrum version ok")
+//     } else {
+//       console.log("electrum version 3.1.3 required")
+//     }
+//   }
+// })
 
 
-ec.parseHistory({}, function(err,output) {
-
-  console.log(JSON.stringify(output,null,4))
-})
 
 
 
