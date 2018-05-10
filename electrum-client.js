@@ -34,9 +34,9 @@ const request = require('request');
 // signtransaction     Sign a transaction
 // version             Return the version of electrum
 
+var ec = module.exports = {}
 
-
-function electrumRequest (method, params, callback) {
+electrumRequest = function (method, params, callback) {
 
   // username and pw should be read from config file
   // note: this is not the actual password which the wallet is encrypted
@@ -64,7 +64,8 @@ function electrumRequest (method, params, callback) {
 }
 
 
-function checkVersion (requiredVersion, callback) {
+ec.checkVersion = function (requiredVersion, callback) {
+  // todo: remove dots from version number, convert to int and compare
   electrumRequest("version", [], function (err,output) {
     var check = false
     // are we actually connected to electrum?
@@ -73,13 +74,13 @@ function checkVersion (requiredVersion, callback) {
   })
 }
 
-function signTransaction(tx,password,callback) {
+ec.signTransaction = function (tx,password,callback) {
   electrumRequest("getmpk", {"tx": tx, "password": password }, function (err,output) {
     callback(err, output.result)
   })
 }
 
-function getMpk (callback) {
+ec.getMpk = function (callback) {
   electrumRequest("getmpk", [], function (err,output) {
     callback(err, output.result)
   })
@@ -87,13 +88,13 @@ function getMpk (callback) {
 
 // this can create a one-off multisig address,  not a multisig wallet
 // see https://gist.github.com/atweiden/7272732#file-2of3-md
-function createMultisig (num,pubKeys,callback) {
+ec.createMultisig = function (num,pubKeys,callback) {
   electrumRequest("createmultisig", { "num": num, "pubkeys": pubKeys }, function (err,output) {
     callback(err, output.result)
   })
 }
 
-function getTransaction (txid, callback) {
+ec.getTransaction = function (txid, callback) {
   // get a tx and deserialize it
   electrumRequest("gettransaction",{ "txid":txid }, function (err,output) {
     electrumRequest("deserialize", { "tx":output.result.hex }, function (err,output) {
@@ -103,14 +104,15 @@ function getTransaction (txid, callback) {
 }
 
 
-// note this wont work with older electrum versions
-function getFeeRate (callback) {
+// note this wont work with older electrum versions, but we kind of need it for building
+// transactions
+ec.getFeeRate = function (callback) {
   electrumRequest("getfeerate", [], function (err,output) {
     callback(err,output.result)
   })
 }
 
-function addRequest (amount,memo,expiration, callback) {
+ec.addRequest = function (amount,memo,expiration, callback) {
   var p = { "amount": amount }
   if (memo) p["memo"] = memo
   if (expiration) p["expiration"] = expiration
@@ -119,27 +121,27 @@ function addRequest (amount,memo,expiration, callback) {
   })
 }
 
-function payTo (desination, amount, callback) {
+ec.payTo = function (desination, amount, callback) {
   electrumRequest("payto", { "destination":destination, "amount":amount }, function (err,output) {
     callback(err,output)
   })
 }
 
-function payToMany (outputs, callback) {
+ec.payToMany = function (outputs, callback) {
   // TODO: ouputs must be list of ["address", amount] --test this
   electrumRequest("payto", { "outputs": outputs }, function (err,output) {
     callback(err,output)
   })
 }
 
-function history (callback) {
+ec.history = function (callback) {
   electrumRequest("history", [], function (err,output) {
     callback(err,output.result)
   })
 }
 
-function parseHistory (wallet, callback) {
-  history( function(err,output) {
+ec.parseHistory = function (wallet, callback) {
+  ec.history( function(err,output) {
     if (output.transactions) 
       output.transactions.forEach(function(transaction) {
         if (typeof wallet.payments === 'undefined') 
@@ -162,7 +164,9 @@ function parseHistory (wallet, callback) {
   })
 }
 
-checkVersion("3.1.3", function(err, output) {
+
+// test 
+ec.checkVersion("3.1.3", function(err, output) {
   if (err) { 
     console.log("Error connecting to electrum")
   } else {
@@ -174,7 +178,8 @@ checkVersion("3.1.3", function(err, output) {
   }
 })
 
-parseHistory({}, function(err,output) {
+
+ec.parseHistory({}, function(err,output) {
 
   console.log(JSON.stringify(output,null,4))
 })
