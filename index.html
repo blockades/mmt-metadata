@@ -3,63 +3,95 @@
   <head>
     <meta charset="UTF-8">
     <title>mmt payment metadata app</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-     <!-- Insert this line above script imports  -->
-     <script>
-       delete module.exports
-     </script>
-     <script src="https://code.jquery.com/jquery-3.2.1.js"></script>
+    
 
-     <!-- normal script imports etc  -->
-     <script src="./mmt-metadata.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">   
+    <style>
+      .unfilled {
+        display: none;
+      }
+    </style>
+    
+    <!-- Insert this line above script imports  -->
+    <script>
+      delete module.exports
+    </script>
      
-   <style>
-     .unfilled {
-       display: none;
-     }
-   </style>
+    <script src="./scripts/jquery-3.3.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+     
+    <!-- normal script imports etc  -->
+     
+    <script src="./mmt-metadata.js"></script>
+     
+    <script>
+      // TODO: put this somewhere else 
+      $( function() {
+        $( "#tabs" ).tabs();
+      } );
+    </script>     
+
   </head>
   <body> 
     <div class = "container">
       <h1>mmt payment metadata app</h1>
-      <!-- TODO: make this with jquery UI tabs or similar -->
-      <div class = "tabs">
-        <button class = "history">History</button>
-        <button class = "send">Send</button>
-        <button class = "recieve">Recieve</button>
-        <button class = "addresses">Addresses</button>
-        <button class = "coins">Coins</button>
-        <button class = "contacts">Contacts</button>
+      <div id="tabs">
+      <ul>
+        <li><a href="#history">History</a></li>
+        <li><a href="#send">Send</a></li>
+        <li><a href="#recieve">Recieve</a></li>
+        <li><a href="#addresses">Addresses</a></li>
+        <li><a href="#coins">Coins</a></li>
+        <li><a href="#contacts">Contacts</a></li>
+      </ul>
+      <div id="history">
+        <table class = "table">
+          <thead>
+            <tr>
+              <th> Date </th>
+              <th> Cosigners </th>
+              <th> Description and comments </th>
+              <th> Rate </th>
+              <th> Amount </th>
+              <th> Confirmations </th>
+              <th> Recipient(s) </th>
+              <th> Options </th>
+             </tr>
+          </thead>
+          <tbody id="paymentsTbody">
+            <tr class="unfilled">
+              <td class="date"></td>
+              <td class="cosigners"></td>
+              <td class="comment"></td>
+              <td class="rate"></td>
+              <td class="amount"></td>
+              <td class="confirmations"></td>
+              <td class="recipients"></td>
+              <td class="options">
+                <button class="details">Details</button>
+                <button class="addComment">Add comment</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>    
       </div>
-      <table class = "table">
-        <thead>
-          <tr>
-            <th> Date </th>
-            <th> Cosigners </th>
-            <th> Description and comments </th>
-            <th> Rate </th>
-            <th> Amount </th>
-            <th> Confirmations </th>
-            <th> Recipient(s) </th>
-            <th> Options </th>
-           </tr>
-        </thead>
-        <tbody id="paymentsTbody">
-          <tr class="unfilled">
-            <td class="date"></td>
-            <td class="cosigners"></td>
-            <td class="comment"></td>
-            <td class="rate"></td>
-            <td class="amount"></td>
-            <td class="confirmations"></td>
-            <td class="recipients"></td>
-            <td class="options">
-              <button class="details">Details</button>
-              <button class="addComment">Add comment</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>    
+      <div id="send">
+        <p>coming soon</p>
+      </div>
+      <div id="recieve">
+        <p>coming soon</p>
+      </div>
+      <div id="addresses">
+        <p>coming soon</p>
+      </div>
+      <div id="coins">
+        <p>coming soon</p>
+      </div>
+      <div id="contacts">
+        <p>coming soon</p>
+      </div>
+    </div>
     </div>
   </body>
 </html>
