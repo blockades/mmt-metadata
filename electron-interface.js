@@ -1,6 +1,17 @@
 
 var electronInterface = module.exports = {}
 
+
+electronInterface.displayWalletInfo = function(wallet) {
+  if (wallet.name) $("#walletName").text(wallet.name)
+  if (wallet.requiredCosigners) $("#requiredCosigners").text(wallet.requiredCosigners)
+  if (wallet.publicKeys) $("#numberCosigners").text(wallet.publicKeys.length)
+  if (wallet.balance) $(".balance").text(wallet.balance)
+  
+  // TODO: names and avatars of cosigners 
+
+}
+
 electronInterface.displayPayments = function(wallet) {
   // this would be the place to create a snazzy html table
   if (wallet.payments) {

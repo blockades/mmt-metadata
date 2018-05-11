@@ -37,6 +37,11 @@
   <body> 
     <div class = "container">
       <h1>mmt payment metadata app</h1>
+      <div id="walletInfo">
+        <b><span id="walletName"></span></b> -
+        <span id="requiredCosigners"></span> of <span id="numberCosigners"></span> multisig. -
+        Confirmed balance: <span class="balance"></span> BTC
+      </div>
       <div id="tabs">
         <ul>
           <li><a href="#history">History</a></li>
@@ -80,7 +85,7 @@
         </div>
         
         <div id="send">
-          <p>Balance available: <span id="balance"></span> BTC</p>
+          <p>Balance available: <span class="balance"></span> BTC</p>
           <p>Pay to: <input type="text" name="payTo" id="payTo" oninput='' ></p> 
           <p>Amount: <input type="text" name="payTo" id="payTo" oninput='' ></p>
           <button>Create transaction</button>

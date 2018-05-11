@@ -307,12 +307,19 @@ ssbClient(function (err, sbot) {
       currentWallet = Object.keys(wallets)[0]
 
       //ec.setupElectrum(walletFile, function (err,output) {
+        ec.getBalance(function(err,output) {
+          if (err) console.error(err)
+          wallets[currentWallet].balance = output.confirmed
+          electronInterface.displayWalletInfo(wallets[currentWallet])
+        })
+
+        electronInterface.displayWalletInfo(wallets[currentWallet])
 
         ec.parseHistory(wallets[currentWallet], function(err,output) {
           if (err) console.error(err)
           wallets[currentWallet] = merge(wallets[currentWallet], output, { arrayMerge: dontMerge })
         })
-        
+         
         // todo:  run once with live:false, to find wallets.  then present choice of found 
         // wallets or 'create new'
         var count = 0

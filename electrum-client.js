@@ -188,6 +188,12 @@ ec.payToMany = function (outputs, callback) {
   })
 }
 
+ec.getBalance = function (callback) {
+  electrumRequest("getbalance", [], function (err,output) {
+    callback(err,output.result)
+  })
+}
+
 ec.history = function (callback) {
   electrumRequest("history", [], function (err,output) {
     if (typeof output.result !== 'undefined') output = output.result
