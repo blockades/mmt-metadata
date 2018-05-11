@@ -11,7 +11,8 @@
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
-
+var merge = require('deepmerge')
+const dontMerge = (destination, source) => source
 
 var ec = require("./electrum-client.js")
 var electronInterface = require("./electron-interface.js")
@@ -77,7 +78,7 @@ writeDbLocally = function() {
   
 }
 
-processDecryptedMessage = function(err, msg,author, ssbKey) {
+processDecryptedMessage = function(err, msg,author, ssbKey,currentWallet) {
 
     if (msg) {    
     
@@ -152,7 +153,7 @@ processDecryptedMessage = function(err, msg,author, ssbKey) {
           // but why are these stored separetly?  fix this
       } 
       
-      electronInterface.displayPayments(wallets[walletId])    
+      electronInterface.displayPayments(wallets[currentWallet])    
       writeDbLocally() 
     }
 }
@@ -301,10 +302,15 @@ ssbClient(function (err, sbot) {
     
     wallets = readDbLocally()
 
-    ec.setupElectrum(walletFile, function (err,output) {
-      //ec.parseHistory(wallets[walletId], function(err,output) {
-      //  console.log(JSON.stringify(output,null,4))
-      //})
+    // for now just use the first wallet (we need to let the user choose)
+    currentWallet = Object.keys(wallets)[0]
+
+    //ec.setupElectrum(walletFile, function (err,output) {
+
+      ec.parseHistory(wallets[currentWallet], function(err,output) {
+        if (err) console.error(err)
+        wallets[currentWallet] = merge(wallets[currentWallet], output, { arrayMerge: dontMerge })
+      })
       
       // todo:  run once with live:false, to find wallets.  then present choice of found 
       // wallets or 'create new'
@@ -322,7 +328,7 @@ ssbClient(function (err, sbot) {
                     //console.log(JSON.stringify(message,null,4))
                     // todo: we also need to pass the recipients and validate them
                     sbot.private.unbox(message.value.content, function(err, msg) {
-                      processDecryptedMessage(err, msg, message.value.author, message.key)
+                      processDecryptedMessage(err, msg, message.value.author, message.key,currentWallet)
                     }) 
                   } catch(e) {
                     console.error('error while decrypting',e)
@@ -347,6 +353,6 @@ ssbClient(function (err, sbot) {
           //sbot.close()
         }))
      } )
-    } )
+   // } )
   } )
 })

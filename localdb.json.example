@@ -20,7 +20,10 @@
                         "comment": "this payment was a mistake"
                     }
                 ],
-                "rate": 5000
+                "rate": 5000,
+                "amount": 59300,
+                "confirmations": 5443,
+                "timestamp": "unknown"
             },
             "d5fsdffd1e8c35466cfe45dg": {
                 "comments": [
@@ -29,7 +32,16 @@
                         "comment": "bought a cheese grater"
                     }
                 ],
-                "rate": 5560
+                "rate": 5560,
+                "amount": 500,
+                "confirmations": 4,
+                "timestamp": "unknown"
+            },
+            "dc4c9bf17b2dff0fff82e2b7cc98b343c14479586a4b8099dc0c52c825176647": {
+                "amount": 88000,
+                "confirmations": 3500,
+                "timestamp": 1524336989000,
+                "comments": []
             }
         },
         "cosigners": [

@@ -13,6 +13,7 @@
   },
   "license": "ISC",
   "dependencies": {
+    "deepmerge": "^2.1.0",
     "electron": "^1.4.6",
     "fs": "0.0.1-security",
     "pull-stream": "^3.6.7",

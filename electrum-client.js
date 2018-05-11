@@ -64,8 +64,8 @@ electrumRequest = function (method, params, callback) {
           password: 'test'
       }
   }
-
   request(options, function(err,response,body) {
+    if (err) console.error(err)
     callback(err,body)
   })
 
@@ -190,33 +190,35 @@ ec.payToMany = function (outputs, callback) {
 
 ec.history = function (callback) {
   electrumRequest("history", [], function (err,output) {
-    callback(err,output.result)
+    if (typeof output.result !== 'undefined') output = output.result
+    callback(err,output)
   })
 }
 
 ec.parseHistory = function (wallet, callback) {
   ec.history( function(err,output) {
-    if (output.transactions) 
-      output.transactions.forEach(function(transaction) {
-        if (typeof wallet.payments === 'undefined') 
-          wallet.payments = {}
-        if (typeof wallet.payments[transaction.txid] === 'undefined') 
-          wallet.payments[transaction.txid] = {}
-        wallet.payments[transaction.txid].amount = transaction.value.value
-        wallet.payments[transaction.txid].confirmations = transaction.confirmations
-      
-        // convert timestamp to seconds to use as javascript date
-        wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
+      if (output.transactions) 
+        output.transactions.forEach(function(transaction) {
+          if (typeof wallet.payments === 'undefined') 
+            wallet.payments = {}
+          if (typeof wallet.payments[transaction.txid] === 'undefined') 
+            wallet.payments[transaction.txid] = {}
+          wallet.payments[transaction.txid].amount = transaction.value.value
+          wallet.payments[transaction.txid].confirmations = transaction.confirmations
         
-        // copy transaction.label as comment?
-      
-      })
-    // could store balance as
-    //output.summary.end_balance.value
-    // or get it from getBalance
+          // convert timestamp to seconds to use as javascript date
+          wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
+          
+          // copy transaction.label as comment?
+        
+        })
+      // could store balance as
+      //output.summary.end_balance.value
+      // or get it from getBalance
     callback(err,wallet)
-  })
+ })
 }
+
 
 
 // test 
