@@ -128,6 +128,18 @@ ec.checkVersion = function (requiredVersion, callback) {
   })
 }
 
+ec.getUnusedAddress = function (callback) {
+  electrumRequest("getunusedaddress", [], function (err,output) {
+    callback(err, output.result)
+  })
+}
+
+ec.listAddresses = function (callback) {
+  electrumRequest("listaddresses", [], function (err,output) {
+    callback(err, output.result)
+  })
+}
+
 ec.signTransaction = function (tx,password,callback) {
   electrumRequest("getmpk", {"tx": tx, "password": password }, function (err,output) {
     callback(err, output.result)

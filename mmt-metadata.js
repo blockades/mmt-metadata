@@ -17,7 +17,8 @@ const dontMerge = (destination, source) => source
 var ec = require("./electrum-client.js")
 var electronInterface = require("./electron-interface.js")
 
-var localDbFile = './localdb.json'
+const localDbFile = './localdb.json'
+var wallets = require(localDbFile)
 
 const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest', 
                       'unsignedMmtPaymentTest','addMmtPaymentCommentTest']
@@ -27,10 +28,10 @@ var verbose = true
 // this is temporary
 var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
-var wallets = {}
+//var wallets = {}
 
 
-publishMessage = function (sbot, messageType, content, recipients) {
+function publishMessage (sbot, messageType, content, recipients) {
   
   // publish an encrypted message
  
@@ -46,31 +47,7 @@ publishMessage = function (sbot, messageType, content, recipients) {
   // todo: should we also update db in memory and write to file when doing this?
 }
 
-
-
-readDbLocally = function() {
-  if (verbose) console.log('reading from local file.') 
-  // for now just use a file as db is not likely to get big
-
-  var dataFromFile = {}
-
-  if (fs.existsSync(localDbFile)) {
-
-    dataFromFile = JSON.parse(fs.readFileSync(localDbFile))
-
-    // todo: this wont work, it will clobber arrays of cosigners and comments.
-    // this information will need to be parsed the same as the stuff coming from ssb
-    //Object.keys(paymentsFromFile).forEach(function(key) {
-    //  payments[key] = paymentsFromFile[key]
-    //} )
-
-    //Object.keys(payments).forEach(key => result[key] = payments[key]);
-
-  } 
-  return dataFromFile
-}
-
-writeDbLocally = function() {
+function writeDbLocally() {
   if (verbose) console.log('writing to local file')
   
   // should use deepmerge
@@ -301,7 +278,7 @@ ssbClient(function (err, sbot) {
       // note that if this is run multiple times it will create multiply identical entries
       //addExampleData(sbot, me)
       
-      wallets = readDbLocally()
+      //wallets = readDbLocally()
 
       // for now just use the first wallet (we need to let the user choose)
       currentWallet = Object.keys(wallets)[0]
@@ -312,8 +289,16 @@ ssbClient(function (err, sbot) {
           wallets[currentWallet].balance = output.confirmed
           electronInterface.displayWalletInfo(wallets[currentWallet])
         })
-
-        electronInterface.displayWalletInfo(wallets[currentWallet])
+        ec.listAddresses(function(err,output){
+          if (err) console.error(err)
+          //console.log('addresses ', JSON.stringify(output,null,4))
+          wallets[currentWallet].addresses = output
+        })
+        ec.getUnusedAddress(function(err,output) {
+          wallets[currentWallet].firstUnusedAddress = output
+          // TODO: qr code
+        })        
+      electronInterface.displayWalletInfo(wallets[currentWallet])
 
         ec.parseHistory(wallets[currentWallet], function(err,output) {
           if (err) console.error(err)

@@ -10,6 +10,20 @@ electronInterface.displayWalletInfo = function(wallet) {
   
   // TODO: names and avatars of cosigners 
 
+
+  if (wallet.addresses) {
+    $("#addressesTbody").html($(".addressesUnfilled").clone()) 
+    wallet.addresses.forEach( function(address) {
+      $(".addressesUnfilled").clone()
+        .find(".address").text(address).end()
+        .find(".amount").text("-").end()
+        .attr("class","filled")
+      .insertAfter(".addressesUnfilled")
+    } ) 
+  }
+
+  if (wallet.firstUnusedAddress) 
+    $("#recieveAddress").text(wallet.firstUnusedAddress)
 }
 
 electronInterface.displayPayments = function(wallet) {
@@ -17,7 +31,7 @@ electronInterface.displayPayments = function(wallet) {
   if (wallet.payments) {
     var payments = wallet.payments
     
-    $("#paymentsTbody").html($(".unfilled").clone()) 
+    $("#paymentsTbody").html($(".paymentsUnfilled").clone()) 
 
     Object.keys(payments).forEach(function( index) {
     
@@ -40,7 +54,7 @@ electronInterface.displayPayments = function(wallet) {
           commentList += "</p>"
       })
 
-      $(".unfilled").clone()
+      $(".paymentsUnfilled").clone()
         .find(".date").text(dateDisplay).end()
         .find(".cosigners").text("").end()
         .find(".comment").html(commentList).end()
@@ -50,8 +64,8 @@ electronInterface.displayPayments = function(wallet) {
         .find(".confirmations").text(payments[index].confirmations).end()
         .find(".recipients").text("recipeintsFromBlockchain").end()
         //.find(".options").find(".details")   .end() //change onclick attribute
-        .attr("class","index")
-      .insertAfter(".unfilled")
+        .attr("class","filled")
+      .insertAfter(".paymentsUnfilled")
     } )
 
 

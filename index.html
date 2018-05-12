@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="./css/jquery-ui.min.css">   
     <style>
       /* TODO: put this somewhere else */
-      .unfilled {
+      .paymentsUnfilled {
         display: none;
       }
     </style>
@@ -67,7 +67,7 @@
                </tr>
             </thead>
             <tbody id="paymentsTbody">
-              <tr class="unfilled">
+              <tr class="paymentsUnfilled">
                 <td class="date"></td>
                 <td class="cosigners"></td>
                 <td class="comment"></td>
@@ -92,13 +92,28 @@
         </div>
         
         <div id="recieve">
-          <span id="recieveAddress"></span>
+          <p>Recieve address: <span id="recieveAddress"></span></p>
           Memo
           <input type="text" name="memo" id="memo" oninput='' > 
           <button>Save memo to recieve address</button>
         </div>
         
         <div id="addresses">
+          
+          <table class = "table">
+            <thead>
+              <tr>
+                <th> Address </th>
+                <th> Amount </th>
+               </tr>
+            </thead>
+            <tbody id="addressesTbody">
+              <tr class="addressesUnfilled">
+                <td class="address"></td>
+                <td class="amount"></td>
+              </tr>
+            </tbody>
+          </table>    
           <p>coming soon</p>
         </div>
         
