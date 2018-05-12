@@ -14,13 +14,19 @@ var fs = require('fs')
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 
-var ec = require("./electrum-client.js")
-var electronInterface = require("./electron-interface.js")
+var ec = require("./electrum-client")
+var electronInterface = require("./electron-interface")
+var publishMessage = require('./utils/publishMessage')
 
 var localDbFile = './localdb.json'
+// var localDb = require('./localdb.json')
 
-const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest', 
-                      'unsignedMmtPaymentTest','addMmtPaymentCommentTest']
+const messageTypes = [
+  'initiateMmtMultisigTest',
+  'shareMmtPublicKeyTest',
+  'unsignedMmtPaymentTest',
+  'addMmtPaymentCommentTest'
+]
 
 var verbose = true
 
@@ -29,26 +35,7 @@ var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
 var wallets = {}
 
-
-publishMessage = function (sbot, messageType, content, recipients) {
-  
-  // publish an encrypted message
- 
-  // recipients are embedded in 'content'
-  sbot.private.publish({ type: messageType, content: content, recipients: recipients }
-    , recipients, function (err, msg) {
-    if (verbose) {
-      console.log('Published: ', messageType)
-      console.log(JSON.stringify(msg, null, 4)) 
-    }
-  })
-
-  // todo: should we also update db in memory and write to file when doing this?
-}
-
-
-
-readDbLocally = function() {
+function readDbLocally () {
   if (verbose) console.log('reading from local file.') 
   // for now just use a file as db is not likely to get big
 
@@ -70,15 +57,14 @@ readDbLocally = function() {
   return dataFromFile
 }
 
-writeDbLocally = function() {
+function writeDbLocally () {
   if (verbose) console.log('writing to local file')
   
   // should use deepmerge
   fs.writeFileSync(localDbFile,JSON.stringify(wallets,null,4))
-  
 }
 
-processDecryptedMessage = function(err, msg,author, ssbKey,currentWallet) {
+function processDecryptedMessage (err, msg,author, ssbKey,currentWallet) {
 
     if (msg) {    
     
@@ -324,29 +310,80 @@ ssbClient(function (err, sbot) {
         // wallets or 'create new'
         var count = 0
         messageTypes.forEach(function (messageType) {
-          // drain lets us process stuff as it comes
-          pull(sbot.messagesByType({ live: false, type: messageType })
-            , pull.drain(function (message) {
-            
-            try {
-                if (message.value)
-                  if (message.value.content) { 
-                    // attempt to decrypt message
-                    try {
-                      //console.log(JSON.stringify(message,null,4))
-                      // todo: we also need to pass the recipients and validate them
-                      sbot.private.unbox(message.value.content, function(err, msg) {
-                        processDecryptedMessage(err, msg, message.value.author, message.key,currentWallet)
-                      }) 
-                    } catch(e) {
-                      console.error('error while decrypting',e)
-                    }
 
-                }
-            } catch(e) {
-              console.error(e)
+          // pull(
+          //   source,
+          //   through, // unbox
+          //   sink     // collect
+          // )
+          
+          // var transactionSource = pull(
+          //   sbot.messagesByType({ live: false, type: messageType }),
+          //   pull.asyncMap((msg, cb) => sbot.private.unbox(msg, cb)),
 
+          // )
+
+          // //// another file 
+          // var transactionSource = require('module with source')
+          // pull(
+          //   transactionSource, // peg's work
+          //   pull.drain(
+          //     // make changes to the UI - mix's work
+          //   )
+          // )
+
+          // initial message
+          // 
+          { 
+            key: '%aewq23123123123',
+            value: {
+              author: @peg,
+              timestamp: 123213213,
+              content: {
+                type: transaction
+                txn: '123nxkjhx234s092834s',
+                details: { ... }  //optional
+              }
             }
+          }
+
+          { 
+            key: '%asd234234234',
+            value: {
+              author: @mix,
+              timestamp: 123213213,
+              content: {
+                type: transaction-comment
+                root: '%aewq23123123123',
+                comment: 'who made this, was this you peg?'
+              }
+            }
+          }
+
+
+          // drain lets us process stuff as it comes
+          pull(
+            sbot.messagesByType({ live: false, type: messageType }),
+            pull.drain(function (message) {
+              try {
+                  if (message.value)
+                    if (message.value.content) { 
+                      // attempt to decrypt message
+                      try {
+                        //console.log(JSON.stringify(message,null,4))
+                        // todo: we also need to pass the recipients and validate them
+                        sbot.private.unbox(message.value.content, function(err, msg) {
+                          processDecryptedMessage(err, msg, message.value.author, message.key,currentWallet)
+                        }) 
+                      } catch(e) {
+                        console.error('error while decrypting',e)
+                      }
+
+                  }
+              } catch(e) {
+                console.error(e)
+
+              }
           }, function(err) {
             if (err) console.error(err)
             // this will only be reached if live = false.  which gives us a chance to tidy
