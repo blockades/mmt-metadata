@@ -11,6 +11,7 @@
 var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
+var bitcoin = require('bitcoinjs-lib')
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 

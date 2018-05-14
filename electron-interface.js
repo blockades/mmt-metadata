@@ -1,4 +1,5 @@
 
+var bitcoinUtils = require('./bitcoin-utils')
 var electronInterface = module.exports = {}
 
 
@@ -79,9 +80,15 @@ electronInterface.displayPayments = function(wallet) {
 }
 
 electronInterface.createTransaction = function() {
+  $("#sendVerifyErrors").text("")
+
   var sendAmount = parseFloat($("input#sendAmount").val())
   if ((!sendAmount) || (sendAmount < 0))
-    $("#sendVerifyErrors").text("invalid amount")
-  else
-    $("#sendVerifyErrors").text("")
+    $("#sendVerifyErrors").text("Invalid amount. ")
+  // todo: compare with balance
+
+
+  var payTo = $("input#payTo").val()
+  if (!bitcoinUtils.validAddress(payTo)) 
+    $("#sendVerifyErrors").append("Invalid BTC address. ")
 }
