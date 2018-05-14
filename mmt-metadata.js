@@ -14,21 +14,24 @@ var fs = require('fs')
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 
-var ec = require("./electrum-client.js")
-var electronInterface = require("./electron-interface.js")
+var ec = require("./electrum-client")
+var electronInterface = require("./electron-interface")
 
 const localDbFile = './localdb.json'
 var wallets = require(localDbFile)
 
-const messageTypes = ['initiateMmtMultisigTest','shareMmtPublicKeyTest', 
-                      'unsignedMmtPaymentTest','addMmtPaymentCommentTest']
+const messageTypes = [
+  'initiateMmtMultisigTest',
+  'shareMmtPublicKeyTest', 
+  'unsignedMmtPaymentTest',
+  'addMmtPaymentCommentTest'
+]
 
 var verbose = true
 
 // this is temporary
 var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
-//var wallets = {}
 
 
 function publishMessage (sbot, messageType, content, recipients) {
@@ -55,7 +58,7 @@ function writeDbLocally() {
   
 }
 
-processDecryptedMessage = function(err, msg,author, ssbKey,currentWallet) {
+function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
 
     if (msg) {    
     
@@ -136,7 +139,7 @@ processDecryptedMessage = function(err, msg,author, ssbKey,currentWallet) {
 }
 
 
-addXpub = function(msg,author,walletId,initiator) {
+function addXpub(msg,author,walletId,initiator) {
     
     var xpubToAdd = {
        owner: author,
@@ -163,7 +166,7 @@ addXpub = function(msg,author,walletId,initiator) {
     }
 }  
 
-addPaymentComment = function(msg, author,walletId) {
+function addPaymentComment (msg, author,walletId) {
     
     // if we dont yet have this entry, define it
     if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') 
@@ -190,7 +193,7 @@ addPaymentComment = function(msg, author,walletId) {
       wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
-addExampleData = function(sbot,me) {
+function addExampleData(sbot,me) {
 
   // todo: could we get the name from ssb about message?
   // using ssb-about? and maybe avatar,etc
