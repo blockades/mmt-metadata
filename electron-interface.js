@@ -77,3 +77,11 @@ electronInterface.displayPayments = function(wallet) {
     console.error('cant display payments as no payments associated with wallet')
   }
 }
+
+electronInterface.createTransaction = function() {
+  var sendAmount = parseFloat($("input#sendAmount").val())
+  if ((!sendAmount) || (sendAmount < 0))
+    $("#sendVerifyErrors").text("invalid amount")
+  else
+    $("#sendVerifyErrors").text("")
+}

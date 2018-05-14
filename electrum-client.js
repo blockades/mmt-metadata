@@ -65,7 +65,7 @@ electrumRequest = function (method, params, callback) {
       }
   }
   request(options, function(err,response,body) {
-    if (err) console.error(err)
+    if (err) console.log("Error from electrum.  Is the electrum daemon running?",err)
     callback(err,body)
   })
 
@@ -202,7 +202,10 @@ ec.payToMany = function (outputs, callback) {
 
 ec.getBalance = function (callback) {
   electrumRequest("getbalance", [], function (err,output) {
-    callback(err,output.result)
+    if ((output) && output.result)
+      callback(err,output.result)
+    else 
+      callback(1,null)
   })
 }
 

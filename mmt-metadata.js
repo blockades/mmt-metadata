@@ -33,7 +33,6 @@ var verbose = true
 var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
 
-
 function publishMessage (sbot, messageType, content, recipients) {
   
   // publish an encrypted message
@@ -288,8 +287,8 @@ ssbClient(function (err, sbot) {
 
       //ec.setupElectrum(walletFile, function (err,output) {
         ec.getBalance(function(err,output) {
-          if (err) console.error(err)
-          wallets[currentWallet].balance = output.confirmed
+          if (err) console.log(err)
+          else wallets[currentWallet].balance = output.confirmed
           electronInterface.displayWalletInfo(wallets[currentWallet])
         })
         ec.listAddresses(function(err,output){
