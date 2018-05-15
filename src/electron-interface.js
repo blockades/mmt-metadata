@@ -83,12 +83,19 @@ electronInterface.createTransaction = function() {
   $("#sendVerifyErrors").text("")
 
   var sendAmount = parseFloat($("input#sendAmount").val())
-  if ((!sendAmount) || (sendAmount < 0))
-    $("#sendVerifyErrors").text("Invalid amount. ")
-  // todo: compare with balance
-
-
   var payTo = $("input#payTo").val()
-  if (!bitcoinUtils.validAddress(payTo)) 
+  
+  if ((!sendAmount) || (sendAmount < 0)) {
+    $("#sendVerifyErrors").text("Invalid amount. ")
+    // todo: compare with balance
+    return false
+  } else if (!bitcoinUtils.validAddress(payTo)) { 
     $("#sendVerifyErrors").append("Invalid BTC address. ")
+    return false
+  } else {
+    $("input#payTo").val("")
+    $("input#sendAmount").val("")
+    // payTo(payTo,sendAmount)
+    return {"recipient": payTo, "amount": sendAmount}
+  }
 }

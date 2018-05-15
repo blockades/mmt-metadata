@@ -262,6 +262,16 @@ function addExampleData(sbot,me) {
 }
 
 
+function createPayTo() {
+  var payToData = electronInterface.createTransaction()
+  if (payToData) {
+    ec.payTo(payToData.recipient, payToData.amount, function(err,output) {
+      console.log(output)
+    } )
+  }
+
+}
+
 
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')

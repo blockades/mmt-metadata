@@ -116,3 +116,4 @@ electrum --testnet daemon stop
 * [bitcoinjs-lib](https://github.com/bitcoinjs/bitcoinjs-lib)
 * [electrum json rpc interface](http://docs.electrum.org/en/latest/merchant.html#jsonrpc-interface)
 * [live.blockcypher.com/btc-testnet](https://live.blockcypher.com/btc-testnet/) - this is the testnet explorer im using.  If you know a better one, post it here
+* [mixmix/ssb-server-plugin-intro](https://github.com/mixmix/ssb-server-plugin-intro) 

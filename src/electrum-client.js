@@ -187,7 +187,7 @@ ec.addRequest = function (amount,memo,expiration, callback) {
   })
 }
 
-ec.payTo = function (desination, amount, callback) {
+ec.payTo = function (destination, amount, callback) {
   electrumRequest("payto", { "destination":destination, "amount":amount }, function (err,output) {
     callback(err,output)
   })
