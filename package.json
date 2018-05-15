@@ -2,9 +2,9 @@
   "name": "mmt-metadata",
   "version": "1.0.0",
   "description": "first stab at fiddling with sbot",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "electron main.js"
+    "start": "electron src/main.js"
   },
   "author": "",
   "repository": {

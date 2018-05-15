@@ -1,5 +1,5 @@
 
-var bitcoinUtils = require('./bitcoin-utils')
+var bitcoinUtils = require('../src/bitcoin-utils')
 var electronInterface = module.exports = {}
 
 

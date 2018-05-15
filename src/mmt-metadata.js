@@ -15,10 +15,11 @@ var bitcoin = require('bitcoinjs-lib')
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 
-var ec = require("./electrum-client")
-var electronInterface = require("./electron-interface")
+// paths are relative to index.html! fix this 
+var ec = require("../src/electrum-client")
+var electronInterface = require("../src/electron-interface")
 
-const localDbFile = './localdb.json'
+const localDbFile = '../localdb.json'
 var wallets = require(localDbFile)
 
 const messageTypes = [
