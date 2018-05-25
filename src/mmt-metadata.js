@@ -325,6 +325,14 @@ ssbClient(function (err, sbot) {
           //console.log('addresses ', JSON.stringify(output,null,4))
           wallets[currentWallet].addresses = output
         })
+
+        ec.listRequests(function(err,output){
+          if (err) console.error(err)
+          //console.log('requests ', JSON.stringify(output,null,4))
+          wallets[currentWallet].requests = output
+          electronInterface.displayWalletInfo(wallets[currentWallet])
+        })
+
         ec.getUnusedAddress(function(err,output) {
           wallets[currentWallet].firstUnusedAddress = output
           // TODO: qr code

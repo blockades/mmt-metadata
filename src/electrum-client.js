@@ -140,6 +140,12 @@ ec.listAddresses = function (callback) {
   })
 }
 
+ec.listRequests = function (callback) {
+  electrumRequest("listrequests", [], function (err,output) {
+    callback(err, output.result)
+  })
+}
+
 ec.signTransaction = function (tx,password,callback) {
   electrumRequest("getmpk", {"tx": tx, "password": password }, function (err,output) {
     callback(err, output.result)

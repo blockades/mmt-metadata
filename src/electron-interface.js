@@ -23,6 +23,19 @@ electronInterface.displayWalletInfo = function(wallet) {
     } ) 
   }
 
+
+  if (wallet.requests) {
+
+    $("#requestsTbody").html($(".requestsUnfilled").clone()) 
+    wallet.requests.forEach( function(request) {
+      $(".requestsUnfilled").clone()
+        .find(".address").text(request.address).end()
+        .find(".memo").text(request.memo).end()
+        .attr("class","filled")
+      .insertAfter(".requestsUnfilled")
+    } ) 
+  }
+
   if (wallet.firstUnusedAddress) 
     $("#recieveAddress").text(wallet.firstUnusedAddress)
 }
