@@ -99,3 +99,16 @@ electronInterface.createTransaction = function() {
     return {"recipient": payTo, "amount": sendAmount}
   }
 }
+
+
+electronInterface.createRecieveMemo = function() {
+
+  var memo = $("input#memo").val()
+  
+  $("input#memo").val("")
+  
+  // TODO: get new unused address, update display
+
+  return {"memo": memo} 
+  
+}

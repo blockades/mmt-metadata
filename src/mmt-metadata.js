@@ -3,7 +3,6 @@
 //   make less ugly
 //   error handling
 //   validation
-//   electron front end
 //   interact with wallet either electrum locally or bitcoin on a server
 //   re-write rates tool into node
 //   make more modular -split into many tiny node modules
@@ -21,6 +20,10 @@ var electronInterface = require("../src/electron-interface")
 
 const localDbFile = '../localdb.json'
 var wallets = require(localDbFile)
+
+// for now just use the first wallet (we need to let the user choose)
+// TODO: this wont work if there are no wallets yet
+var currentWallet = Object.keys(wallets)[0]
 
 const messageTypes = [
   'initiateMmtMultisigTest',
@@ -273,6 +276,20 @@ function createPayTo() {
 }
 
 
+function recieveMemo() {
+  var recieveMemoData = electronInterface.createRecieveMemo()
+  if (recieveMemoData) {
+    // TODO: amount, and expiry fields
+    ec.addRequest(0,recieveMemoData.memo, false, function(err,output) {
+      console.log(output)
+      ec.getUnusedAddress(function(err,output) {
+        wallets[currentWallet].firstUnusedAddress = output
+      })        
+      electronInterface.displayWalletInfo(wallets[currentWallet])
+    })
+  }
+}
+
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
 
@@ -287,7 +304,6 @@ ssbClient(function (err, sbot) {
     
       if (verbose) console.log('whoami: ',me)
 
-
       // uncomment this line to add example data to scuttlebutt 
       // note that if this is run multiple times it will create multiply identical entries
       //addExampleData(sbot, me)
@@ -295,7 +311,8 @@ ssbClient(function (err, sbot) {
       //wallets = readDbLocally()
 
       // for now just use the first wallet (we need to let the user choose)
-      currentWallet = Object.keys(wallets)[0]
+      // TODO: this wont work if there are no wallets yet
+      var currentWallet = Object.keys(wallets)[0]
 
       //ec.setupElectrum(walletFile, function (err,output) {
         ec.getBalance(function(err,output) {
