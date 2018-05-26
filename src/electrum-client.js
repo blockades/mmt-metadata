@@ -219,21 +219,24 @@ ec.getBalance = function (callback) {
 
 ec.history = function (callback) {
   electrumRequest("history", [], function (err,output) {
-    if (typeof output.result !== 'undefined') output = output.result
+    // JSON.parse is needed with electrum version 3.1.3
+    if (typeof output.result !== 'undefined') output = JSON.parse(output.result)
     callback(err,output)
   })
 }
 
 ec.parseHistory = function (wallet, callback) {
   ec.history( function(err,output) {
-   //   if (output.transactions)
-        output.forEach(function(transaction) {
+      // note: electrums history formatting varies greatly with electrum versions
+      //       this requires electrum version 3.1.3 
+      if (output.transactions)
+        output.transactions.forEach(function(transaction) {
           if (typeof wallet.payments === 'undefined') 
             wallet.payments = {}
           if (typeof wallet.payments[transaction.txid] === 'undefined') 
             wallet.payments[transaction.txid] = {}
-          
-          wallet.payments[transaction.txid].amount = transaction.value.value
+          // TODO: value is a string eg "1.0 BTC" - convert to int
+          wallet.payments[transaction.txid].amount = transaction.value
           wallet.payments[transaction.txid].confirmations = transaction.confirmations
         
           // convert timestamp to seconds to use as javascript date
