@@ -102,9 +102,10 @@
         </div>
         
         <div id="recieve">
-          <p>Recieve address: <span id="recieveAddress"></span></p>
-          Memo
-          <input type="text" name="memo" id="memo" oninput='' > 
+          <p> Recieve address: <span id="recieveAddress"></span><button id="addressToClipboard" onclick="">Copy to clipboard</button></p>
+          <p> Memo <input type="text" name="memo" id="memo" oninput='' ></p>
+          <p> Requested Amount (optional) <input type="text" name="requestedAmount" id="requestedAmount" oninput=''></p>
+          <p> Expires: (drop down box?) </p>
           <button id="recieveMemo" onclick="recieveMemo()">Save memo to recieve address</button>
           <br>
           <h3> Existing requests: </h3>

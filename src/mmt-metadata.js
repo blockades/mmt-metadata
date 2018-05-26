@@ -269,8 +269,9 @@ function addExampleData(sbot,me) {
 function createPayTo() {
   var payToData = electronInterface.createTransaction()
   if (payToData) {
-    ec.payTo(payToData.recipient, payToData.amount, function(err,output) {
-      console.log(output)
+    // TODO: ask for password in a secure way. (password here is hard coded to 'test')
+    ec.payTo(payToData.recipient, payToData.amount, 'test', function(err,output) {
+      console.log(JSON.stringify(output,null,4))
     } )
   }
 
