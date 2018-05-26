@@ -29,7 +29,8 @@ const messageTypes = [
   'initiateMmtMultisigTest',
   'shareMmtPublicKeyTest', 
   'unsignedMmtPaymentTest',
-  'addMmtPaymentCommentTest'
+  'addMmtPaymentCommentTest',
+  'addMmtRecieveCommentTest'
 ]
 
 var verbose = true
