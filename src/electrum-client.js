@@ -226,24 +226,25 @@ ec.history = function (callback) {
 
 ec.parseHistory = function (wallet, callback) {
   ec.history( function(err,output) {
-      if (output.transactions) 
-        output.transactions.forEach(function(transaction) {
+   //   if (output.transactions)
+        output.forEach(function(transaction) {
           if (typeof wallet.payments === 'undefined') 
             wallet.payments = {}
           if (typeof wallet.payments[transaction.txid] === 'undefined') 
             wallet.payments[transaction.txid] = {}
+          
           wallet.payments[transaction.txid].amount = transaction.value.value
           wallet.payments[transaction.txid].confirmations = transaction.confirmations
         
           // convert timestamp to seconds to use as javascript date
           wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
-          
           // copy transaction.label as comment?
         
         })
       // could store balance as
       //output.summary.end_balance.value
       // or get it from getBalance
+    
     callback(err,wallet)
  })
 }

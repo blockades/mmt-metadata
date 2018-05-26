@@ -36,7 +36,7 @@ const messageTypes = [
 var verbose = true
 
 // this is temporary
-var walletFile = '~/.electrum/testnet/wallets/default_wallet'
+//var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
 
 function publishMessage (sbot, messageType, content, recipients) {
@@ -139,7 +139,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
       } 
       
       electronInterface.displayPayments(wallets[currentWallet])    
-      writeDbLocally() 
+      //writeDbLocally() 
     }
 }
 
@@ -175,7 +175,8 @@ function addPaymentComment (msg, author,walletId) {
     
     // if we dont yet have this entry, define it
     if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') 
-      wallets[walletId].payments[msg.content.key] = {}
+      wallets[walletId].payments[msg.content.key] = { complete: false }
+
     if (typeof wallets[walletId].payments[msg.content.key].comments === 'undefined') 
       wallets[walletId].payments[msg.content.key].comments = []
     
@@ -319,7 +320,10 @@ ssbClient(function (err, sbot) {
       //ec.setupElectrum(walletFile, function (err,output) {
         ec.getBalance(function(err,output) {
           if (err) console.log(err)
-          else wallets[currentWallet].balance = output.confirmed
+          else {
+            wallets[currentWallet].balance = output.confirmed
+            console.log('-------balance', output.confirmed)
+          }
           electronInterface.displayWalletInfo(wallets[currentWallet])
         })
         ec.listAddresses(function(err,output){
@@ -344,6 +348,8 @@ ssbClient(function (err, sbot) {
         ec.parseHistory(wallets[currentWallet], function(err,output) {
           if (err) console.error(err)
           wallets[currentWallet] = merge(wallets[currentWallet], output, { arrayMerge: dontMerge })
+                   
+          electronInterface.displayPayments(wallets[currentWallet])    
         })
          
         // todo:  run once with live:false, to find wallets.  then present choice of found 
