@@ -272,8 +272,7 @@ function createPayTo() {
 
 }
 
-
-function recieveMemo() {
+function recieveMemo(sbot) {
   var recieveMemoData = electronInterface.createRecieveMemo()
   if (recieveMemoData) {
     // TODO: amount, and expiry fields
@@ -283,7 +282,7 @@ function recieveMemo() {
         wallets[currentWallet].firstUnusedAddress = output
       }) 
       
-      //publishMessage(sbot, 'addMmtRecieveCommentTest', recieveMemoData, recipients) 
+      publishMessage(sbot, 'addMmtRecieveCommentTest', recieveMemoData, recipients) 
 
       // display the request
       ec.listRequests(function(err,output){
@@ -328,6 +327,10 @@ ssbClient(function (err, sbot) {
       
       //wallets = readDbLocally()
 
+      $('#recieveMemo').click(function () {
+        recieveMemo(sbot)
+      } )
+      
       // for now just use the first wallet (we need to let the user choose)
       // TODO: this wont work if there are no wallets yet
       var currentWallet = Object.keys(wallets)[0]
