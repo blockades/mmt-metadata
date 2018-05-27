@@ -27,8 +27,8 @@ var wallets = require(localDbFile)
 // TODO: this wont work if there are no wallets yet
 var currentWallet = Object.keys(wallets)[0]
 
-var cosigners = {}
-var recipients = []
+//var cosigners = {}
+//var recipients = []
 
 
 const messageTypes = [
@@ -207,6 +207,8 @@ function addPaymentComment (msg, author,walletId) {
 function addExampleData(sbot) {
 
   
+  var recipients = Object.keys(wallets[currentWallet].cosigners)
+  
   // an example to initiate a wallet.  Note that the recipients for this message 
   // should be the recipients for all future messages associated with this wallet
 
@@ -261,12 +263,15 @@ function addExampleData(sbot) {
 }
 
 
-function createPayTo() {
+function createPayTo(sbot) {
   var payToData = electronInterface.createTransaction()
   if (payToData) {
     // TODO: ask for password in a secure way. (password here is hard coded to 'test')
     ec.payTo(payToData.recipient, payToData.amount, 'test', function(err,output) {
       console.log(JSON.stringify(output,null,4))
+
+      var recipients = Object.keys(wallets[currentWallet].cosigners)
+      //publishMessage(sbot, 'unsignedMmtPaymentTest', payment, recipients) 
     } )
   }
 
@@ -282,6 +287,7 @@ function recieveMemo(sbot) {
         wallets[currentWallet].firstUnusedAddress = output
       }) 
       
+      var recipients = Object.keys(wallets[currentWallet].cosigners)
       publishMessage(sbot, 'addMmtRecieveCommentTest', recieveMemoData, recipients) 
 
       // display the request
@@ -310,32 +316,34 @@ ssbClient(function (err, sbot) {
     
       if (verbose) console.log('whoami: ',me)
 
-      // todo:  get the name from ssb about message?
-      // using ssb-about and maybe avatar,etc
-      cosigners[me] = {
-        name: 'alice'
-      }
-
-      // In order for messages to be encrypted we need to specify recipients
-      // there can be a maximum of 7, which means if we wanted more we need multiple 
-      // messages (todo: implement this of verify recipients.length < 8)
-      var recipients = Object.keys(cosigners)
-      
-      // uncomment this line to add example data to scuttlebutt 
-      // note that if this is run multiple times it will create multiply identical entries
-      //addExampleData(sbot)
-      
-      //wallets = readDbLocally()
-
-      $('#recieveMemo').click(function () {
-        recieveMemo(sbot)
-      } )
-      
       // for now just use the first wallet (we need to let the user choose)
       // TODO: this wont work if there are no wallets yet
       var currentWallet = Object.keys(wallets)[0]
-
+      
+      // todo:  get the name from ssb about message?
+      // using ssb-about and maybe avatar,etc
+      wallets[currentWallet].cosigners[me] = {
+        name: 'alice'
+      }
+      // In order for messages to be encrypted we need to specify recipients
+      // there can be a maximum of 7, which means if we wanted more we need multiple 
+      // messages (todo: implement this with verify recipients.length < 8)
+      
+      // uncomment this line to add example data to scuttlebutt 
+      // note that if this is run multiple times it will create multiple identical entries
+      //addExampleData(sbot)
+      
+      $('#recieveMemo').click(function () { recieveMemo(sbot) } )
+      $('#createTransaction').click(function () { createPayTo(sbot) } )
+      
       //ec.setupElectrum(walletFile, function (err,output) {
+
+        ec.getMpk(function (err,mpk){
+          // identify the wallet using the hash of the mpk
+          var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk))
+          console.log('-----mpk', hashMpk)
+        } )
+
         ec.getBalance(function(err,output) {
           if (err) console.log(err)
           else {
