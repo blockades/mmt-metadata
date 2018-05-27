@@ -11,6 +11,7 @@ var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
+
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 
@@ -18,12 +19,17 @@ const dontMerge = (destination, source) => source
 var ec = require("../src/electrum-client")
 var electronInterface = require("../src/electron-interface")
 
+// this will be replaced by a flume view
 const localDbFile = '../localdb.json'
 var wallets = require(localDbFile)
 
 // for now just use the first wallet (we need to let the user choose)
 // TODO: this wont work if there are no wallets yet
 var currentWallet = Object.keys(wallets)[0]
+
+var cosigners = {}
+var recipients = []
+
 
 const messageTypes = [
   'initiateMmtMultisigTest',
@@ -52,7 +58,6 @@ function publishMessage (sbot, messageType, content, recipients) {
     }
   })
 
-  // todo: should we also update db in memory and write to file when doing this?
 }
 
 function writeDbLocally() {
@@ -199,19 +204,8 @@ function addPaymentComment (msg, author,walletId) {
       wallets[walletId].payments[msg.content.key].comments.push(commentToAdd)
 }  
 
-function addExampleData(sbot,me) {
+function addExampleData(sbot) {
 
-  // todo: could we get the name from ssb about message?
-  // using ssb-about? and maybe avatar,etc
-  var cosigners = {}
-  cosigners[me] = {
-    name: 'alice'
-  }
-
-  // In order for messages to be encrypted we need to specify recipients
-  // there can be a maximum of 7, which means if we wanted more we need multiple 
-  // messages (todo: implement this of verify recipients.length < 8)
-  var recipients = Object.keys(cosigners)
   
   // an example to initiate a wallet.  Note that the recipients for this message 
   // should be the recipients for all future messages associated with this wallet
@@ -222,7 +216,7 @@ function addExampleData(sbot,me) {
     xpub: 'xpubblahblah....'
   }
 
-  //publishMessage(sbot, 'initiateMmtMultisigTest', initWallet, recipients)
+  publishMessage(sbot, 'initiateMmtMultisigTest', initWallet, recipients)
 
   // an example of sharing a public key to initiate a wallet   
   
@@ -233,7 +227,7 @@ function addExampleData(sbot,me) {
     xpub: 'xpubblahblah.....'
   }
 
-  //publishMessage(sbot, 'shareMmtPublicKeyTest', pubKey, recipients)
+  publishMessage(sbot, 'shareMmtPublicKeyTest', pubKey, recipients)
 
   // an example payment to add to the db
   var payment = {
@@ -284,11 +278,20 @@ function recieveMemo() {
   if (recieveMemoData) {
     // TODO: amount, and expiry fields
     ec.addRequest(0,recieveMemoData.memo, false, function(err,output) {
-      console.log(output)
+      
       ec.getUnusedAddress(function(err,output) {
         wallets[currentWallet].firstUnusedAddress = output
-      })        
-      electronInterface.displayWalletInfo(wallets[currentWallet])
+      }) 
+      
+      //publishMessage(sbot, 'addMmtRecieveCommentTest', recieveMemoData, recipients) 
+
+      // display the request
+      ec.listRequests(function(err,output){
+        if (err) console.error(err)
+        //console.log('requests ', JSON.stringify(output,null,4))
+        wallets[currentWallet].requests = output
+        electronInterface.displayWalletInfo(wallets[currentWallet])
+      })
     })
   }
 }
@@ -299,6 +302,7 @@ ssbClient(function (err, sbot) {
   
   // this assumes we already have an ssb identity. 
   // if not we need to create one wiht ssb-keys (todo)
+  
   if (sbot) 
     sbot.whoami( function(err,msg) {
       if (err) console.error('Error running whoami.', err)
@@ -307,9 +311,20 @@ ssbClient(function (err, sbot) {
     
       if (verbose) console.log('whoami: ',me)
 
+      // todo:  get the name from ssb about message?
+      // using ssb-about and maybe avatar,etc
+      cosigners[me] = {
+        name: 'alice'
+      }
+
+      // In order for messages to be encrypted we need to specify recipients
+      // there can be a maximum of 7, which means if we wanted more we need multiple 
+      // messages (todo: implement this of verify recipients.length < 8)
+      var recipients = Object.keys(cosigners)
+      
       // uncomment this line to add example data to scuttlebutt 
       // note that if this is run multiple times it will create multiply identical entries
-      //addExampleData(sbot, me)
+      //addExampleData(sbot)
       
       //wallets = readDbLocally()
 
@@ -322,7 +337,6 @@ ssbClient(function (err, sbot) {
           if (err) console.log(err)
           else {
             wallets[currentWallet].balance = output.confirmed
-            console.log('-------balance', output.confirmed)
           }
           electronInterface.displayWalletInfo(wallets[currentWallet])
         })
@@ -342,8 +356,9 @@ ssbClient(function (err, sbot) {
         ec.getUnusedAddress(function(err,output) {
           wallets[currentWallet].firstUnusedAddress = output
           // TODO: qr code
+          electronInterface.displayWalletInfo(wallets[currentWallet])
         })        
-      electronInterface.displayWalletInfo(wallets[currentWallet])
+        electronInterface.displayWalletInfo(wallets[currentWallet])
 
         ec.parseHistory(wallets[currentWallet], function(err,output) {
           if (err) console.error(err)
