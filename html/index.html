@@ -15,6 +15,9 @@
       .addressesUnfilled {
         display: none;
       }
+      .requestsUnfilled {
+        display: none;
+      }
       #payTo {
         width: 400px;
       }
@@ -99,10 +102,27 @@
         </div>
         
         <div id="recieve">
-          <p>Recieve address: <span id="recieveAddress"></span></p>
-          Memo
-          <input type="text" name="memo" id="memo" oninput='' > 
-          <button>Save memo to recieve address</button>
+          <p> Recieve address: <span id="recieveAddress"></span><button id="addressToClipboard" onclick="">Copy to clipboard</button></p>
+          <p> Memo <input type="text" name="memo" id="memo" oninput='' ></p>
+          <p> Requested Amount (optional) <input type="text" name="requestedAmount" id="requestedAmount" oninput=''></p>
+          <p> Expires: (drop down box?) </p>
+          <button id="recieveMemo" onclick="recieveMemo()">Save memo to recieve address</button>
+          <br>
+          <h3> Existing requests: </h3>
+          <table class = "table">
+            <thead>
+              <tr>
+                <th> Address </th>
+                <th> Memo </th>
+               </tr>
+            </thead>
+            <tbody id="requestsTbody">
+              <tr class="requestsUnfilled">
+                <td class="address"></td>
+                <td class="memo"></td>
+              </tr>
+            </tbody>
+          </table>    
         </div>
         
         <div id="addresses">
@@ -121,7 +141,6 @@
               </tr>
             </tbody>
           </table>    
-          <p>coming soon</p>
         </div>
         
         <div id="coins">

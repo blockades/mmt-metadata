@@ -3,7 +3,6 @@
 //   make less ugly
 //   error handling
 //   validation
-//   electron front end
 //   interact with wallet either electrum locally or bitcoin on a server
 //   re-write rates tool into node
 //   make more modular -split into many tiny node modules
@@ -22,17 +21,22 @@ var electronInterface = require("../src/electron-interface")
 const localDbFile = '../localdb.json'
 var wallets = require(localDbFile)
 
+// for now just use the first wallet (we need to let the user choose)
+// TODO: this wont work if there are no wallets yet
+var currentWallet = Object.keys(wallets)[0]
+
 const messageTypes = [
   'initiateMmtMultisigTest',
   'shareMmtPublicKeyTest', 
   'unsignedMmtPaymentTest',
-  'addMmtPaymentCommentTest'
+  'addMmtPaymentCommentTest',
+  'addMmtRecieveCommentTest'
 ]
 
 var verbose = true
 
 // this is temporary
-var walletFile = '~/.electrum/testnet/wallets/default_wallet'
+//var walletFile = '~/.electrum/testnet/wallets/default_wallet'
 
 
 function publishMessage (sbot, messageType, content, recipients) {
@@ -135,7 +139,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
       } 
       
       electronInterface.displayPayments(wallets[currentWallet])    
-      writeDbLocally() 
+      //writeDbLocally() 
     }
 }
 
@@ -171,7 +175,8 @@ function addPaymentComment (msg, author,walletId) {
     
     // if we dont yet have this entry, define it
     if (typeof wallets[walletId].payments[msg.content.key] === 'undefined') 
-      wallets[walletId].payments[msg.content.key] = {}
+      wallets[walletId].payments[msg.content.key] = { complete: false }
+
     if (typeof wallets[walletId].payments[msg.content.key].comments === 'undefined') 
       wallets[walletId].payments[msg.content.key].comments = []
     
@@ -265,13 +270,28 @@ function addExampleData(sbot,me) {
 function createPayTo() {
   var payToData = electronInterface.createTransaction()
   if (payToData) {
-    ec.payTo(payToData.recipient, payToData.amount, function(err,output) {
-      console.log(output)
+    // TODO: ask for password in a secure way. (password here is hard coded to 'test')
+    ec.payTo(payToData.recipient, payToData.amount, 'test', function(err,output) {
+      console.log(JSON.stringify(output,null,4))
     } )
   }
 
 }
 
+
+function recieveMemo() {
+  var recieveMemoData = electronInterface.createRecieveMemo()
+  if (recieveMemoData) {
+    // TODO: amount, and expiry fields
+    ec.addRequest(0,recieveMemoData.memo, false, function(err,output) {
+      console.log(output)
+      ec.getUnusedAddress(function(err,output) {
+        wallets[currentWallet].firstUnusedAddress = output
+      })        
+      electronInterface.displayWalletInfo(wallets[currentWallet])
+    })
+  }
+}
 
 ssbClient(function (err, sbot) {
   if (verbose) console.log('ssb ready.')
@@ -287,7 +307,6 @@ ssbClient(function (err, sbot) {
     
       if (verbose) console.log('whoami: ',me)
 
-
       // uncomment this line to add example data to scuttlebutt 
       // note that if this is run multiple times it will create multiply identical entries
       //addExampleData(sbot, me)
@@ -295,12 +314,16 @@ ssbClient(function (err, sbot) {
       //wallets = readDbLocally()
 
       // for now just use the first wallet (we need to let the user choose)
-      currentWallet = Object.keys(wallets)[0]
+      // TODO: this wont work if there are no wallets yet
+      var currentWallet = Object.keys(wallets)[0]
 
       //ec.setupElectrum(walletFile, function (err,output) {
         ec.getBalance(function(err,output) {
           if (err) console.log(err)
-          else wallets[currentWallet].balance = output.confirmed
+          else {
+            wallets[currentWallet].balance = output.confirmed
+            console.log('-------balance', output.confirmed)
+          }
           electronInterface.displayWalletInfo(wallets[currentWallet])
         })
         ec.listAddresses(function(err,output){
@@ -308,6 +331,14 @@ ssbClient(function (err, sbot) {
           //console.log('addresses ', JSON.stringify(output,null,4))
           wallets[currentWallet].addresses = output
         })
+
+        ec.listRequests(function(err,output){
+          if (err) console.error(err)
+          //console.log('requests ', JSON.stringify(output,null,4))
+          wallets[currentWallet].requests = output
+          electronInterface.displayWalletInfo(wallets[currentWallet])
+        })
+
         ec.getUnusedAddress(function(err,output) {
           wallets[currentWallet].firstUnusedAddress = output
           // TODO: qr code
@@ -317,6 +348,8 @@ ssbClient(function (err, sbot) {
         ec.parseHistory(wallets[currentWallet], function(err,output) {
           if (err) console.error(err)
           wallets[currentWallet] = merge(wallets[currentWallet], output, { arrayMerge: dontMerge })
+                   
+          electronInterface.displayPayments(wallets[currentWallet])    
         })
          
         // todo:  run once with live:false, to find wallets.  then present choice of found 

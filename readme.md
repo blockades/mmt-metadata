@@ -91,7 +91,22 @@ Example:
 content: {
   walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
   key: 'd5f2a6a8cd1e8c35466cfec16551',
-  rawTransaction: 'a294b83........',
+  rawTransaction: 'a294b83........'
+}
+```
+
+#### `addMmtRecieveCommentTest`
+
+This will be published any number of times to add a comment to a recieve address.  This will be used to create something like an invoice for a specific recieve address, to reserve that address for a particular payment.  This helps avoid address reuse and makes it easy to check if a particular payment has been recieved. It will contain a recieve address, a comment, and optionally a requested amount and an expiry date for the request.
+
+Example:
+
+```
+content: {
+  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+  address: 'bc15f2a6a8cd1e8c3dfjhg873hk', 
+  comment: 'Invoice for that job we did'
+  amount: '0.0184'
 }
 ```
 

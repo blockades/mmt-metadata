@@ -140,6 +140,12 @@ ec.listAddresses = function (callback) {
   })
 }
 
+ec.listRequests = function (callback) {
+  electrumRequest("listrequests", [], function (err,output) {
+    callback(err, output.result)
+  })
+}
+
 ec.signTransaction = function (tx,password,callback) {
   electrumRequest("getmpk", {"tx": tx, "password": password }, function (err,output) {
     callback(err, output.result)
@@ -187,8 +193,10 @@ ec.addRequest = function (amount,memo,expiration, callback) {
   })
 }
 
-ec.payTo = function (destination, amount, callback) {
-  electrumRequest("payto", { "destination":destination, "amount":amount }, function (err,output) {
+ec.payTo = function (destination, amount, password, callback) {
+  var payData = { "destination": destination, "amount": amount }
+  if ((password) && (password != '')) payData.password = password
+  electrumRequest("payto", payData, function (err,output) {
     callback(err,output)
   })
 }
@@ -211,31 +219,35 @@ ec.getBalance = function (callback) {
 
 ec.history = function (callback) {
   electrumRequest("history", [], function (err,output) {
-    if (typeof output.result !== 'undefined') output = output.result
+    // JSON.parse is needed with electrum version 3.1.3
+    if (typeof output.result !== 'undefined') output = JSON.parse(output.result)
     callback(err,output)
   })
 }
 
 ec.parseHistory = function (wallet, callback) {
   ec.history( function(err,output) {
-      if (output.transactions) 
+      // note: electrums history formatting varies greatly with electrum versions
+      //       this requires electrum version 3.1.3 
+      if (output.transactions)
         output.transactions.forEach(function(transaction) {
           if (typeof wallet.payments === 'undefined') 
             wallet.payments = {}
           if (typeof wallet.payments[transaction.txid] === 'undefined') 
             wallet.payments[transaction.txid] = {}
-          wallet.payments[transaction.txid].amount = transaction.value.value
+          // TODO: value is a string eg "1.0 BTC" - convert to int
+          wallet.payments[transaction.txid].amount = transaction.value
           wallet.payments[transaction.txid].confirmations = transaction.confirmations
         
           // convert timestamp to seconds to use as javascript date
           wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
-          
           // copy transaction.label as comment?
         
         })
       // could store balance as
       //output.summary.end_balance.value
       // or get it from getBalance
+    
     callback(err,wallet)
  })
 }

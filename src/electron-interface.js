@@ -23,6 +23,19 @@ electronInterface.displayWalletInfo = function(wallet) {
     } ) 
   }
 
+
+  if (wallet.requests) {
+
+    $("#requestsTbody").html($(".requestsUnfilled").clone()) 
+    wallet.requests.forEach( function(request) {
+      $(".requestsUnfilled").clone()
+        .find(".address").text(request.address).end()
+        .find(".memo").text(request.memo).end()
+        .attr("class","filled")
+      .insertAfter(".requestsUnfilled")
+    } ) 
+  }
+
   if (wallet.firstUnusedAddress) 
     $("#recieveAddress").text(wallet.firstUnusedAddress)
 }
@@ -98,4 +111,17 @@ electronInterface.createTransaction = function() {
     // payTo(payTo,sendAmount)
     return {"recipient": payTo, "amount": sendAmount}
   }
+}
+
+
+electronInterface.createRecieveMemo = function() {
+
+  var memo = $("input#memo").val()
+  
+  $("input#memo").val("")
+  
+  // TODO: get new unused address, update display
+
+  return {"memo": memo} 
+  
 }
