@@ -49,13 +49,10 @@ content: {
 }
 ```
 
-#### `unsignedMmtPaymentTest`
+#### `partiallySignedMmtPaymentTest`
 
-This will be published each time an outgoing payment needs to be signed.  In the case of only two signatures being required it will be published once per outgoing payment. It will contain: a link the `initiateMmtMultisigTest` ssb message `walletId`, a bitcoin transaction id `key`, the raw unsigned transaction in hex `rawTransaction`, optionally the rate `rate` in another currency `currency` at the time of initiating, and optionally a comment `comment`.
+This will be published each time an outgoing payment is signed but remains incomplete.  In the case of only two signatures being required it will be published once per outgoing payment. It will contain: a link the `initiateMmtMultisigTest` ssb message `walletId`, a bitcoin transaction id `key`, the raw transaction in hex `rawTransaction`, optionally the rate `rate` in another currency `currency` at the time of initiating, and optionally a comment `comment`.
 
-Potentially an alias or unique identifier could be associated with each receive address, but im not sure how to do this in a reliable way.
-
-It could possibly also contain an identifier of the wallet, but it should be possible to derive this from the transaction data.
 
 ```
 content: {
@@ -63,8 +60,7 @@ content: {
   // is the transaction id needed?  it can also be derived from the transaction data
   key: 'd5f2a6a8cd1e8c35466cfec16551',
   rawTransaction: 'a294b83........',
-  rate:           5000,
-  currency:       'GBP',
+  rate:      { value:  5000, currency:  'GBP' },
   comment:       'bought a new pencil sharpener'
 }
 ```
@@ -82,18 +78,6 @@ content: {
 }
 ```
 
-#### `signedMmtPaymentTest`
-
-This will be published each time a cosigner signs a payment. It will contain: a link the `initiateMmtMultisigTest` ssb message `walletId`, a bitcoin transaction id `key`, the hex of the signed transaction (?) `rawTransaction`.
-
-Example:
-```
-content: {
-  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
-  key: 'd5f2a6a8cd1e8c35466cfec16551',
-  rawTransaction: 'a294b83........'
-}
-```
 
 #### `addMmtRecieveCommentTest`
 
