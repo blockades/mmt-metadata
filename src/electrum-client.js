@@ -66,7 +66,8 @@ electrumRequest = function (method, params, callback) {
   }
   request(options, function(err,response,body) {
     // todo: display this error message on the html page
-    if (err) console.log("Error from electrum.  Is the electrum daemon running?",err)
+    if (err) console.log("Error from electrum.  Is the electrum daemon running?",err) 
+    
     callback(err,body)
   })
 

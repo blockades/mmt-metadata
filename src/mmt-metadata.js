@@ -29,7 +29,7 @@ var currentWallet = Object.keys(wallets)[0]
 
 //var cosigners = {}
 //var recipients = []
-
+var requiredElectrumVersion = "3.1.3"
 
 const messageTypes = [
   'initiateMmtMultisigTest',
@@ -310,6 +310,7 @@ function createPayTo(sbot) {
 
         var payment = {
           //walletId: currentWallet,
+          // TODO: we need the transaction id
           //key: 'd5f2a6a8cd1e8c35466cfec16551',
           rawTransaction: output.hex,
           // add rate?
@@ -384,18 +385,32 @@ function whoAmICallbackCreator(sbot) {
     // will only work with unencrypted wallet
     //ec.setupElectrum(walletFile, function (err,output) {
 
+    // TODO: check electrum version
+    ec.checkVersion(requiredElectrumVersion, function(err, output) {
+      if (err) { 
+        console.log("Error connecting to electrum")
+        $('#notifications').append('Error connecting to electrum.  Is the electrum daemon running, with a wallet loaded?')
+      } else {
+        if (output) { 
+          console.log("electrum version ok")
+        } else {
+          var errmsg = "electrum version" + requiredElectrumVersion + "required"
+          console.log(errmsg)
+          $('#notifications').append(errmsg)
+        }
+      }
+    })
+    
     // Get master public key and its hash (so that we can store it safely in ssb messages)
     ec.getMpk(function (err,mpk){
       // identify the wallet using the hash of the mpk
       var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk))
-      console.log('-----mpk', hashMpk)
+      console.log('-----mpk', mpk)
     } )
 
     ec.getBalance(function(err,output) {
-      if (err) console.log(err)
-      else {
-        wallets[currentWallet].balance = parseFloat(output.confirmed)
-      }
+      if (!err) wallets[currentWallet].balance = parseFloat(output.confirmed)
+      
       electronInterface.displayWalletInfo(wallets[currentWallet])
     })
 
