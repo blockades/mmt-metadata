@@ -65,6 +65,7 @@ electrumRequest = function (method, params, callback) {
       }
   }
   request(options, function(err,response,body) {
+    // todo: display this error message on the html page
     if (err) console.log("Error from electrum.  Is the electrum daemon running?",err)
     callback(err,body)
   })
@@ -175,6 +176,11 @@ ec.getTransaction = function (txid, callback) {
   })
 }
 
+ec.deserialize = function(tx, callback) {
+  electrumRequest("deserialize", { "tx": tx }, function (err,output) {
+    callback(err,output)
+  })
+} 
 
 // note this wont work with older electrum versions, but we kind of need it for building
 // transactions
@@ -197,6 +203,7 @@ ec.payTo = function (destination, amount, password, callback) {
   var payData = { "destination": destination, "amount": amount }
   if ((password) && (password != '')) payData.password = password
   electrumRequest("payto", payData, function (err,output) {
+    if (typeof output.result !== 'undefined') output = output.result
     callback(err,output)
   })
 }
@@ -204,6 +211,7 @@ ec.payTo = function (destination, amount, password, callback) {
 ec.payToMany = function (outputs, callback) {
   // TODO: ouputs must be list of ["address", amount] --test this
   electrumRequest("payto", { "outputs": outputs }, function (err,output) {
+    if (typeof output.result !== 'undefined') output = output.result
     callback(err,output)
   })
 }
@@ -235,10 +243,14 @@ ec.parseHistory = function (wallet, callback) {
             wallet.payments = {}
           if (typeof wallet.payments[transaction.txid] === 'undefined') 
             wallet.payments[transaction.txid] = {}
+          
           // TODO: value is a string eg "1.0 BTC" - convert to int
           wallet.payments[transaction.txid].amount = transaction.value
+          
           wallet.payments[transaction.txid].confirmations = transaction.confirmations
         
+          wallet.payments[transaction.txid].broadcast = true
+          
           // convert timestamp to seconds to use as javascript date
           wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
           // copy transaction.label as comment?

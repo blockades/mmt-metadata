@@ -34,7 +34,8 @@ var currentWallet = Object.keys(wallets)[0]
 const messageTypes = [
   'initiateMmtMultisigTest',
   'shareMmtPublicKeyTest',
-  'partiallySignedMmtPaymentTest',
+  'initiateMmtPaymentTest',
+  'signMmtPaymentTest',
   'addMmtPaymentCommentTest',
   'addMmtRecieveCommentTest'
 ]
@@ -87,33 +88,6 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
       if (typeof wallets[walletId] === 'undefined') wallets[walletId] = {}
 
       switch (msg.type) {
-        case 'unsignedMmtPaymentTest':
-          // todo: validate that we dont have too many cosigners
-          // check if its already been added
-          //payments[msg.payment.key].cosigners.push(message.author)
-
-          // todo: check if the transaction has already been signed and broadcast
-          // (can we see it already) if not prompt the user to review and sign.
-          // then if there are still more required cosigners, re-publish the
-          // transaction to ssb, if not broadcast transaction.
-
-          if (typeof wallets[walletId].payments === 'undefined')
-            wallets[walletId].payments = {}
-          if (typeof wallets[walletId].payments[msg.content.key] === 'undefined')
-            wallets[walletId].payments[msg.content.key] = {}
-
-          if (msg.content.comment) addPaymentComment(msg, author, walletId)
-          if (msg.content.rate)
-            wallets[walletId].payments[msg.content.key].rate = msg.content.rate
-
-          break
-
-        case 'addMmtPaymentCommentTest':
-          if (typeof wallets[walletId].payments === 'undefined')
-            wallets[walletId].payments = {}
-          addPaymentComment(msg,author,walletId)
-          break
-
         case 'initiateMmtMultisigTest':
 
           if (typeof wallets[ssbKey] === 'undefined') {
@@ -141,6 +115,63 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
           // if (wallets[walletId].publicKeys.length === msg.recipients.length)
           // and if it is do something like wallets[walletId].isActive = true
           // but why are these stored separetly?  fix this
+          break
+
+        case 'initiateMmtPaymentTest':
+          
+          // todo: validate that we dont have too many cosigners
+          // check if its already been added
+          //payments[msg.payment.key].cosigners.push(message.author)
+
+          // todo: check if the transaction has already been signed and broadcast
+          // (can we see it already) if not prompt the user to review and sign.
+          // then if there are still more required cosigners, re-publish the
+          // transaction to ssb, if not broadcast transaction.
+
+          if (typeof wallets[walletId].payments === 'undefined')
+            wallets[walletId].payments = {}
+          if (typeof wallets[walletId].payments[msg.content.key] === 'undefined')
+            wallets[walletId].payments[msg.content.key] = {}
+
+          if (msg.content.comment) addPaymentComment(msg, author, walletId)
+          if (msg.content.rate)
+            wallets[walletId].payments[msg.content.key].rate = msg.content.rate
+          
+      
+          ec.deserialize(msg.content.rawTransaction, function (err,output) {
+            console.log(JSON.stringify(output,null,4))
+            // we are interested in:
+            //   result.inputs[0].signatures (array of signatures where the missing ones are 'null')
+            //   result.outputs.forEach( function (output){  } )  value -int,satoshis,  address
+          })
+          break
+
+        case 'signMmtPaymentTest':
+          // much the same as for initiatePayment above          
+
+          if (typeof wallets[walletId].payments === 'undefined')
+            wallets[walletId].payments = {}
+          if (typeof wallets[walletId].payments[msg.content.key] === 'undefined')
+            wallets[walletId].payments[msg.content.key] = {}
+
+          if (msg.content.comment) addPaymentComment(msg, author, walletId)
+          if (msg.content.rate)
+            wallets[walletId].payments[msg.content.key].rate = msg.content.rate
+
+          break
+
+        case 'addMmtPaymentCommentTest':
+          if (typeof wallets[walletId].payments === 'undefined')
+            wallets[walletId].payments = {}
+          addPaymentComment(msg,author,walletId)
+          break
+        case 'addMmtRecieveCommentTest':
+          // TODO: here we do something like:
+          var theComment = {
+            author: author,
+            comment: msg.content.memo
+          }
+          //wallets[walletId].addresses[msg.content.address].comments.push(theComment)
       }
 
       electronInterface.displayPayments(wallets[currentWallet])
@@ -270,6 +301,11 @@ function createPayTo(sbot) {
     ec.payTo(payToData.recipient, payToData.amount, 'test', function(err,output) {
       console.log(JSON.stringify(output,null,4))
       if (output.hex) {
+        // deserialize to take a look at it
+        ec.deserialize(output.hex, function (err,output) {
+          console.log(JSON.stringify(output,null,4))
+        })
+
         var recipients = Object.keys(wallets[currentWallet].cosigners)
 
         var payment = {
@@ -280,6 +316,7 @@ function createPayTo(sbot) {
           comment:  payToData.comment
         }
         //publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients)
+        // todo: add this as an imcomplete tx and display it
       }
     } )
   }
@@ -289,6 +326,7 @@ function createPayTo(sbot) {
 function recieveMemo(sbot) {
   var recieveMemoData = electronInterface.createRecieveMemo()
   if (recieveMemoData) {
+    recieveMemoData.address = wallets[currentWallet].firstUnusedAddress 
     // TODO: amount, and expiry fields
     ec.addRequest(0,recieveMemoData.memo, false, function(err,output) {
 
@@ -321,12 +359,14 @@ function whoAmICallbackCreator(sbot) {
     // for now just use the first wallet (we need to let the user choose)
     // TODO: this wont work if there are no wallets yet
     var currentWallet = Object.keys(wallets)[0]
+    
 
     // todo:  get the name from ssb about message?
     // using ssb-about and maybe avatar,etc
     wallets[currentWallet].cosigners[me] = {
       name: 'alice'
     }
+    
     // In order for messages to be encrypted we need to specify recipients
     // there can be a maximum of 7, which means if we wanted more we need multiple
     // messages (todo: implement this with verify recipients.length < 8)
@@ -335,11 +375,16 @@ function whoAmICallbackCreator(sbot) {
     // note that if this is run multiple times it will create multiple identical entries
     //addExampleData(sbot)
 
+    // Specify some event handlers.  This needs to be done here where we can
+    // pass sbot.
     $('#recieveMemo').click(function () { recieveMemo(sbot) } )
     $('#createTransaction').click(function () { createPayTo(sbot) } )
 
+    // Have scrapped this for now but it was an attempt to automate loading the wallet
+    // will only work with unencrypted wallet
     //ec.setupElectrum(walletFile, function (err,output) {
 
+    // Get master public key and its hash (so that we can store it safely in ssb messages)
     ec.getMpk(function (err,mpk){
       // identify the wallet using the hash of the mpk
       var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk))
@@ -353,10 +398,13 @@ function whoAmICallbackCreator(sbot) {
       }
       electronInterface.displayWalletInfo(wallets[currentWallet])
     })
+
     ec.listAddresses(function(err,output){
       if (err) console.error(err)
       //console.log('addresses ', JSON.stringify(output,null,4))
       wallets[currentWallet].addresses = output
+      // TODO: this should be:  (so that we can add more info about each address) 
+      // output.forEach(function(address) { wallets[currentWallet].addresses[address] = {} })
     })
 
     ec.listRequests(function(err,output){
