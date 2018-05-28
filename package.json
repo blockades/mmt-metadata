@@ -4,7 +4,8 @@
   "description": "first stab at fiddling with sbot",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron src/main.js"
+    "start": "electron src/main.js",
+    "test": "mocha"
   },
   "author": "",
   "repository": {
@@ -26,5 +27,10 @@
     "sbot": "0.0.3",
     "ssb-client": "^4.5.7",
     "ssb-keys": "^7.0.14"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0",
+    "spectron": "^3.8.0",
+    "tiny-secp256k1": "^0.1.0"
   }
 }
