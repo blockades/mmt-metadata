@@ -34,7 +34,7 @@ var currentWallet = Object.keys(wallets)[0]
 const messageTypes = [
   'initiateMmtMultisigTest',
   'shareMmtPublicKeyTest', 
-  'unsignedMmtPaymentTest',
+  'partiallySignedMmtPaymentTest',
   'addMmtPaymentCommentTest',
   'addMmtRecieveCommentTest'
 ]
