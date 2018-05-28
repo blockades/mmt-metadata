@@ -49,19 +49,33 @@ content: {
 }
 ```
 
-#### `partiallySignedMmtPaymentTest`
 
-This will be published each time an outgoing payment is signed but remains incomplete.  In the case of only two signatures being required it will be published once per outgoing payment. It will contain: a link the `initiateMmtMultisigTest` ssb message `walletId`, a bitcoin transaction id `key`, the raw transaction in hex `rawTransaction`, optionally the rate `rate` in another currency `currency` at the time of initiating, and optionally a comment `comment`.
+#### `initiateMmtPaymentTest`
+
+This will be published once each time an outgoing payment is initiated.  It will contain a bitcoin transaction id, the raw transaction in hex, optionally the rate in another currency at the time of initiating, and a description of the payment. 
+
+```
+content: {
+  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+  // is the transaction id needed?  it can also be derived from the transaction data
+  key: 'd5f2a6a8cd1e8c35466cfec16551', 
+  rawTransaction: 'a294b83........',
+  rate:           { value: 5000, currency: 'GBP' } 
+  comment:       'bought a new pencil sharpener'
+}
+```
+
+#### `signMmtPaymentTest`
 
 
+This will be published each additional time a transaction is signed.  It will contain a bitcoin transaction id, the raw transaction in hex, and optionally a comment about the payment.
 ```
 content: {
   walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
   // is the transaction id needed?  it can also be derived from the transaction data
   key: 'd5f2a6a8cd1e8c35466cfec16551',
   rawTransaction: 'a294b83........',
-  rate:      { value:  5000, currency:  'GBP' },
-  comment:       'bought a new pencil sharpener'
+  comment:       'ive signed this but i dont see why we need a new pencil sharpener'
 }
 ```
 

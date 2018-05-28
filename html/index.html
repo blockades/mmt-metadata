@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="../css/jquery-ui.min.css">   
     <style>
       /* TODO: put this somewhere else */
+      .incompleteUnfilled {
+        display: none;
+      }
       .paymentsUnfilled {
         display: none;
       }
@@ -53,7 +56,7 @@
       </div>
       <div id="tabs">
         <ul>
-          <li><a href="#history">History</a></li>
+          <li><a href="#history">Transactions</a></li>
           <li><a href="#send">Send</a></li>
           <li><a href="#recieve">Recieve</a></li>
           <li><a href="#addresses">Addresses</a></li>
@@ -62,6 +65,38 @@
         </ul>
       
         <div id="history">
+          <h3> Incomplete transactions </h3>
+          <table class = "table">
+            <thead>
+              <tr>
+                <th> Date </th>
+                <th> Cosigners </th>
+                <th> Description and comments </th>
+                <th> Rate </th>
+                <th> Amount </th>
+                <th> Confirmations </th>
+                <th> Recipient(s) </th>
+                <th> Options </th>
+               </tr>
+            </thead>
+            <tbody id="incompleteTbody">
+              <tr class="incompleteUnfilled">
+                <td class="date"></td>
+                <td class="Initiated by"></td>
+                <td class="cosigners"></td>
+                <td class="comment"></td>
+                <td class="rate"></td>
+                <td class="amount"></td>
+                <td class="recipients"></td>
+                <td class="options">
+                  <button class="details">Sign</button>
+                  <button class="details">Details</button>
+                  <button class="addComment">Add comment</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>    
+          <h3> Broadcast transactions </h3>
           <table class = "table">
             <thead>
               <tr>
@@ -95,9 +130,10 @@
         
         <div id="send">
           <p>Balance available: <span class="balance"></span> BTC</p>
-          <p>Pay to: <input type="text" name="payTo" id="payTo" oninput='' ></p> 
-          <p>Amount: <input type="text" name="sendAmount" id="sendAmount" oninput='' ></p>
-          <button id="createTransaction" onclick="createPayTo()">Create transaction</button>
+          <p>Pay to: <input type="text" name="payTo" id="payTo" ></p> 
+          <p>Amount: <input type="text" name="sendAmount" id="sendAmount" ></p>
+          <p>Description: <input type="text" name="sendComment" id="sendComment" ></p>
+          <button id="createTransaction">Create transaction</button>
           <p><span id="sendVerifyErrors"></span></p>
         </div>
         
@@ -106,9 +142,9 @@
           <p> Memo <input type="text" name="memo" id="memo" oninput='' ></p>
           <p> Requested Amount (optional) <input type="text" name="requestedAmount" id="requestedAmount" oninput=''></p>
           <p> Expires: (drop down box?) </p>
-          <button id="recieveMemo" onclick="recieveMemo()">Save memo to recieve address</button>
-          <br>
-          <h3> Existing requests: </h3>
+          <button id="recieveMemo">Save memo to recieve address</button>
+          <br><br>
+          <h4> Existing requests: </h4>
           <table class = "table">
             <thead>
               <tr>
