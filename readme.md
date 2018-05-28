@@ -49,13 +49,9 @@ content: {
 }
 ```
 
-#### `unsignedMmtPaymentTest`
+#### `initiateMmtPaymentTest`
 
-This will be published each time an outgoing payment needs to be signed.  In the case of only two signatures being required it will be published once per outgoing payment. It will contain a bitcoin transaction id, the raw unsigned transaction in hex, optionally the rate in another currency at the time of initiating, and optionally a description. 
-
-Potentially an alias or unique indentifier could be associated with each receive address, but im not sure how to do this in a reliable way.
-
-It could possibly also contain an identifier of the wallet, but it should be possible to derive this from the transaction data.
+This will be published once each time an outgoing payment is initiated.  It will contain a bitcoin transaction id, the raw transaction in hex, optionally the rate in another currency at the time of initiating, and a description of the payment. 
 
 ```
 content: {
@@ -63,8 +59,21 @@ content: {
   // is the transaction id needed?  it can also be derived from the transaction data
   key: 'd5f2a6a8cd1e8c35466cfec16551', 
   rawTransaction: 'a294b83........',
-  rate:           5000,
+  rate:           { value: 5000, currency: 'GBP' } 
   comment:       'bought a new pencil sharpener'
+}
+```
+
+#### `signMmtPaymentTest`
+
+This will be published each additional time a transaction is signed.  It will contain a bitcoin transaction id, the raw transaction in hex, and optionally a comment about the payment.
+```
+content: {
+  walletId: '%9t2AsdffVfrt9+PygOipJP6COtTUy7igJt/SjNWkYnR8=.sha256',
+  // is the transaction id needed?  it can also be derived from the transaction data
+  key: 'd5f2a6a8cd1e8c35466cfec16551', 
+  rawTransaction: 'a294b83........',
+  comment:       'ive signed this but i dont see why we need a new pencil sharpener'
 }
 ```
 

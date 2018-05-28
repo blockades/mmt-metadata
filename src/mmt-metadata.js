@@ -264,14 +264,23 @@ function addExampleData(sbot) {
 
 
 function createPayTo(sbot) {
-  var payToData = electronInterface.createTransaction()
+  var payToData = electronInterface.createTransaction(wallets[currentWallet])
   if (payToData) {
     // TODO: ask for password in a secure way. (password here is hard coded to 'test')
     ec.payTo(payToData.recipient, payToData.amount, 'test', function(err,output) {
       console.log(JSON.stringify(output,null,4))
-
-      var recipients = Object.keys(wallets[currentWallet].cosigners)
-      //publishMessage(sbot, 'unsignedMmtPaymentTest', payment, recipients) 
+      if (output.hex) { 
+        var recipients = Object.keys(wallets[currentWallet].cosigners)
+        
+        var payment = {
+          //walletId: currentWallet,
+          //key: 'd5f2a6a8cd1e8c35466cfec16551', 
+          rawTransaction: output.hex,
+          // add rate?
+          comment:  payToData.comment
+        }
+        //publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients)
+      }
     } )
   }
 
@@ -347,7 +356,7 @@ ssbClient(function (err, sbot) {
         ec.getBalance(function(err,output) {
           if (err) console.log(err)
           else {
-            wallets[currentWallet].balance = output.confirmed
+            wallets[currentWallet].balance = parseFloat(output.confirmed)
           }
           electronInterface.displayWalletInfo(wallets[currentWallet])
         })

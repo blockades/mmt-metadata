@@ -92,24 +92,32 @@ electronInterface.displayPayments = function(wallet) {
   }
 }
 
-electronInterface.createTransaction = function() {
+electronInterface.createTransaction = function(wallet) {
   $("#sendVerifyErrors").text("")
-
+  console.log('------balance', typeof wallet.balance, wallet.balance)
   var sendAmount = parseFloat($("input#sendAmount").val())
+  console.log('------sendAmount', typeof sendAmount, sendAmount)
   var payTo = $("input#payTo").val()
+  var comment = $('input#sendComment').val()
   
   if ((!sendAmount) || (sendAmount < 0)) {
     $("#sendVerifyErrors").text("Invalid amount. ")
-    // todo: compare with balance
+    return false
+  } else if (sendAmount > wallet.balance) {
+    $("#sendVerifyErrors").text("Not enough funds in wallet. ")
     return false
   } else if (!bitcoinUtils.validAddress(payTo)) { 
     $("#sendVerifyErrors").append("Invalid BTC address. ")
     return false
+  } else if ((!comment) || (comment == '')) {
+    $("#sendVerifyErrors").append("Please enter a description so your co-signers can see what the payment is for. ")
+    return false
   } else {
     $("input#payTo").val("")
     $("input#sendAmount").val("")
+    $("input#sendComment").val("")
     // payTo(payTo,sendAmount)
-    return {"recipient": payTo, "amount": sendAmount}
+    return {"recipient": payTo, "amount": sendAmount, "comment": comment}
   }
 }
 
