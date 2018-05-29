@@ -53,6 +53,7 @@ function publishMessage (sbot, messageType, content, recipients) {
   // recipients are embedded in 'content'
   sbot.private.publish({ type: messageType, content: content, recipients: recipients }
     , recipients, function (err, msg) {
+    if (err) console.error(err)
     if (verbose) {
       console.log('Published: ', messageType)
       console.log(JSON.stringify(msg, null, 4))
@@ -69,7 +70,7 @@ function writeDbLocally() {
 
 }
 
-function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
+function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
 
     if (msg) {
 
@@ -99,7 +100,8 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
           }
           wallets[ssbKey].name = msg.content.walletName
 
-          wallets[ssbKey].cosigners = msg.recipients
+          //wallets[ssbKey].cosigners = msg.recipients
+          
           // note number of cosigners is wallet[ssbKey].cosigners.length
           // todo: validate requiredCosigners < cosigners.length
           wallets[ssbKey].requiredCosigners = msg.content.requiredCosigners
@@ -176,7 +178,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
           //wallets[walletId].addresses[msg.content.address].comments.push(theComment)
       }
 
-      electronInterface.displayPayments(wallets[currentWallet])
+      electronInterface.displayPayments(wallets[currentWallet],currentWallet,sbot)
       //writeDbLocally()
     }
 }
@@ -306,10 +308,11 @@ function createPayTo(sbot) {
         // deserialize to take a look at it
         ec.deserialize(output.hex, function (err,output) {
           console.log(JSON.stringify(output,null,4))
+         
           //output.lockTime
         })
 
-        var recipients = Object.keys(wallets[currentWallet].cosigners)
+        //var recipients = Object.keys(wallets[currentWallet].cosigners)
 
         var payment = {
           //walletId: currentWallet,
@@ -339,7 +342,7 @@ function recieveMemo(sbot) {
       })
 
       var recipients = Object.keys(wallets[currentWallet].cosigners)
-      publishMessage(sbot, 'addMmtRecieveCommentTest', recieveMemoData, recipients)
+      publishMessage(sbot, 'addMmtRecieveCommentTest', recieveMemoData, recipients )
 
       // display the request
       ec.listRequests(function(err,output){
@@ -364,12 +367,13 @@ function whoAmICallbackCreator(sbot) {
     // TODO: this wont work if there are no wallets yet
     var currentWallet = Object.keys(wallets)[0]
     
-
+    if (typeof wallets[currentWallet].cosigners === 'undefined') wallets[currentWallet].cosigners = {} 
     // todo:  get the name from ssb about message?
     // using ssb-about and maybe avatar,etc
     wallets[currentWallet].cosigners[me] = {
       name: 'alice'
     }
+    if (verbose) console.log('-----cosigners:',JSON.stringify(wallets[currentWallet].cosigners,null,4)) 
     
     // In order for messages to be encrypted we need to specify recipients
     // there can be a maximum of 7, which means if we wanted more we need multiple
@@ -443,7 +447,7 @@ function whoAmICallbackCreator(sbot) {
       if (err) console.error(err)
       wallets[currentWallet] = merge(wallets[currentWallet], output, { arrayMerge: dontMerge })
 
-      electronInterface.displayPayments(wallets[currentWallet])
+      electronInterface.displayPayments(wallets[currentWallet],currentWallet,sbot)
     })
 
     // todo:  run once with live:false, to find wallets.  then present choice of found
@@ -462,7 +466,7 @@ function whoAmICallbackCreator(sbot) {
                   //console.log(JSON.stringify(message,null,4))
                   // todo: we also need to pass the recipients and validate them
                   sbot.private.unbox(message.value.content, function(err, msg) {
-                    processDecryptedMessage(err, msg, message.value.author, message.key,currentWallet)
+                    processDecryptedMessage(err, msg, message.value.author, message.key,currentWallet,sbot)
                   })
                 } catch(e) {
                   console.error('error while decrypting',e)

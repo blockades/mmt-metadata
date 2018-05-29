@@ -42,7 +42,7 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#recieveAddress").text(wallet.firstUnusedAddress)
 }
 
-electronInterface.displayPayments = function(wallet) {
+electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
   // this would be the place to create a snazzy html table
   if (wallet.payments) {
     var payments = wallet.payments
@@ -80,12 +80,39 @@ electronInterface.displayPayments = function(wallet) {
           .find(".confirmations").text(payments[index].confirmations).end()
           .find(".recipients").text("recipeintsFromBlockchain").end()
           .find(".options").find(".details").click(function(){ 
-            $('#notifications').append(index) 
+            $('#txid').text(index)
+            // TODO: add more transaction details from the deserialised transaction
+            $('#transactionDetailsAmount').text(payments[index].amount)
+            //"initiatedBy"
+            //"signedBy"
+            //"outputs"
+            $('#comments').html(commentList)
+            
+            $('#addComment').click( function (){
+              // we need sbot
+              var transactionComment = $("input#addTransactionComment").val()
+  
+              $("input#addTransactionComment").val("")
+  
+              var paymentComment = {
+                walletId: currentWallet,
+                key: index,
+                comment: transactionComment 
+              }
+              console.log(JSON.stringify(wallet.cosigners,null,4))
+              var recipients = Object.keys(wallet.cosigners)
+              publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients)
+              // todo: process this comment right now so we can immediately see the result
+            } )
+
             $('#transactionTables').attr("class","invisible")
             $('#transactionDetails').attr("class","visible")
           }).end().end() 
           .attr("class","filled")
         .insertAfter(".paymentsUnfilled")
+      } else {
+        // TODO: display incomplete transactions here
+     
       }
     } )
 

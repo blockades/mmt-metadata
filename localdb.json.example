@@ -44,8 +44,10 @@
                 "comments": []
             }
         },
-        "cosigners": [
-            "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519"
-        ]
+        "cosigners": {
+            "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {
+              "name": "alice"
+            }
+        }
     }
 }

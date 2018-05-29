@@ -46,6 +46,10 @@
       $( function() {
         $( "#tabs" ).tabs();
       } );
+      function backToTables() {
+        $('#transactionDetails').attr("class","invisible")
+        $('#transactionTables').attr("class","visible")
+      }
     </script>     
 
   </head>
@@ -108,7 +112,7 @@
                   <th> Date </th>
                   <th> Cosigners </th>
                   <th> Description and comments </th>
-                  <th> Rate </th>
+                  <th> Rate </transactionComment>
                   <th> Amount </th>
                   <th> Confirmations </th>
                   <th> Recipient(s) </th>
@@ -132,13 +136,15 @@
             </table>
           </div>
           <div id="transactionDetails" class="invisible">
-            <h4> Details for transaction <span id="txid"></span> </h4>
+            <h5> Details for transaction <span id="txid"></span> </h5>
+            <p> Amount <span id="transactionDetailsAmount"></span> </p>
             <p> Initiated by: <span id="initiatedBy"></span></p>
             <p> Signed by: <span id="initiatedBy"></span></p>
             <p> Outputs: <span id="outputs"></span></p>
             <p> Comments: <span id="comments"></span></p>
+            <p> Add a comment: <input type="text" name="addTransactionComment" id="addTransactionComment" ></p> 
             <button id="addComment">Add comment</button>
-            <button id="toTable">Back to other transactions</button>
+            <button id="toTable" onclick='backToTables()'>Back to other transactions</button>
           </div>
         </div>
         
