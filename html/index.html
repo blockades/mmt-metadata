@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="../css/jquery-ui.min.css">   
     <style>
       /* TODO: put this somewhere else */
+      .invisible {
+        display: none;
+      }
       .incompleteUnfilled {
         display: none;
       }
@@ -66,67 +69,77 @@
         </ul>
       
         <div id="history">
-          <h3> Incomplete transactions </h3>
-          <table class = "table">
-            <thead>
-              <tr>
-                <th> Date </th>
-                <th> Cosigners </th>
-                <th> Description and comments </th>
-                <th> Rate </th>
-                <th> Amount </th>
-                <th> Confirmations </th>
-                <th> Recipient(s) </th>
-                <th> Options </th>
-               </tr>
-            </thead>
-            <tbody id="incompleteTbody">
-              <tr class="incompleteUnfilled">
-                <td class="date"></td>
-                <td class="Initiated by"></td>
-                <td class="cosigners"></td>
-                <td class="comment"></td>
-                <td class="rate"></td>
-                <td class="amount"></td>
-                <td class="recipients"></td>
-                <td class="options">
-                  <button class="details">Sign</button>
-                  <button class="details">Details</button>
-                  <button class="addComment">Add comment</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>    
-          <h3> Broadcast transactions </h3>
-          <table class = "table">
-            <thead>
-              <tr>
-                <th> Date </th>
-                <th> Cosigners </th>
-                <th> Description and comments </th>
-                <th> Rate </th>
-                <th> Amount </th>
-                <th> Confirmations </th>
-                <th> Recipient(s) </th>
-                <th> Options </th>
-               </tr>
-            </thead>
-            <tbody id="paymentsTbody">
-              <tr class="paymentsUnfilled">
-                <td class="date"></td>
-                <td class="cosigners"></td>
-                <td class="comment"></td>
-                <td class="rate"></td>
-                <td class="amount"></td>
-                <td class="confirmations"></td>
-                <td class="recipients"></td>
-                <td class="options">
-                  <button class="details">Details</button>
-                  <button class="addComment">Add comment</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>    
+          <div id="transactionTables" class="visible">
+            <h3> Incomplete transactions </h3>
+            <table class = "table">
+              <thead>
+                <tr>
+                  <th> Date </th>
+                  <th> Cosigners </th>
+                  <th> Description and comments </th>
+                  <th> Rate </th>
+                  <th> Amount </th>
+                  <th> Confirmations </th>
+                  <th> Recipient(s) </th>
+                  <th> Options </th>
+                 </tr>
+              </thead>
+              <tbody id="incompleteTbody">
+                <tr class="incompleteUnfilled">
+                  <td class="date"></td>
+                  <td class="Initiated by"></td>
+                  <td class="cosigners"></td>
+                  <td class="comment"></td>
+                  <td class="rate"></td>
+                  <td class="amount"></td>
+                  <td class="recipients"></td>
+                  <td class="options">
+                    <button class="details">Sign</button>
+                    <button class="details">Details</button>
+                    <button class="addComment">Add comment</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>    
+            <h3> Broadcast transactions </h3>
+            <table class = "table">
+              <thead>
+                <tr>
+                  <th> Date </th>
+                  <th> Cosigners </th>
+                  <th> Description and comments </th>
+                  <th> Rate </th>
+                  <th> Amount </th>
+                  <th> Confirmations </th>
+                  <th> Recipient(s) </th>
+                  <th> Options </th>
+                 </tr>
+              </thead>
+              <tbody id="paymentsTbody">
+                <tr class="paymentsUnfilled">
+                  <td class="date"></td>
+                  <td class="cosigners"></td>
+                  <td class="comment"></td>
+                  <td class="rate"></td>
+                  <td class="amount"></td>
+                  <td class="confirmations"></td>
+                  <td class="recipients"></td>
+                  <td class="options">
+                    <button class="details">Details</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="transactionDetails" class="invisible">
+            <h4> Details for transaction <span id="txid"></span> </h4>
+            <p> Initiated by: <span id="initiatedBy"></span></p>
+            <p> Signed by: <span id="initiatedBy"></span></p>
+            <p> Outputs: <span id="outputs"></span></p>
+            <p> Comments: <span id="comments"></span></p>
+            <button id="addComment">Add comment</button>
+            <button id="toTable">Back to other transactions</button>
+          </div>
         </div>
         
         <div id="send">

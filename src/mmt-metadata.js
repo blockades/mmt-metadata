@@ -137,13 +137,15 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet) {
           if (msg.content.rate)
             wallets[walletId].payments[msg.content.key].rate = msg.content.rate
           
-      
-          ec.deserialize(msg.content.rawTransaction, function (err,output) {
-            console.log(JSON.stringify(output,null,4))
-            // we are interested in:
-            //   result.inputs[0].signatures (array of signatures where the missing ones are 'null')
-            //   result.outputs.forEach( function (output){  } )  value -int,satoshis,  address
-          })
+          // if (msg.content.rawTransaction) {
+          //   console.log('tx ',msg.content.rawTransaction)
+          //   ec.deserialize(msg.content.rawTransaction, function (err,output) {
+          //     console.log(JSON.stringify(output,null,4))
+          //     // we are interested in:
+          //     //   result.inputs[0].signatures (array of signatures where the missing ones are 'null')
+          //     //   result.outputs.forEach( function (output){  } )  value -int,satoshis,  address
+          //   })
+          // }
           break
 
         case 'signMmtPaymentTest':
@@ -304,6 +306,7 @@ function createPayTo(sbot) {
         // deserialize to take a look at it
         ec.deserialize(output.hex, function (err,output) {
           console.log(JSON.stringify(output,null,4))
+          //output.lockTime
         })
 
         var recipients = Object.keys(wallets[currentWallet].cosigners)
@@ -500,4 +503,6 @@ ssbClient(function (err, sbot) {
     sbot.whoami( whoAmICallbackCreator(sbot) )
   else
     console.error('Unable to connect to sbot.  Is sbot running?')
+
+
 })

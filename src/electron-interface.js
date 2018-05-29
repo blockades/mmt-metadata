@@ -79,7 +79,11 @@ electronInterface.displayPayments = function(wallet) {
           // TODO: make a thingy that goes from red to green with under 6 confimations
           .find(".confirmations").text(payments[index].confirmations).end()
           .find(".recipients").text("recipeintsFromBlockchain").end()
-          //.find(".options").find(".details")   .end() //change onclick attribute
+          .find(".options").find(".details").click(function(){ 
+            $('#notifications').append(index) 
+            $('#transactionTables').attr("class","invisible")
+            $('#transactionDetails').attr("class","visible")
+          }).end().end() 
           .attr("class","filled")
         .insertAfter(".paymentsUnfilled")
       }
