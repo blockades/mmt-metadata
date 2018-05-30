@@ -314,9 +314,9 @@ function createPayTo(sbot) {
           const inputs = electrumTx.inputs.map(
             function(input) {
               const seq = new btcnodejs.Sequence(input.sequence)
-              const witness = new btcnodejs.Witness([new ByteBuffer.fromHex(input.wittness)]);
+              const witness = new btcnodejs.Witness([new ByteBuffer.fromHex(input.wittness), new ByteBuffer.fromHex(input.wittnessScript)]);
               return new btcnodejs.Input(
-                input.prevout_hash, input.value, btcnodejs.ScriptSig.empty(), seq, witness
+                input.prevout_hash, input.value, witness.toScriptSig(), seq, witness
               )
             }
           )
