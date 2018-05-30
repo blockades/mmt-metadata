@@ -181,7 +181,7 @@ ec.deserialize = function(tx, callback) {
   electrumRequest("deserialize", { "tx": tx }, function (err,output) {
     callback(err,output)
   })
-} 
+}
 
 // note this wont work with older electrum versions, but we kind of need it for building
 // transactions
@@ -200,8 +200,8 @@ ec.addRequest = function (amount,memo,expiration, callback) {
   })
 }
 
-ec.payTo = function (destination, amount, password, callback) {
-  var payData = { "destination": destination, "amount": amount }
+ec.payTo = function (destination, amount, fee, password, callback) {
+  var payData = { "destination": destination, "amount": amount, "fee": fee }
   if ((password) && (password != '')) payData.password = password
   electrumRequest("payto", payData, function (err,output) {
     if (typeof output.result !== 'undefined') output = output.result
