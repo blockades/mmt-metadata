@@ -11,7 +11,9 @@ var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
-
+const ByteBuffer = require("bytebuffer")
+const btcnodejs = require('btcnodejs')
+btcnodejs.network.setup('testnet')
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 
@@ -297,7 +299,6 @@ function addExampleData(sbot) {
 
 }
 
-
 function createPayTo(sbot) {
   var payToData = electronInterface.createTransaction(wallets[currentWallet])
   if (payToData) {
@@ -305,20 +306,39 @@ function createPayTo(sbot) {
     // TODO fix the hardcoded fee of 0.01
     ec.payTo(payToData.recipient, payToData.amount, 0.01, 'test', function(err,output) {
       console.log(JSON.stringify(output,null,4))
+      let txid;
       if (output.hex) {
         // deserialize to take a look at it
-        ec.deserialize(output.hex, function (err,output) {
-          console.log(JSON.stringify(output,null,4))
-
-          //output.lockTime
+        ec.deserialize(output.hex, function (err, output) {
+          const electrumTx = output.result;
+          const inputs = electrumTx.inputs.map(
+            function(input) {
+              const seq = new btcnodejs.Sequence(input.sequence)
+              const witness = new btcnodejs.Witness([new ByteBuffer.fromHex(input.wittness)]);
+              return new btcnodejs.Input(
+                input.prevout_hash, input.value, btcnodejs.ScriptSig.empty(), seq, witness
+              )
+            }
+          )
+          const outputs = electrumTx.outputs.map(
+            function(output) {
+              const sigPub = btcnodejs.ScriptPubKey.fromHex(output.scriptPubKey);
+              return new btcnodejs.Output(output.value, sigPub);
+            }
+          )
+          // TODO this isn't giving the same result as in Electrum, probably the Witness is wrong...
+          const tx = new btcnodejs.Transaction(
+            electrumTx.version, inputs, outputs, new btcnodejs.Locktime(electrumTx.lockTime), true
+          );
+          txid = tx.txid;
         })
+        console.log(txid);
 
         //var recipients = Object.keys(wallets[currentWallet].cosigners)
 
         var payment = {
           //walletId: currentWallet,
-          // TODO: we need the transaction id
-          //key: 'd5f2a6a8cd1e8c35466cfec16551',
+          key: txid,
           rawTransaction: output.hex,
           // add rate?
           comment:  payToData.comment
