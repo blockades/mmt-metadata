@@ -11,7 +11,9 @@ var pull = require('pull-stream')
 var ssbClient = require('ssb-client')
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
-
+const ByteBuffer = require("bytebuffer")
+const btcnodejs = require('btcnodejs')
+btcnodejs.network.setup('testnet')
 var merge = require('deepmerge')
 const dontMerge = (destination, source) => source
 
@@ -101,7 +103,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
           wallets[ssbKey].name = msg.content.walletName
 
           //wallets[ssbKey].cosigners = msg.recipients
-          
+
           // note number of cosigners is wallet[ssbKey].cosigners.length
           // todo: validate requiredCosigners < cosigners.length
           wallets[ssbKey].requiredCosigners = msg.content.requiredCosigners
@@ -120,7 +122,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
           break
 
         case 'initiateMmtPaymentTest':
-          
+
           // todo: validate that we dont have too many cosigners
           // check if its already been added
           //payments[msg.payment.key].cosigners.push(message.author)
@@ -138,7 +140,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
           if (msg.content.comment) addPaymentComment(msg, author, walletId)
           if (msg.content.rate)
             wallets[walletId].payments[msg.content.key].rate = msg.content.rate
-          
+
           // if (msg.content.rawTransaction) {
           //   console.log('tx ',msg.content.rawTransaction)
           //   ec.deserialize(msg.content.rawTransaction, function (err,output) {
@@ -151,7 +153,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
           break
 
         case 'signMmtPaymentTest':
-          // much the same as for initiatePayment above          
+          // much the same as for initiatePayment above
 
           if (typeof wallets[walletId].payments === 'undefined')
             wallets[walletId].payments = {}
@@ -297,27 +299,45 @@ function addExampleData(sbot) {
 
 }
 
-
 function createPayTo(sbot) {
   var payToData = electronInterface.createTransaction(wallets[currentWallet])
   if (payToData) {
     // TODO: ask for password in a secure way. (password here is hard coded to 'test')
-    ec.payTo(payToData.recipient, payToData.amount, 'test', function(err,output) {
+    // TODO fix the hardcoded fee of 0.01
+    ec.payTo(payToData.recipient, payToData.amount, 0.01, 'test', function(err,output) {
       console.log(JSON.stringify(output,null,4))
+      let txid;
       if (output.hex) {
         // deserialize to take a look at it
-        ec.deserialize(output.hex, function (err,output) {
-          console.log(JSON.stringify(output,null,4))
-         
-          //output.lockTime
+        ec.deserialize(output.hex, function (err, output) {
+          const electrumTx = output.result;
+          const inputs = electrumTx.inputs.map(
+            function(input) {
+              const seq = new btcnodejs.Sequence(input.sequence)
+              const witness = new btcnodejs.Witness();
+              return new btcnodejs.Input(
+                input.prevout_hash, input.prevout_n, btcnodejs.ScriptSig.empty(), seq, witness
+              )
+            }
+          )
+          const outputs = electrumTx.outputs.map(
+            function(output) {
+              const sigPub = btcnodejs.ScriptPubKey.fromHex(output.scriptPubKey);
+              return new btcnodejs.Output(output.value, sigPub);
+            }
+          )
+          const tx = new btcnodejs.Transaction(
+            electrumTx.version, inputs, outputs, new btcnodejs.Locktime(electrumTx.lockTime), true
+          );
+          txid = tx.txid;
         })
+        console.log(txid);
 
         //var recipients = Object.keys(wallets[currentWallet].cosigners)
 
         var payment = {
           //walletId: currentWallet,
-          // TODO: we need the transaction id
-          //key: 'd5f2a6a8cd1e8c35466cfec16551',
+          key: txid,
           rawTransaction: output.hex,
           // add rate?
           comment:  payToData.comment
@@ -333,7 +353,7 @@ function createPayTo(sbot) {
 function recieveMemo(sbot) {
   var recieveMemoData = electronInterface.createRecieveMemo()
   if (recieveMemoData) {
-    recieveMemoData.address = wallets[currentWallet].firstUnusedAddress 
+    recieveMemoData.address = wallets[currentWallet].firstUnusedAddress
     // TODO: amount, and expiry fields
     ec.addRequest(0,recieveMemoData.memo, false, function(err,output) {
 
@@ -366,15 +386,15 @@ function whoAmICallbackCreator(sbot) {
     // for now just use the first wallet (we need to let the user choose)
     // TODO: this wont work if there are no wallets yet
     var currentWallet = Object.keys(wallets)[0]
-    
-    if (typeof wallets[currentWallet].cosigners === 'undefined') wallets[currentWallet].cosigners = {} 
+
+    if (typeof wallets[currentWallet].cosigners === 'undefined') wallets[currentWallet].cosigners = {}
     // todo:  get the name from ssb about message?
     // using ssb-about and maybe avatar,etc
     wallets[currentWallet].cosigners[me] = {
       name: 'alice'
     }
-    if (verbose) console.log('-----cosigners:',JSON.stringify(wallets[currentWallet].cosigners,null,4)) 
-    
+    if (verbose) console.log('-----cosigners:',JSON.stringify(wallets[currentWallet].cosigners,null,4))
+
     // In order for messages to be encrypted we need to specify recipients
     // there can be a maximum of 7, which means if we wanted more we need multiple
     // messages (todo: implement this with verify recipients.length < 8)
@@ -394,11 +414,11 @@ function whoAmICallbackCreator(sbot) {
 
     // TODO: check electrum version
     ec.checkVersion(requiredElectrumVersion, function(err, output) {
-      if (err) { 
+      if (err) {
         console.log("Error connecting to electrum")
         $('#notifications').append('Error connecting to electrum.  Is the electrum daemon running, with a wallet loaded?')
       } else {
-        if (output) { 
+        if (output) {
           console.log("electrum version ok")
         } else {
           var errmsg = "electrum version" + requiredElectrumVersion + "required"
@@ -407,7 +427,7 @@ function whoAmICallbackCreator(sbot) {
         }
       }
     })
-    
+
     // Get master public key and its hash (so that we can store it safely in ssb messages)
     ec.getMpk(function (err,mpk){
       // identify the wallet using the hash of the mpk
@@ -417,7 +437,7 @@ function whoAmICallbackCreator(sbot) {
 
     ec.getBalance(function(err,output) {
       if (!err) wallets[currentWallet].balance = parseFloat(output.confirmed)
-      
+
       electronInterface.displayWalletInfo(wallets[currentWallet])
     })
 
@@ -425,7 +445,7 @@ function whoAmICallbackCreator(sbot) {
       if (err) console.error(err)
       //console.log('addresses ', JSON.stringify(output,null,4))
       wallets[currentWallet].addresses = output
-      // TODO: this should be:  (so that we can add more info about each address) 
+      // TODO: this should be:  (so that we can add more info about each address)
       // output.forEach(function(address) { wallets[currentWallet].addresses[address] = {} })
     })
 
