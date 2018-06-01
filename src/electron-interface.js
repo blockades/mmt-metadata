@@ -48,13 +48,24 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
     var payments = wallet.payments
     
     $("#paymentsTbody").html($(".paymentsUnfilled").clone()) 
+    $("#incompleteTbody").html($(".incompleteUnfilled").clone()) 
 
     Object.keys(payments).forEach(function( index) {
-      if (payments[index].broadcast) { 
-        var commentList = "" 
 
-        if (typeof payments[index].comments === 'undefined') payments[index].comments = []
-        if (typeof payments[index].amount === 'undefined') payments[index].amount = 'unknown'
+      var commentList = "" 
+
+      if (typeof payments[index].comments === 'undefined') payments[index].comments = []
+      if (typeof payments[index].amount === 'undefined') payments[index].amount = 'unknown'
+      
+      payments[index].comments.forEach(function(comment){    
+          // todo: resolve alias for comment.author and add it here
+          // possibly with avatar image 
+          commentList += "<p>"
+          commentList += comment.comment 
+          commentList += "</p>"
+      })
+      
+      if (payments[index].broadcast) { 
         if (typeof payments[index].confirmations === 'undefined') payments[index].confirmations = 'unknown'
         if (typeof payments[index].timestamp === 'undefined') 
           var dateDisplay = payments[index].timestamp = 'unknown'
@@ -62,13 +73,6 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
           var dateDisplay = new Date(payments[index].timestamp)
           dateDisplay = dateDisplay.toUTCString()
         }  
-        payments[index].comments.forEach(function(comment){    
-            // todo: resolve alias for comment.author and add it here
-            // possibly with avatar image 
-            commentList += "<p>"
-            commentList += comment.comment 
-            commentList += "</p>"
-        })
 
         $(".paymentsUnfilled").clone()
           .find(".date").text(dateDisplay).end()
@@ -111,8 +115,47 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
           .attr("class","filled")
         .insertAfter(".paymentsUnfilled")
       } else {
-        // TODO: display incomplete transactions here
-     
+        // TODO: Dont Repeat Yourself
+        console.log('##################',index) 
+        $(".incompleteUnfilled").clone()
+          .find(".date").text(dateDisplay).end()
+          .find(".initiatedBy").text("").end()
+          .find(".cosigners").text("").end()
+          .find(".comment").html(commentList).end()
+          .find(".rate").text(payments[index].rate).end()
+          .find(".amount").text(payments[index].amount).end()
+          .find(".recipients").text("recipeintsFromBlockchain").end()
+          .find(".options").find(".details").click(function(){ 
+            $('#txid').text(index)
+            // TODO: add more transaction details from the deserialised transaction
+            $('#transactionDetailsAmount').text(payments[index].amount)
+            //"initiatedBy"
+            //"signedBy"
+            //"outputs"
+            $('#comments').html(commentList)
+
+            $('#addComment').click( function (){
+              // we need sbot
+              var transactionComment = $("input#addTransactionComment").val()
+
+              $("input#addTransactionComment").val("")
+
+              var paymentComment = {
+                walletId: currentWallet,
+                key: index,
+                comment: transactionComment 
+              }
+              console.log(JSON.stringify(wallet.cosigners,null,4))
+              var recipients = Object.keys(wallet.cosigners)
+              publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients)
+              // todo: process this comment right now so we can immediately see the result
+            } )
+
+            $('#transactionTables').attr("class","invisible")
+            $('#transactionDetails').attr("class","visible")
+          }).end().end() 
+          .attr("class","filled")
+        .insertAfter(".incompleteUnfilled")
       }
     } )
 
