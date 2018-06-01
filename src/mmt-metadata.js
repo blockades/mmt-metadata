@@ -86,7 +86,7 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
       } else {
         walletId = msg.content.walletId
       }
-
+      
       // if we dont yet have this record, create it
       if (typeof wallets[walletId] === 'undefined') wallets[walletId] = {}
 
@@ -140,16 +140,27 @@ function processDecryptedMessage(err, msg,author, ssbKey,currentWallet,sbot) {
           if (msg.content.comment) addPaymentComment(msg, author, walletId)
           if (msg.content.rate)
             wallets[walletId].payments[msg.content.key].rate = msg.content.rate
-
-          // if (msg.content.rawTransaction) {
-          //   console.log('tx ',msg.content.rawTransaction)
-          //   ec.deserialize(msg.content.rawTransaction, function (err,output) {
-          //     console.log(JSON.stringify(output,null,4))
-          //     // we are interested in:
-          //     //   result.inputs[0].signatures (array of signatures where the missing ones are 'null')
-          //     //   result.outputs.forEach( function (output){  } )  value -int,satoshis,  address
-          //   })
-          // }
+        
+          // if the transaction has not yet been broadcast
+          // TODO: should we refresh our transaction history from electrum before doing this?
+          if (!wallets[walletId].payments[msg.content.key].broadcast) { 
+            wallets[walletId].payments[msg.content.key].broadcast = false
+        
+            // TODO: what to do about the date for partially signed transactions? what is locktime?
+            if (msg.content.rawTransaction) {
+              wallets[walletId].payments[msg.content.key].rawTransaction = msg.content.rawTransaction
+              ec.deserialize(msg.content.rawTransaction, function (err,output) {
+                
+                // TODO: we already have some test messages with rawTransactions which 
+                // cant be deserialized. aargh. 
+                
+                console.log(JSON.stringify(output,null,4))
+                // we are interested in:
+                //   result.inputs[0].signatures (array of signatures where the missing ones are 'null')
+                //   result.outputs.forEach( function (output){  } )  value -int,satoshis,  address
+              })
+            }
+          }
           break
 
         case 'signMmtPaymentTest':
@@ -304,48 +315,59 @@ function createPayTo(sbot) {
   if (payToData) {
     // TODO: ask for password in a secure way. (password here is hard coded to 'test')
     // TODO fix the hardcoded fee of 0.01
-    ec.payTo(payToData.recipient, payToData.amount, 0.01, 'test', function(err,output) {
-      console.log(JSON.stringify(output,null,4))
-      let txid;
-      if (output.hex) {
-        // deserialize to take a look at it
-        ec.deserialize(output.hex, function (err, output) {
-          const electrumTx = output.result;
-          const inputs = electrumTx.inputs.map(
-            function(input) {
-              const seq = new btcnodejs.Sequence(input.sequence)
-              const witness = new btcnodejs.Witness();
-              return new btcnodejs.Input(
-                input.prevout_hash, input.prevout_n, btcnodejs.ScriptSig.empty(), seq, witness
-              )
-            }
-          )
-          const outputs = electrumTx.outputs.map(
-            function(output) {
-              const sigPub = btcnodejs.ScriptPubKey.fromHex(output.scriptPubKey);
-              return new btcnodejs.Output(output.value, sigPub);
-            }
-          )
-          const tx = new btcnodejs.Transaction(
-            electrumTx.version, inputs, outputs, new btcnodejs.Locktime(electrumTx.lockTime), true
-          );
-          txid = tx.txid;
-        })
-        console.log(txid);
+ 
+    // TODO: we should already display a fee estimation on the 'send' tab somewhere 
+    ec.getFeeRate(function (err,feeRate) {
+      console.log('fee rate',feeRate)
+      // going to guess the transaction size for now - taking an example which has
+      // 982 hex digits, would be 491 bytes, convert to kb, 0.479492187.  assuming the fee rate is satoshis per kb
+      feeInSatoshis = feeRate / 0.479492187
+      feeInBTC = feeInSatoshis / 100000000
 
-        //var recipients = Object.keys(wallets[currentWallet].cosigners)
+      ec.payTo(payToData.recipient, payToData.amount, feeInBTC, 'test', function(err,output) {
+        console.log(JSON.stringify(output,null,4))
+        let txid;
+        if (output.hex) {
+          // deserialize to take a look at it
+          ec.deserialize(output.hex, function (err, output) {
+            const electrumTx = output.result;
+            const inputs = electrumTx.inputs.map(
+              function(input) {
+                const seq = new btcnodejs.Sequence(input.sequence)
+                const witness = new btcnodejs.Witness();
+                return new btcnodejs.Input(
+                  input.prevout_hash, input.prevout_n, btcnodejs.ScriptSig.empty(), seq, witness
+                )
+              }
+            )
+            const outputs = electrumTx.outputs.map(
+              function(output) {
+                const sigPub = btcnodejs.ScriptPubKey.fromHex(output.scriptPubKey);
+                return new btcnodejs.Output(output.value, sigPub);
+              }
+            )
+            const tx = new btcnodejs.Transaction(
+              electrumTx.version, inputs, outputs, new btcnodejs.Locktime(electrumTx.lockTime), true
+            );
+            txid = tx.txid;
+          })
+          console.log(txid);
 
-        var payment = {
-          //walletId: currentWallet,
-          key: txid,
-          rawTransaction: output.hex,
-          // add rate?
-          comment:  payToData.comment
+          var recipients = Object.keys(wallets[currentWallet].cosigners)
+
+          var payment = {
+            //walletId: currentWallet,
+            key: txid,
+            rawTransaction: output.hex,
+            // add rate?
+            comment:  payToData.comment
+          }
+          publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients)
+          // todo: add this as an imcomplete tx and display it
         }
-        //publishMessage(sbot, 'initiateMmtPaymentTest', payment, recipients)
-        // todo: add this as an imcomplete tx and display it
-      }
-    } )
+      } )
+
+    })
   }
 
 }
