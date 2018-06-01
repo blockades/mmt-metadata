@@ -314,9 +314,9 @@ function createPayTo(sbot) {
           const inputs = electrumTx.inputs.map(
             function(input) {
               const seq = new btcnodejs.Sequence(input.sequence)
-              const witness = new btcnodejs.Witness([new ByteBuffer.fromHex(input.wittness), new ByteBuffer.fromHex(input.wittnessScript)]);
+              const witness = new btcnodejs.Witness();
               return new btcnodejs.Input(
-                input.prevout_hash, input.value, witness.toScriptSig(), seq, witness
+                input.prevout_hash, input.prevout_n, btcnodejs.ScriptSig.empty(), seq, witness
               )
             }
           )
@@ -326,7 +326,6 @@ function createPayTo(sbot) {
               return new btcnodejs.Output(output.value, sigPub);
             }
           )
-          // TODO this isn't giving the same result as in Electrum, probably the Witness is wrong...
           const tx = new btcnodejs.Transaction(
             electrumTx.version, inputs, outputs, new btcnodejs.Locktime(electrumTx.lockTime), true
           );
