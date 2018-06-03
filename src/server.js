@@ -7,7 +7,7 @@ const Path = require('path')
 // Install the plugin
 Server
   .use(require('scuttlebot/plugins/master')) // required
-//  .use(require('ssb-about'))
+  .use(require('ssb-about'))
   .use(require('ssb-private'))
   // .use(require('ssb-backlinks')) // not required, just an example
 
