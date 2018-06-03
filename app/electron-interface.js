@@ -1,6 +1,5 @@
-
-var bitcoinUtils = require('../src/bitcoin-utils')
-var electronInterface = module.exports = {}
+const bitcoinUtils = require('../src/bitcoin-utils')
+const electronInterface = module.exports = {}
 
 
 electronInterface.displayWalletInfo = function(wallet) {
@@ -8,21 +7,21 @@ electronInterface.displayWalletInfo = function(wallet) {
   if (wallet.requiredCosigners) $("#requiredCosigners").text(wallet.requiredCosigners)
   if (wallet.publicKeys) $("#numberCosigners").text(wallet.publicKeys.length)
   if (wallet.balance) $(".balance").text(wallet.balance)
-  
+
   // TODO: names and avatars of cosigners 
 
 
   if (wallet.addresses) {
     $("#addressesTbody").html($(".addressesUnfilled").clone()) 
-    
+
     // TODO: amount and comments
     wallet.addresses.forEach( function(address) {
       $(".addressesUnfilled").clone()
         .find(".address").text(address).end()
         .find(".amount").text("-").end()
         .attr("class","filled")
-      .insertAfter(".addressesUnfilled")
-    } ) 
+        .insertAfter(".addressesUnfilled")
+    } )
   }
 
 
@@ -34,8 +33,8 @@ electronInterface.displayWalletInfo = function(wallet) {
         .find(".address").text(request.address).end()
         .find(".memo").text(request.memo).end()
         .attr("class","filled")
-      .insertAfter(".requestsUnfilled")
-    } ) 
+        .insertAfter(".requestsUnfilled")
+    } )
   }
 
   if (wallet.firstUnusedAddress) 
@@ -46,7 +45,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
   // this would be the place to create a snazzy html table
   if (wallet.payments) {
     var payments = wallet.payments
-    
+
     $("#paymentsTbody").html($(".paymentsUnfilled").clone()) 
     $("#incompleteTbody").html($(".incompleteUnfilled").clone()) 
 
@@ -56,15 +55,15 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
 
       if (typeof payments[index].comments === 'undefined') payments[index].comments = []
       if (typeof payments[index].amount === 'undefined') payments[index].amount = 'unknown'
-      
+
       payments[index].comments.forEach(function(comment){    
-          // todo: resolve alias for comment.author and add it here
-          // possibly with avatar image 
-          commentList += "<p>"
-          commentList += comment.comment 
-          commentList += "</p>"
+        // todo: resolve alias for comment.author and add it here
+        // possibly with avatar image 
+        commentList += "<p>"
+        commentList += comment.comment 
+        commentList += "</p>"
       })
-      
+
       if (payments[index].broadcast) { 
         if (typeof payments[index].confirmations === 'undefined') payments[index].confirmations = 'unknown'
         if (typeof payments[index].timestamp === 'undefined') 
@@ -80,7 +79,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
           .find(".comment").html(commentList).end()
           .find(".rate").text(payments[index].rate).end()
           .find(".amount").text(payments[index].amount).end()
-          // TODO: make a thingy that goes from red to green with under 6 confimations
+        // TODO: make a thingy that goes from red to green with under 6 confimations
           .find(".confirmations").text(payments[index].confirmations).end()
           .find(".recipients").text("recipeintsFromBlockchain").end()
           .find(".options").find(".details").click(function(){ 
@@ -91,13 +90,13 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
             //"signedBy"
             //"outputs"
             $('#comments').html(commentList)
-            
+
             $('#addComment').click( function (){
               // we need sbot
               var transactionComment = $("input#addTransactionComment").val()
-  
+
               $("input#addTransactionComment").val("")
-  
+
               var paymentComment = {
                 walletId: currentWallet,
                 key: index,
@@ -113,7 +112,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
             $('#transactionDetails').attr("class","visible")
           }).end().end() 
           .attr("class","filled")
-        .insertAfter(".paymentsUnfilled")
+          .insertAfter(".paymentsUnfilled")
       } else {
         // TODO: Dont Repeat Yourself
         console.log('##################',index) 
@@ -155,7 +154,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
             $('#transactionDetails').attr("class","visible")
           }).end().end() 
           .attr("class","filled")
-        .insertAfter(".incompleteUnfilled")
+          .insertAfter(".incompleteUnfilled")
       }
     } )
 
@@ -176,7 +175,7 @@ electronInterface.createTransaction = function(wallet) {
   console.log('------sendAmount', typeof sendAmount, sendAmount)
   var payTo = $("input#payTo").val()
   var comment = $('input#sendComment').val()
-  
+
   if ((!sendAmount) || (sendAmount < 0)) {
     $("#sendVerifyErrors").text("Invalid amount. ")
     return false
@@ -202,11 +201,10 @@ electronInterface.createTransaction = function(wallet) {
 electronInterface.createRecieveMemo = function() {
 
   var memo = $("input#memo").val()
-  
+
   $("input#memo").val("")
-  
+
   // TODO: get new unused address, update display
 
   return {"memo": memo} 
-  
 }
