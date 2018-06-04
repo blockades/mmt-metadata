@@ -63,7 +63,7 @@ function publishMessage (server, type, content, recipients) {
   server.private.publish({ type, content, recipients }, recipients, (err, msg) => {
     if (err) console.error(err)
     if (verbose) {
-      console.log('Published: ', messageType)
+      console.log('Published: ', type)
       console.log(JSON.stringify(msg, null, 4))
     }
   })
@@ -194,13 +194,13 @@ function processDecryptedMessage(err, msg, author, ssbKey, currentWallet, server
         //wallets[walletId].addresses[msg.content.address].comments.push(theComment)
     }
 
-    electronInterface.displayPayments(wallets[currentWallet],currentWallet,server)
+    electronInterface.displayPayments(wallets[currentWallet], currentWallet, server)
     //writeDbLocally()
   }
 }
 
 
-function addXpub(msg,author,walletId,initiator) {
+function addXpub(msg, author, walletId, initiator) {
 
   var xpubToAdd = {
     owner: author,
@@ -498,11 +498,11 @@ function whoAmICallbackCreator(server) {
     // todo:  run once with live:false, to find wallets.  then present choice of found
     // wallets or 'create new'
     var count = 0
-    messageTypes.forEach(function (messageType) {
+    messageTypes.forEach(function (type) {
       // drain lets us process stuff as it comes
-      pull(server.messagesByType({ live: false, type: messageType })
-        , pull.drain(function (message) {
-
+      pull(
+        server.messagesByType({ live: false, type }),
+        pull.drain(function (message) {
           try {
             if (message.value)
               if (message.value.content) {
@@ -520,7 +520,6 @@ function whoAmICallbackCreator(server) {
               }
           } catch(e) {
             console.error(e)
-
           }
         }, function(err) {
           if (err) console.error(err)
@@ -534,8 +533,8 @@ function whoAmICallbackCreator(server) {
           //   if (walletId) electronInterface.displayPayments(wallets[walletId])
           // }
           //server.close()
-        }))
-    } )
-    // } )
+        })
+      )
+    })
   }
 }
