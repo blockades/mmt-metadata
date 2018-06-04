@@ -1,4 +1,4 @@
-const bitcoinUtils = require('../src/bitcoin-utils')
+const bitcoinUtils = require('./bitcoin-utils')
 const electronInterface = module.exports = {}
 
 
@@ -159,10 +159,8 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
     } )
 
 
-    if (verbose) {
-      console.log('payments now looks like this:')
-      console.log(JSON.stringify(payments, null, 4))
-    }
+    console.log('payments now looks like this:')
+    console.log(JSON.stringify(payments, null, 4))
   } else {
     console.error('cant display payments as no payments associated with wallet')
   }
