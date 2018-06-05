@@ -144,3 +144,5 @@ electrum --testnet daemon stop
 * [electrum json rpc interface](http://docs.electrum.org/en/latest/merchant.html#jsonrpc-interface)
 * [live.blockcypher.com/btc-testnet](https://live.blockcypher.com/btc-testnet/) - this is the testnet explorer im using.  If you know a better one, post it here
 * [mixmix/ssb-server-plugin-intro](https://github.com/mixmix/ssb-server-plugin-intro)
+* [ssbc/ssb-ref: check if a string is a valid ssb-reference](https://github.com/ssbc/ssb-ref)
+* [KGibb8/scuttletron: A minimal electron application running with a scuttlebot server](https://github.com/KGibb8/scuttletron)

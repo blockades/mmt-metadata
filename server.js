@@ -7,6 +7,8 @@ Server
   .use(require('scuttlebot/plugins/master'))
   .use(require('ssb-private'))
   .use(require('ssb-about'))
+  // our new plugin
+  .use(require('./app/ssb-mmt-metadata'))
 
 const Config = require('./config')
 var config = Config()
