@@ -41,7 +41,7 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#recieveAddress").text(wallet.firstUnusedAddress)
 }
 
-electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
+electronInterface.displayPayments = function(wallet,currentWallet,server) {
   // this would be the place to create a snazzy html table
   if (wallet.payments) {
     var payments = wallet.payments
@@ -104,7 +104,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
               }
               console.log(JSON.stringify(wallet.cosigners,null,4))
               var recipients = Object.keys(wallet.cosigners)
-              publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients)
+              publishMessage(server, 'addMmtPaymentCommentTest', paymentComment, recipients)
               // todo: process this comment right now so we can immediately see the result
             } )
 
@@ -146,7 +146,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,sbot) {
               }
               console.log(JSON.stringify(wallet.cosigners,null,4))
               var recipients = Object.keys(wallet.cosigners)
-              publishMessage(sbot, 'addMmtPaymentCommentTest', paymentComment, recipients)
+              publishMessage(server, 'addMmtPaymentCommentTest', paymentComment, recipients)
               // todo: process this comment right now so we can immediately see the result
             } )
 

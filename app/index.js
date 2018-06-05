@@ -407,16 +407,29 @@ function whoAmICallbackCreator(server) {
     var me = msg.id
 
     if(verbose) console.log('whoami: ',me)
+    
+    server.about.get(aboutCallbackCreator(server,me))  
+  }
+}
+
+function aboutCallbackCreator(server, me) {
+  return function aboutCallback(err,ssbAbout) {
+
 
     // for now just use the first wallet (we need to let the user choose)
     // TODO: this wont work if there are no wallets yet
     var currentWallet = Object.keys(wallets)[0]
 
     if (typeof wallets[currentWallet].cosigners === 'undefined') wallets[currentWallet].cosigners = {}
+    
     // todo:  get the name from ssb about message?
     // using ssb-about and maybe avatar,etc
     wallets[currentWallet].cosigners[me] = {
-      name: 'alice'
+      // not sure if this is the most reliable way to get self-identified name but works for me
+      name: ssbAbout[me].name[me][0],
+      // TODO: this gives image location, we still need to actually get the image from ssb
+      image: ssbAbout[me].image[me][0]
+      // description?  
     }
     if (verbose) console.log('-----cosigners:',JSON.stringify(wallets[currentWallet].cosigners,null,4))
 
