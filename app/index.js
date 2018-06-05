@@ -415,7 +415,9 @@ function whoAmICallbackCreator(server) {
 function aboutCallbackCreator(server, me) {
   return function aboutCallback(err,ssbAbout) {
 
-
+    server.mmtMetadata.get(function (err,data){
+      console.log('Output from mmtMetadata plugin: ',JSON.stringify(data,null,4))
+    })
     // for now just use the first wallet (we need to let the user choose)
     // TODO: this wont work if there are no wallets yet
     var currentWallet = Object.keys(wallets)[0]
