@@ -2,6 +2,9 @@
 const flumeView = require('flumeview-reduce')
 const pull = require('pull-stream')
 
+const mergeWith = require('lodash.mergewith')
+
+
 const messageTypes = [
   'initiateMmtMultisigTest',
   'shareMmtPublicKeyTest',
@@ -25,6 +28,8 @@ module.exports = {
   }
 }
 
+
+
 function reduce (result,item) {
   if (!result) result = {}
 
@@ -33,8 +38,9 @@ function reduce (result,item) {
   // console.log('!!!!!!! item', JSON.stringify(item,null,4))
   // console.log('!!!!!!! result', JSON.stringify(result,null,4))
     Object.keys(item).forEach(function (i){
-      result[i] = item[i]
+      //result[i] = item[i]
       // this should be a deep merge which concatonates arrays
+      mergeWith(result, item,customizer)
     })
   } 
   return result
@@ -99,4 +105,12 @@ function map (msg) {
   return toReturn
 }
 
+
+
+
+function customizer(objValue, srcValue) {
+  if (objValue.constructor === Array)
+    return objValue.concat(srcValue)
+  
+}
 
