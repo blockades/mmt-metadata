@@ -115,7 +115,6 @@ electronInterface.displayPayments = function(wallet,currentWallet,server) {
           .insertAfter(".paymentsUnfilled")
       } else {
         // TODO: Dont Repeat Yourself
-        console.log('##################',index) 
         $(".incompleteUnfilled").clone()
           .find(".date").text(dateDisplay).end()
           .find(".initiatedBy").text("").end()
@@ -159,8 +158,8 @@ electronInterface.displayPayments = function(wallet,currentWallet,server) {
     } )
 
 
-    console.log('payments now looks like this:')
-    console.log(JSON.stringify(payments, null, 4))
+    // console.log('payments now looks like this:')
+    // console.log(JSON.stringify(payments, null, 4))
   } else {
     console.error('cant display payments as no payments associated with wallet')
   }

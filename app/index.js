@@ -328,11 +328,12 @@ function createPayTo(server) {
       feeInBTC = feeInSatoshis / 100000000
 
       ec.payTo(payToData.recipient, payToData.amount, feeInBTC, 'test', function(err,output) {
-        console.log(JSON.stringify(output,null,4))
+        // console.log(JSON.stringify(output,null,4))
         let txid;
         if (output.hex) {
           // deserialize to take a look at it
           ec.deserialize(output.hex, function (err, output) {
+            
             const electrumTx = output.result;
             const inputs = electrumTx.inputs.map(
               function(input) {

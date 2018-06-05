@@ -23,7 +23,7 @@ module.exports = {
   },
   init: function (ssbServer, config) {
     console.log('*** Loading mmtMetadata ***')
-    return ssbServer._flumeUse('mmtMetadata', flumeView(1.9,reduce,map))
+    return ssbServer._flumeUse('mmtMetadata', flumeView(2.4,reduce,map))
 
   }
 }
@@ -35,13 +35,13 @@ function reduce (result,item) {
 
   if (Object.keys(item).length > 0) {
 
-  // console.log('!!!!!!! item', JSON.stringify(item,null,4))
-  // console.log('!!!!!!! result', JSON.stringify(result,null,4))
-    Object.keys(item).forEach(function (i){
+   console.log('!!!!!!! item', JSON.stringify(item,null,4))
+   console.log('!!!!!!! result', JSON.stringify(result,null,4))
+    //Object.keys(item).forEach(function (i){
       //result[i] = item[i]
       // this should be a deep merge which concatonates arrays
       mergeWith(result, item,customizer)
-    })
+    // })
   } 
   return result
 }
@@ -74,32 +74,33 @@ function map (msg) {
         break
 
       case 'initiateMmtPaymentTest':
-        const txid = content.key
+        var txid = content.key
         delete content.key
         content.initiatedBy = author
         content.initialComment = content.comment
         delete content.comment
-        wallet.transactions[txid] = content  
+        wallet.transactions = { [txid]: content }  
         break
 
       case 'signMmtPaymentTest':
-        const txid = content.key
+        var txid = content.key
         delete content.key
         content.signedBy = [ author ]
         content.comments = [ {author, comment: content.comment } ]
         delete content.comment
-        wallet.transactions[txid] = content  
+        wallet.transactions = { [txid]: content }  
         break
 
       case 'addMmtPaymentCommentTest':
-        wallet.transactions[content.key].comments = [ { author, comment: content.comment } ]
+        wallet.transactions = { [content.key]: {comments: [ { author, comment: content.comment } ] } }
         break
       case 'addMmtRecieveCommentTest':
         const address = content.address
         delete content.address
         content.author = author
-        wallet.recieveAddress[content.address] = [ content ]
+        wallet.recieveAddress = { [content.address]: [ content ] }
     }
+    
     toReturn = { [key]: wallet }
   } 
   return toReturn
@@ -109,7 +110,7 @@ function map (msg) {
 
 
 function customizer(objValue, srcValue) {
-  if (objValue.constructor === Array)
+  if (objValue && objValue.constructor === Array)
     return objValue.concat(srcValue)
   
 }
