@@ -240,20 +240,20 @@ ec.parseHistory = function (wallet, callback) {
       //       this requires electrum version 3.1.3 
       if (output.transactions)
         output.transactions.forEach(function(transaction) {
-          if (typeof wallet.payments === 'undefined') 
-            wallet.payments = {}
-          if (typeof wallet.payments[transaction.txid] === 'undefined') 
-            wallet.payments[transaction.txid] = {}
+          if (typeof wallet.transactions === 'undefined') 
+            wallet.transactions = {}
+          if (typeof wallet.transactions[transaction.txid] === 'undefined') 
+            wallet.transactions[transaction.txid] = {}
           
           // TODO: value is a string eg "1.0 BTC" - convert to int
-          wallet.payments[transaction.txid].amount = transaction.value
+          wallet.transactions[transaction.txid].amount = transaction.value
           
-          wallet.payments[transaction.txid].confirmations = transaction.confirmations
+          wallet.transactions[transaction.txid].confirmations = transaction.confirmations
         
-          wallet.payments[transaction.txid].broadcast = true
+          wallet.transactions[transaction.txid].broadcast = true
           
           // convert timestamp to seconds to use as javascript date
-          wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
+          wallet.transactions[transaction.txid].timestamp = transaction.timestamp * 1000
           // copy transaction.label as comment?
         
         })

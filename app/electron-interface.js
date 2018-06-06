@@ -43,8 +43,8 @@ electronInterface.displayWalletInfo = function(wallet) {
 
 electronInterface.displayPayments = function(wallet,currentWallet,server) {
   // this would be the place to create a snazzy html table
-  if (wallet.payments) {
-    var payments = wallet.payments
+  if (wallet.transactions) {
+    var payments = wallet.transactions
 
     $("#paymentsTbody").html($(".paymentsUnfilled").clone()) 
     $("#incompleteTbody").html($(".incompleteUnfilled").clone()) 
