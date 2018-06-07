@@ -15,7 +15,7 @@ function identifyWallet(allWallets,mpk) {
 }
 
 // todo: should this query be done within the ssb plugin?
-function findIncompleteWallets(AllWallets) {
+function findIncompleteWallets(allWallets) {
   var incompleteWallets = []
   Object.keys(allWallets).forEach( function (aWallet) {
     if (Object.keys(allWallets[aWallet].xpub).length < allWallets[aWallet].numCosigners)

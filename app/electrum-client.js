@@ -192,16 +192,16 @@ ec.deserialize = function(tx, callback) {
 };
 
 ec.extractDataFromTx = function(tx, callback) {
-  electrumRequest("deserialize", { tx: output.result.hex }, function(
+  electrumRequest("deserialize", { tx }, function(
     err,
     output
   ) {
     var transaction = {};
 
     // todo: take from signatures from all inputs?
-    transaction.signatures = output.result.inputs[0].signatures;
+    transaction.signatures = tx.result.inputs[0].signatures;
     // (array of signatures where the missing ones are 'null')
-    transaction.outputs = output.result.outputs;
+    transaction.outputs = tx.result.outputs;
     //value -int,satoshis,  address
     // TODO: use ismine to find which is the change address
     callback(err, transaction);
@@ -287,7 +287,7 @@ ec.parseHistory = function(callback) {
 
         // TODO: what to do about the date for partially signed transactions? what is locktime?
 
-        ec.getTransaction(transaction.txid, function(err, output) {
+        electrumRequest("gettransaction", { txid: transaction.txid }, function(err, rawTx) {
           ec.extractDataFromTx(rawTx, function(err, transaction) {
             mergeWith(wallet.transactions[transaction.txid], transaction);
             callback(err, wallet);
@@ -320,7 +320,7 @@ ec.getWalletInfo = function(callback) {
         if (err) console.error(err);
         wallet.requests = output;
         ec.getUnusedAddress(function(err, output) {
-          wallets[currentWallet].firstUnusedAddress = output;
+          wallet.firstUnusedAddress = output;
           // TODO: qr code
           callback(err,wallet)
         });

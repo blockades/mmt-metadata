@@ -107,10 +107,12 @@ function map(msg) {
     }
 
     // deserialize all transactions
-    for (transaction in wallet.transactions)
-      ec.extractDataFromTx(rawTx, function(err, transaction) {
-        merge
-      } )
+    for (transaction in wallet.transactions) {
+      if (transaction.rawTransaction)
+        ec.extractDataFromTx(transaction.rawTransaction, function(err, transactionData) {
+          mergeWith(transaction,transactionData,util.concatArrays)
+        } )
+    }
 
     toReturn = {[key]: wallet};
   }
