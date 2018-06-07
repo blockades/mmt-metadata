@@ -16,7 +16,8 @@
   "devDependencies": {
     "electron": "=1.8.6",
     "electron-rebuild": "=1.7.0",
-    "electron-reload": "^1.2.2"
+    "electron-reload": "^1.2.2",
+    "tape": "^4.9.0"
   },
   "dependencies": {
     "bip32": "^0.1.0",
