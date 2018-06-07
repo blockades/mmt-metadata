@@ -3,14 +3,9 @@ const pull = require('pull-stream');
 
 const mergeWith = require('lodash.mergewith');
 
-const messageTypes = [
-  'initiateMmtMultisigTest',
-  'shareMmtPublicKeyTest',
-  'initiateMmtPaymentTest',
-  'signMmtPaymentTest',
-  'addMmtPaymentCommentTest',
-  'addMmtRecieveCommentTest',
-];
+const ec = require("./electrum-client");
+const util = require("./util");
+const messageTypes = util.messageTypes;
 
 module.exports = {
   name: 'mmtMetadata',
@@ -22,7 +17,7 @@ module.exports = {
   },
   init: function(ssbServer, config) {
     console.log('*** Loading mmtMetadata ***');
-    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.4, reduce, map));
+    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.6, reduce, map));
     return { 
       get: view.get,
       stream: view.stream,
@@ -42,13 +37,9 @@ function reduce(result, item) {
   if (!result) result = {};
 
   if (Object.keys(item).length > 0) {
-    console.log('!!!!!!! item', JSON.stringify(item, null, 4));
-    console.log('!!!!!!! result', JSON.stringify(result, null, 4));
-    //Object.keys(item).forEach(function (i){
-    //result[i] = item[i]
-    // this should be a deep merge which concatonates arrays
-    mergeWith(result, item, customizer);
-    // })
+    // console.log('!!!!!!! item', JSON.stringify(item, null, 4));
+    // console.log('!!!!!!! result', JSON.stringify(result, null, 4));
+    mergeWith(result, item, util.concatArrays);
   }
   return result;
 }
@@ -64,7 +55,12 @@ function map(msg) {
       key = content.walletId;
       delete content.walletId;
     }
+    
+    // TODO: somewhere we need to make sure that all messages about each wallet
+    // have exactly the same recipients
+    wallet.cosigners = msg.value.content.recipients 
 
+    // console.log('!!!!!!! ', JSON.stringify(msg, null, 4));
     switch (msg.value.content.type) {
       case 'initiateMmtMultisigTest':
         key = msg.key;
@@ -110,12 +106,14 @@ function map(msg) {
         wallet.recieveAddress = {[content.address]: [content]};
     }
 
+    // deserialize all transactions
+    for (transaction in wallet.transactions)
+      ec.extractDataFromTx(rawTx, function(err, transaction) {
+        merge
+      } )
+
     toReturn = {[key]: wallet};
   }
   return toReturn;
 }
 
-function customizer(objValue, srcValue) {
-  if (objValue && objValue.constructor === Array)
-    return objValue.concat(srcValue);
-}
