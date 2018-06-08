@@ -201,8 +201,11 @@ ec.addRequest = function (amount,memo,expiration, callback) {
 }
 
 ec.payTo = function (destination, amount, fee, password, callback) {
-  var payData = { "destination": destination, "amount": amount, "fee": fee }
-  if ((password) && (password != '')) payData.password = password
+  let payData = { "destination": destination, "amount": amount }
+  if(!!fee) {
+    payData["fee"] = fee;
+  }
+  if (!!password && password !== '') payData.password = password
   electrumRequest("payto", payData, function (err,output) {
     if (typeof output.result !== 'undefined') output = output.result
     callback(err,output)
