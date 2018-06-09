@@ -8,7 +8,7 @@ Server
   .use(require('ssb-private'))
   .use(require('ssb-about'))
   // our new plugin
-  .use(require('./app/ssb-mmt-metadata'))
+  .use(require('./plugin/ssb-mmt-metadata'))
 
 const Config = require('./config')
 var config = Config()
