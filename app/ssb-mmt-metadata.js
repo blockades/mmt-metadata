@@ -45,77 +45,76 @@ function reduce(result, item) {
 }
 
 function map(msg) {
-  if (msg.value.content && messageTypes.indexOf(msg.value.content.type) > -1) {
-    var toReturn = {};
-    const content = msg.value.content.content;
-    const author = msg.value.author;
-    var wallet = {};
-    var key = '';
-    if (content.walletId) {
-      key = content.walletId;
-      delete content.walletId;
-    }
-    
-    // TODO: somewhere we need to make sure that all messages about each wallet
-    // have exactly the same recipients
-    wallet.cosigners = msg.value.content.recipients 
-
-    // console.log('!!!!!!! ', JSON.stringify(msg, null, 4));
-    switch (msg.value.content.type) {
-      case 'initiateMmtMultisigTest':
-        key = msg.key;
-        // todo: can we set cosigners to the other recipients of this message?
-        wallet = content;
-        wallet.xpub = {[wallet.xpub]: author};
-
-        break;
-
-      case 'shareMmtPublicKeyTest':
-        wallet = content;
-        wallet.xpub = {[wallet.xpub]: author};
-
-        break;
-
-      case 'initiateMmtPaymentTest':
-        var txid = content.key;
-        delete content.key;
-        content.initiatedBy = author;
-        content.initialComment = content.comment;
-        delete content.comment;
-        wallet.transactions = {[txid]: content};
-        break;
-
-      case 'signMmtPaymentTest':
-        var txid = content.key;
-        delete content.key;
-        content.signedBy = [author];
-        content.comments = [{author, comment: content.comment}];
-        delete content.comment;
-        wallet.transactions = {[txid]: content};
-        break;
-
-      case 'addMmtPaymentCommentTest':
-        wallet.transactions = {
-          [content.key]: {comments: [{author, comment: content.comment}]},
-        };
-        break;
-      case 'addMmtRecieveCommentTest':
-        const address = content.address;
-        delete content.address;
-        content.author = author;
-        wallet.recieveAddress = {[content.address]: [content]};
-    }
-
-    // deserialize all transactions
-    for (transaction in wallet.transactions) {
-      if (transaction.rawTransaction)
-        ec.extractDataFromTx(transaction.rawTransaction, function(err, transactionData) {
-          mergeWith(transaction,transactionData,util.concatArrays)
-        } )
-    }
-
-    toReturn = {[key]: wallet};
+  if (!msg.value.content || messageTypes.indexOf(msg.value.content.type) === -1) return
+  var toReturn = {};
+  const content = msg.value.content.content;
+  const author = msg.value.author;
+  var wallet = {};
+  var key = '';
+  if (content.walletId) {
+    key = content.walletId;
+    delete content.walletId;
   }
+  
+  // TODO: somewhere we need to make sure that all messages about each wallet
+  // have exactly the same recipients
+  wallet.cosigners = msg.value.content.recipients 
+
+  // console.log('!!!!!!! ', JSON.stringify(msg, null, 4));
+  switch (msg.value.content.type) {
+    case 'initiateMmtMultisigTest':
+      key = msg.key;
+      // todo: can we set cosigners to the other recipients of this message?
+      wallet = content;
+      wallet.xpub = {[wallet.xpub]: author};
+
+      break;
+
+    case 'shareMmtPublicKeyTest':
+      wallet = content;
+      wallet.xpub = {[wallet.xpub]: author};
+
+      break;
+
+    case 'initiateMmtPaymentTest':
+      var txid = content.key;
+      delete content.key;
+      content.initiatedBy = author;
+      content.initialComment = content.comment;
+      delete content.comment;
+      wallet.transactions = {[txid]: content};
+      break;
+
+    case 'signMmtPaymentTest':
+      var txid = content.key;
+      delete content.key;
+      content.signedBy = [author];
+      content.comments = [{author, comment: content.comment}];
+      delete content.comment;
+      wallet.transactions = {[txid]: content};
+      break;
+
+    case 'addMmtPaymentCommentTest':
+      wallet.transactions = {
+        [content.key]: {comments: [{author, comment: content.comment}]},
+      };
+      break;
+    case 'addMmtRecieveCommentTest':
+      const address = content.address;
+      delete content.address;
+      content.author = author;
+      wallet.recieveAddress = {[content.address]: [content]};
+  }
+
+  // deserialize all transactions
+  for (transaction in wallet.transactions) {
+    if (transaction.rawTransaction)
+      ec.extractDataFromTx(transaction.rawTransaction, function(err, transactionData) {
+        mergeWith(transaction,transactionData,util.concatArrays)
+      } )
+  }
+
+  toReturn = {[key]: wallet};
   return toReturn;
 }
 
