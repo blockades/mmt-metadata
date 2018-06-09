@@ -196,12 +196,13 @@ ec.extractDataFromTx = function(tx, callback) {
     err,
     output
   ) {
+    var txData = output.result
     var transaction = {};
 
     // todo: take from signatures from all inputs?
-    transaction.signatures = tx.result.inputs[0].signatures;
+    transaction.signatures = txData.inputs[0].signatures;
     // (array of signatures where the missing ones are 'null')
-    transaction.outputs = tx.result.outputs;
+    transaction.outputs = txData.outputs;
     //value -int,satoshis,  address
     // TODO: use ismine to find which is the change address
     callback(err, transaction);
@@ -288,8 +289,8 @@ ec.parseHistory = function(callback) {
         // TODO: what to do about the date for partially signed transactions? what is locktime?
 
         electrumRequest("gettransaction", { txid: transaction.txid }, function(err, rawTx) {
-          ec.extractDataFromTx(rawTx, function(err, transaction) {
-            mergeWith(wallet.transactions[transaction.txid], transaction);
+          ec.extractDataFromTx(rawTx.result.hex, function(err, moreTransactionData) {
+            mergeWith(wallet.transactions[transaction.txid], moreTransactionData);
             callback(err, wallet);
           });
         });
