@@ -221,6 +221,18 @@ function aboutCallbackCreator(server, me) {
           // todo: provide a way to initiate it
         } else {
           mergeWith(wallet, dataFromSsb[currentWallet], util.concatArrays);
+        
+        
+          ec.parseHistory(function(err, output) {
+            if (err) console.error(err);
+            // todo change this to mergeWith
+            wallet = merge(wallet, output, {
+              arrayMerge: dontMerge
+            });
+
+            electronInterface.displayPayments(wallet, currentWallet, server);
+          });
+        
         }
       });
     });
@@ -251,14 +263,5 @@ function aboutCallbackCreator(server, me) {
       electronInterface.displayWalletInfo(wallet);
     });
 
-    ec.parseHistory(function(err, output) {
-      if (err) console.error(err);
-      // todo change this to mergeWith
-      wallet = merge(wallet, output, {
-        arrayMerge: dontMerge
-      });
-
-      electronInterface.displayPayments(wallet, currentWallet, server);
-    });
   };
 }

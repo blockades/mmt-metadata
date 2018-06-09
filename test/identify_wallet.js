@@ -1,12 +1,7 @@
 const test = require("tape");
-
+const util = require("../app/util")
 // my first go at writing a test with tape
 
-function identifyWallet(wallets, mpk) {
-  return Object.keys(wallets).find(function(wallet) {
-    return Object.keys(wallets[wallet].xpub).indexOf(mpk) > -1;
-  });
-}
 
 test("indentifyWallet should return the wallet key of the wallet containing the desired xpub", function(t) {
   var wallets = {
@@ -26,7 +21,7 @@ test("indentifyWallet should return the wallet key of the wallet containing the 
     }
   };
   
-  t.equal('theone', identifyWallet(wallets, 'myKey')); // make this test pass by completing the add function!
+  t.equal('theone', util.identifyWallet(wallets, 'myKey')); // make this test pass by completing the add function!
   t.end();
 });
 
@@ -49,7 +44,7 @@ test("indentifyWallet should return undefined if no wallet contains the desired 
     }
   };
   
-  t.false(identifyWallet(wallets, 'thisKeyDoesntExist')); // make this test pass by completing the add function!
+  t.false(util.identifyWallet(wallets, 'thisKeyDoesntExist')); // make this test pass by completing the add function!
   t.end();
 });
 

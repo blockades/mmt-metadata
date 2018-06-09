@@ -3,8 +3,8 @@ const pull = require('pull-stream');
 
 const mergeWith = require('lodash.mergewith');
 
-const ec = require("./electrum-client");
-const util = require("./util");
+const ec = require("../app/electrum-client");
+const util = require("../app/util");
 const messageTypes = util.messageTypes;
 
 module.exports = {
@@ -17,7 +17,7 @@ module.exports = {
   },
   init: function(ssbServer, config) {
     console.log('*** Loading mmtMetadata ***');
-    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.6, reduce, map,null,{}));
+    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.9, reduce, map,null,{}));
     return { 
       get: view.get,
       stream: view.stream,
@@ -45,10 +45,11 @@ function reduce(result, item) {
 
 function map(msg) {
   if (!msg.value.content || messageTypes.indexOf(msg.value.content.type) === -1) return
-  var toReturn = {};
   const content = msg.value.content.content;
   const author = msg.value.author;
-  var wallet = {};
+  var wallet = {
+    xpub: {}
+  };
   var key = '';
   if (content.walletId) {
     key = content.walletId;
@@ -57,7 +58,7 @@ function map(msg) {
   
   // TODO: somewhere we need to make sure that all messages about each wallet
   // have exactly the same recipients
-  wallet.cosigners = msg.value.content.recipients 
+  
 
   // console.log('!!!!!!! ', JSON.stringify(msg, null, 4));
   switch (msg.value.content.type) {
@@ -113,7 +114,17 @@ function map(msg) {
       } )
   }
 
-  toReturn = {[key]: wallet};
-  return toReturn;
+  wallet.cosigners = {}
+  // console.log(JSON.stringify(msg,null,4))
+  
+  // ignore the message if we cannot check the recipients
+  // TODO: do we only get the recipients with particular scuttlebot versions?
+  if (typeof msg.value.content.recipients === 'undefined') return
+  
+  msg.value.content.recipients.forEach(function(recipient) {
+    wallet.cosigners[recipient] = {}
+  }) 
+  
+  return {[key]: wallet};
 }
 
