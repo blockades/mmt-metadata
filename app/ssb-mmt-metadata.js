@@ -17,7 +17,7 @@ module.exports = {
   },
   init: function(ssbServer, config) {
     console.log('*** Loading mmtMetadata ***');
-    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.6, reduce, map));
+    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.6, reduce, map,null,{}));
     return { 
       get: view.get,
       stream: view.stream,
@@ -34,7 +34,6 @@ module.exports = {
 };
 
 function reduce(result, item) {
-  if (!result) result = {};
 
   if (Object.keys(item).length > 0) {
     // console.log('!!!!!!! item', JSON.stringify(item, null, 4));
