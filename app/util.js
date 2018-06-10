@@ -1,14 +1,13 @@
-
 const messageTypes = [
-  'initiateMmtMultisigTest',
-  'shareMmtPublicKeyTest',
-  'initiateMmtPaymentTest',
-  'signMmtPaymentTest',
-  'addMmtPaymentCommentTest',
-  'addMmtRecieveCommentTest',
+  "initiateMmtMultisigTest",
+  "shareMmtPublicKeyTest",
+  "initiateMmtPaymentTest",
+  "signMmtPaymentTest",
+  "addMmtPaymentCommentTest",
+  "addMmtRecieveCommentTest"
 ];
 
-function publishMessage(server, type, content, recipients) {
+function publishMessage(server, type, content, recipients,callback) {
   // publish an encrypted message
   // recipients are embedded in 'content'
   server.private.publish(
@@ -18,27 +17,34 @@ function publishMessage(server, type, content, recipients) {
       if (err) console.error(err);
       console.log("Published: ", type);
       console.log(JSON.stringify(msg, null, 4));
-      // TODO re-call plugin .get and do merge
+      // re-call plugin to get the updated data
+      server.mmtMetadata.get(function(err, dataFromSsb) {
+        if (err) return callback(err, null)
+        callback(null,dataFromSsb)
+      } )
     }
   );
 }
 
-function identifyWallet(allWallets,mpk) {
-  return Object.keys(allWallets).find ( function (aWallet){
-    return Object.keys(allWallets[aWallet].xpub).indexOf(mpk) > -1
-  } )
+function identifyWallet(allWallets, mpk) {
+  return Object.keys(allWallets).find(function(aWallet) {
+    return Object.keys(allWallets[aWallet].xpub).indexOf(mpk) > -1;
+  });
 }
 
 // todo: should this query be done within the ssb plugin?
 function findIncompleteWallets(allWallets) {
-  var incompleteWallets = []
-  console.log('allWallets', JSON.stringify(allWallets,null,4))
-  Object.keys(allWallets).forEach( function (aWallet) {
+  var incompleteWallets = [];
+  console.log("allWallets", JSON.stringify(allWallets, null, 4));
+  Object.keys(allWallets).forEach(function(aWallet) {
     //TODO: should we do validation of correct keys here?
-    if (Object.keys(allWallets[aWallet].xpub).length < allWallets[aWallet].cosigners.length)
-      incompleteWallets.push(aWallet)
-  } ) 
-  return incompleteWallets
+    if (
+      Object.keys(allWallets[aWallet].xpub).length <
+      allWallets[aWallet].cosigners.length
+    )
+      incompleteWallets.push(aWallet);
+  });
+  return incompleteWallets;
 }
 
 function concatArrays(objValue, srcValue) {
@@ -46,4 +52,10 @@ function concatArrays(objValue, srcValue) {
     return objValue.concat(srcValue);
 }
 
-module.exports = { publishMessage, identifyWallet, findIncompleteWallets, messageTypes, concatArrays }
+module.exports = {
+  publishMessage,
+  identifyWallet,
+  findIncompleteWallets,
+  messageTypes,
+  concatArrays
+};

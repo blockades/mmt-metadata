@@ -32,6 +32,7 @@ electronInterface.displayWalletInfo = function(wallet) {
     wallet.requests.forEach( function(request) {
       $(".requestsUnfilled").clone()
         .find(".address").text(request.address).end()
+        // TODO: add author
         .find(".memo").text(request.memo).end()
         .attr("class","filled")
         .insertAfter(".requestsUnfilled")
@@ -42,7 +43,7 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#recieveAddress").text(wallet.firstUnusedAddress)
 }
 
-electronInterface.displayPayments = function(wallet,currentWallet,server) {
+electronInterface.displayPayments = function(wallet,currentWallet,server,callback) {
   // this would be the place to create a snazzy html table
   if (wallet.transactions) {
     var payments = wallet.transactions
@@ -115,8 +116,9 @@ electronInterface.displayPayments = function(wallet,currentWallet,server) {
               }
               console.log(JSON.stringify(wallet.cosigners,null,4))
               var recipients = Object.keys(wallet.cosigners)
-              util.publishMessage(server, 'addMmtPaymentCommentTest', paymentComment, recipients)
-              // todo: process this comment right now so we can immediately see the result
+              util.publishMessage(server, 'addMmtPaymentCommentTest', paymentComment, recipients, function (err,updatedData) {
+                callback(err,updatedData)
+              })
             } )
 
             $('#transactionTables').attr("class","invisible")

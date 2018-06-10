@@ -110,18 +110,13 @@ content: {
 
 ### Installation and dependencies
 
+To install:
 ```
 npm install
 ```
-sbot must be running.  Either you will need to be running an ssb client with sbot embedded such as Patchwork, or install sbot and run `sbot server`
-
-To run:
-```
-npm start
-```
-
 ### Integration with electrum
 
+Electrum version 3.1.3 must also be installed.
 Setting up electrum is not yet automated, we will need to do:
 
 ```
@@ -131,10 +126,17 @@ electrum --testnet setconfig rpcpassword test
 electrum --testnet daemon start
 electrum --testnet -w ~/.electrum/testnet/wallets/walletfile daemon load_wallet
 ```
+
 and not to forget afterwards
 ```
 electrum --testnet daemon stop
 ```
+
+To run:
+```
+npm start
+```
+
 
 ### Relevant resources
 
