@@ -146,6 +146,15 @@ function recieveMemo(server) {
   }
 }
 
+function cosignerInfo(ssbAbout) {
+  Object.keys(wallet.cosigners).forEach( function (cosigner){
+    // not sure if this is the most reliable way to get self-identified name but works for me
+    wallet.cosigners[cosigner].name = ssbAbout[cosigner].name[cosigner][0];
+    wallet.cosigners[cosigner].image = ssbAbout[cosigner].image[cosigner][0];
+    // TODO: this gives image location, we still need to actually get the image from ssb
+  })
+}
+
 function whoAmICallbackCreator(server) {
   return function whoAmICallback(err, msg) {
     if (err) console.error("Error running whoami.", err);
@@ -211,7 +220,7 @@ function aboutCallbackCreator(server, me) {
           // todo: provide a way to initiate it
         } else {
           mergeWith(wallet, dataFromSsb[currentWallet], util.concatArrays);
-        
+          cosignerInfo(ssbAbout) 
         
           ec.parseHistory(function(err, output) {
             if (err) console.error(err);

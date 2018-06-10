@@ -93,8 +93,12 @@ electronInterface.displayPayments = function(wallet,currentWallet,server) {
             $('#txid').text(index)
             // TODO: add more transaction details from the deserialised transaction
             $('#transactionDetailsAmount').text(payments[index].amount)
-            //"initiatedBy"
-            //"signedBy"
+
+            if (typeof payments[index].initiatedBy === 'undefined') payments[index].initiatedBy = ''
+            if (typeof payments[index].signedBy === 'undefined') payments[index].signedBy = ''
+            // this should be wallet.cosigners[payments[index].initiatedBy].name
+            $('#initiatedBy').text(payments[index].initiatedBy)
+            $('#signedBy').text(payments[index].signedBy)
             //"outputs"
             $('#comments').html(commentList)
 
