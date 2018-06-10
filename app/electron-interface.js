@@ -1,11 +1,12 @@
 const bitcoinUtils = require('./bitcoin-utils')
 const electronInterface = module.exports = {}
+const util = require("./util");
 
 
 electronInterface.displayWalletInfo = function(wallet) {
-  if (wallet.name) $("#walletName").text(wallet.name)
+  if (wallet.walletName) $("#walletName").text(wallet.walletName)
   if (wallet.requiredCosigners) $("#requiredCosigners").text(wallet.requiredCosigners)
-  if (wallet.publicKeys) $("#numberCosigners").text(wallet.publicKeys.length)
+  if (wallet.cosigners) $("#numberCosigners").text(Object.keys(wallet.cosigners).length)
   if (wallet.balance) $(".balance").text(wallet.balance)
 
   // TODO: names and avatars of cosigners 
@@ -57,9 +58,15 @@ electronInterface.displayPayments = function(wallet,currentWallet,server) {
       if (typeof payments[index].amount === 'undefined') payments[index].amount = 'unknown'
 
       payments[index].comments.forEach(function(comment){    
-        // todo: resolve alias for comment.author and add it here
-        // possibly with avatar image 
+        // possibly with avatar image
         commentList += "<p>"
+        if (typeof wallet.cosigners[comment.author] != 'undefined')
+          if (typeof wallet.cosigners[comment.author].name != 'undefined') {
+            commentList += "<b>"
+            commentList += wallet.cosigners[comment.author].name
+            commentList += ":</b> "
+          }
+        
         commentList += comment.comment 
         commentList += "</p>"
       })
@@ -104,7 +111,7 @@ electronInterface.displayPayments = function(wallet,currentWallet,server) {
               }
               console.log(JSON.stringify(wallet.cosigners,null,4))
               var recipients = Object.keys(wallet.cosigners)
-              publishMessage(server, 'addMmtPaymentCommentTest', paymentComment, recipients)
+              util.publishMessage(server, 'addMmtPaymentCommentTest', paymentComment, recipients)
               // todo: process this comment right now so we can immediately see the result
             } )
 

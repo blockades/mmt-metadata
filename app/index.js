@@ -37,33 +37,18 @@ module.exports = function(root, server) {
   else console.error("Unable to connect to server.  Is server running?");
 };
 
-function publishMessage(server, type, content, recipients) {
-  // publish an encrypted message
-  // recipients are embedded in 'content'
-  server.private.publish(
-    { type, content, recipients },
-    recipients,
-    (err, msg) => {
-      if (err) console.error(err);
-      if (verbose) {
-        console.log("Published: ", type);
-        console.log(JSON.stringify(msg, null, 4));
-      }
-    }
-  );
-}
 
 // TODO: sort this out
 function initiateWallet(server, mpk) {
   var recipients = Object.keys(wallet.cosigners);
 
   var initWallet = {
-    walletName: "the groovy gang wallet",
+    walletName: "cucumber",
     requiredCosigners: 2,
     xpub: mpk
   };
-
-  publishMessage(server, "initiateMmtMultisigTest", initWallet, recipients);
+  console.log('publishing')
+  util.publishMessage(server, "initiateMmtMultisigTest", initWallet, recipients);
   // TODO: we need the id of this message
 }
 
@@ -75,7 +60,7 @@ function shareXpub(server, currentWallet, mpk) {
     xpub: mpk
   };
 
-  publishMessage(server, "shareMmtPublicKeyTest", pubKey, recipients);
+  util.publishMessage(server, "shareMmtPublicKeyTest", pubKey, recipients);
 }
 
 function createPayTo(server) {
@@ -117,7 +102,7 @@ function createPayTo(server) {
                 // add rate?
                 comment: payToData.comment
               };
-              publishMessage(
+              util.publishMessage(
                 server,
                 "initiateMmtPaymentTest",
                 payment,
@@ -143,7 +128,7 @@ function recieveMemo(server) {
       });
 
       var recipients = Object.keys(wallet.cosigners);
-      publishMessage(
+      util.publishMessage(
         server,
         "addMmtRecieveCommentTest",
         recieveMemoData,
@@ -194,10 +179,10 @@ function aboutCallbackCreator(server, me) {
     });
 
     server.mmtMetadata.get(function(err, dataFromSsb) {
-      console.log(
-        "Output from mmtMetadata plugin: ",
-        JSON.stringify(dataFromSsb, null, 4)
-      );
+      // console.log(
+      //   "Output from mmtMetadata plugin: ",
+      //   JSON.stringify(dataFromSsb, null, 4)
+      // );
 
       // tidyWalletInfo()
 
@@ -217,7 +202,12 @@ function aboutCallbackCreator(server, me) {
             "Cannot find this wallet on ssb. Do you want to initiate it"
           );
           // first check if there are any incomplete wallets we could possibly join
-
+          
+          // wallet.cosigners = {
+          //   "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {},
+          //   "@DQ1HPdrTi6iUUlU22CRqZlEnbxWm6XjjdFQs+4fy+HY=.ed25519": {}
+          // }
+          // initiateWallet(server, mpk) 
           // todo: provide a way to initiate it
         } else {
           mergeWith(wallet, dataFromSsb[currentWallet], util.concatArrays);
@@ -230,6 +220,7 @@ function aboutCallbackCreator(server, me) {
               arrayMerge: dontMerge
             });
 
+            console.log(JSON.stringify(wallet,null,4))
             electronInterface.displayPayments(wallet, currentWallet, server);
           });
         

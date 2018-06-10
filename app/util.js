@@ -8,6 +8,21 @@ const messageTypes = [
   'addMmtRecieveCommentTest',
 ];
 
+function publishMessage(server, type, content, recipients) {
+  // publish an encrypted message
+  // recipients are embedded in 'content'
+  server.private.publish(
+    { type, content, recipients },
+    recipients,
+    (err, msg) => {
+      if (err) console.error(err);
+      console.log("Published: ", type);
+      console.log(JSON.stringify(msg, null, 4));
+      // TODO re-call plugin .get and do merge
+    }
+  );
+}
+
 function identifyWallet(allWallets,mpk) {
   return Object.keys(allWallets).find ( function (aWallet){
     return Object.keys(allWallets[aWallet].xpub).indexOf(mpk) > -1
@@ -31,4 +46,4 @@ function concatArrays(objValue, srcValue) {
     return objValue.concat(srcValue);
 }
 
-module.exports = { identifyWallet, findIncompleteWallets, messageTypes, concatArrays }
+module.exports = { publishMessage, identifyWallet, findIncompleteWallets, messageTypes, concatArrays }
