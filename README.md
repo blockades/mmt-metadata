@@ -123,11 +123,16 @@ Setting up electrum is not yet automated, we will need to do:
 electrum --testnet setconfig rpcport 8888
 electrum --testnet setconfig rpcuser spinach
 electrum --testnet setconfig rpcpassword test
+electrum --testnet setconfig dynamic_fees True
+electrum --testnet setconfig fee_level 3
+```
+To set the configuration.  And then start electrum with:
+```
 electrum --testnet daemon start
 electrum --testnet -w ~/.electrum/testnet/wallets/walletfile daemon load_wallet
 ```
 
-and not to forget afterwards
+and not to forget afterwards:
 ```
 electrum --testnet daemon stop
 ```
