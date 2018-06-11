@@ -52,20 +52,28 @@ function initiateWallet(server, mpk) {
     "initiateMmtMultisigTest",
     initWallet,
     recipients,
+    wallet.walletId,
     mergeAndDisplay
   );
   // TODO: we need the id of this message
 }
 
-function shareXpub(server, currentWallet, mpk) {
+function shareXpub(server, mpk) {
   var pubKey = {
     // walletId is the key of the initiateMmtMultisig message as above
 
-    walletId: currentWallet,
+    walletId: wallet.walletId,
     xpub: mpk
   };
 
-  util.publishMessage(server, "shareMmtPublicKeyTest", pubKey, recipients,mergeAndDisplay);
+  util.publishMessage(
+    server,
+    "shareMmtPublicKeyTest",
+    pubKey,
+    recipients,
+    wallet.walletId,
+    mergeAndDisplay
+  );
 }
 
 function createPayTo(server) {
@@ -101,7 +109,7 @@ function createPayTo(server) {
               var recipients = Object.keys(wallet.cosigners);
 
               var payment = {
-                //walletId: currentWallet,
+                walletId: wallet.walletId,
                 key: txid,
                 rawTransaction: output.hex,
                 // add rate?
@@ -112,6 +120,7 @@ function createPayTo(server) {
                 "initiateMmtPaymentTest",
                 payment,
                 recipients,
+                wallet.walletId,
                 mergeAndDisplay
               );
               // todo: add this as an imcomplete tx and display it
@@ -123,10 +132,10 @@ function createPayTo(server) {
   }
 }
 
-function recieveMemo(server, currentWallet) {
+function recieveMemo(server) {
   var recieveMemoData = electronInterface.createRecieveMemo();
   if (recieveMemoData) {
-    recieveMemoData.walletId = currentWallet;
+    recieveMemoData.walletId = wallet.walletId;
     recieveMemoData.address = wallet.firstUnusedAddress;
     // TODO: amount, and expiry fields
     ec.addRequest(0, recieveMemoData.memo, false, function(err, output) {
@@ -140,6 +149,7 @@ function recieveMemo(server, currentWallet) {
         "addMmtRecieveCommentTest",
         recieveMemoData,
         recipients,
+        wallet.walletId,
         // TODO: this isnt quite right, should displayWalletInfo
         mergeAndDisplay
       );
@@ -176,10 +186,14 @@ function whoAmICallbackCreator(server) {
   };
 }
 
-function mergeAndDisplay(err,updatedData) {
+function mergeAndDisplay(err, updatedData,server) {
   // never ending loop. This looks dangerous
-  mergeWith(wallet, dataFromSsb[currentWallet], util.concatArrays);
-  electronInterface.displayPayments(wallet, currentWallet, server, mergeAndDisplay);
+  mergeWith(wallet, updatedData, util.concatArrays);
+  electronInterface.displayPayments(
+    wallet,
+    server,
+    mergeAndDisplay
+  );
 }
 
 function aboutCallbackCreator(server, me) {
@@ -202,6 +216,8 @@ function aboutCallbackCreator(server, me) {
       }
     });
 
+    wallet.walletId = null
+
     server.mmtMetadata.get(function(err, dataFromSsb) {
       // console.log(
       //   "Output from mmtMetadata plugin: ",
@@ -220,41 +236,40 @@ function aboutCallbackCreator(server, me) {
       ec.getMpk(function(err, mpk) {
         //var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk));
         console.log("-----mpk", mpk);
-        var currentWallet = util.identifyWallet(dataFromSsb, mpk);
-        if (!currentWallet) {
+        wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
+        if (!wallet.walletId) {
           console.log(
             "Cannot find this wallet on ssb. Do you want to initiate it"
           );
+          $("#notifications").append(
+            "Cannot find this wallet on ssb. Do you want to initiate it?"
+          );
+          
           // first check if there are any incomplete wallets we could possibly join
 
-          // wallet.cosigners = {
-          //   "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {},
-          //   "@DQ1HPdrTi6iUUlU22CRqZlEnbxWm6XjjdFQs+4fy+HY=.ed25519": {}
-          // }
-          // initiateWallet(server, mpk)
+          wallet.cosigners = {
+            "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {},
+            "@DQ1HPdrTi6iUUlU22CRqZlEnbxWm6XjjdFQs+4fy+HY=.ed25519": {}
+          }
+          initiateWallet(server, mpk)
           // todo: provide a way to initiate it
         } else {
-          mergeWith(wallet, dataFromSsb[currentWallet], util.concatArrays);
+          mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
           cosignerInfo(ssbAbout);
           // Specify some event handlers.  This needs to be done here where we can
-          // pass server and currentWallet
+          // pass server and walletId
           $("#recieveMemo").click(function() {
-            recieveMemo(server, currentWallet);
+            recieveMemo(server);
           });
           $("#createTransaction").click(function() {
-            createPayTo(server, currentWallet);
+            createPayTo(server);
           });
-
-          ec.parseHistory(function(err, output) {
-            if (err) console.error(err);
-            // todo change this to mergeWith
-            wallet = merge(wallet, output, {
-              arrayMerge: dontMerge
-            });
-
-            console.log(JSON.stringify(wallet, null, 4));
-            electronInterface.displayPayments(wallet, currentWallet, server, mergeAndDisplay);
-          });
+          console.log(JSON.stringify(wallet, null, 4));
+          electronInterface.displayPayments(
+            wallet,
+            server,
+            mergeAndDisplay
+          );
         }
       });
     });
@@ -275,6 +290,20 @@ function aboutCallbackCreator(server, me) {
     ec.getWalletInfo(function(err, output) {
       mergeWith(wallet, output);
       electronInterface.displayWalletInfo(wallet);
+    });
+
+    ec.parseHistory(function(err, output) {
+      if (err) console.error(err);
+      // todo change this to mergeWith
+      wallet = merge(wallet, output, {
+        arrayMerge: dontMerge
+      });
+
+      electronInterface.displayPayments(
+        wallet,
+        server,
+        mergeAndDisplay
+      );
     });
   };
 }

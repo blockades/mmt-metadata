@@ -7,7 +7,7 @@ const messageTypes = [
   "addMmtRecieveCommentTest"
 ];
 
-function publishMessage(server, type, content, recipients,callback) {
+function publishMessage(server, type, content, recipients,currentWallet,callback) {
   // publish an encrypted message
   // recipients are embedded in 'content'
   server.private.publish(
@@ -20,7 +20,7 @@ function publishMessage(server, type, content, recipients,callback) {
       // re-call plugin to get the updated data
       server.mmtMetadata.get(function(err, dataFromSsb) {
         if (err) return callback(err, null)
-        callback(null,dataFromSsb)
+        callback(null,dataFromSsb[currentWallet])
       } )
     }
   );
@@ -49,7 +49,9 @@ function findIncompleteWallets(allWallets) {
 
 function concatArrays(objValue, srcValue) {
   if (objValue && objValue.constructor === Array)
-    return objValue.concat(srcValue);
+    // concatonate only unique values
+    if (objVale.indexOf(srcValue) < 0)
+      return objValue.concat(srcValue);
 }
 
 module.exports = {
