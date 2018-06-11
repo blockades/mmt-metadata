@@ -275,7 +275,6 @@ function aboutCallbackCreator(server, me) {
           $("#createTransaction").click(function() {
             createPayTo(server);
           });
-          console.log(JSON.stringify(wallet, null, 4));
           electronInterface.displayPayments(
             wallet,
             server,
@@ -309,6 +308,7 @@ function aboutCallbackCreator(server, me) {
         arrayMerge: dontMerge
       });
 
+      console.log(JSON.stringify(wallet, null, 4));
       electronInterface.displayPayments(
         wallet,
         server,

@@ -2,55 +2,66 @@ const bitcoinUtils = require("./bitcoin-utils");
 const electronInterface = (module.exports = {});
 const util = require("./util");
 
+function getAddressComments(address, wallet) {
+  var commentList = "";
+  if (typeof address.comments === "undefined") return;
+
+  address.comments.forEach(function(comment) {
+    // possibly with avatar image
+    commentList += "<p>";
+    if (typeof wallet.cosigners[comment.author] != "undefined")
+      if (typeof wallet.cosigners[comment.author].name != "undefined") {
+        commentList += "<b>";
+        commentList += wallet.cosigners[comment.author].name;
+        commentList += ":</b> ";
+      }
+    commentList += comment.comment;
+    commentList += "</p>";
+  });
+  return commentList;
+}
+
 electronInterface.displayWalletInfo = function(wallet) {
   if (wallet.walletName) $("#walletName").text(wallet.walletName);
   if (wallet.requiredCosigners)
     $("#requiredCosigners").text(wallet.requiredCosigners);
-  if (wallet.cosigners)
+  if (wallet.cosigners) {
     $("#numberCosigners").text(Object.keys(wallet.cosigners).length);
+    // TODO: names and avatars of cosigners
+    var cosignerList = "";
+    // should this be for...in?
+    Object.keys(wallet.cosigners).forEach(function(cosigner) {
+      cosignerList += wallet.cosigners[cosigner].name;
+      cosignerList += " ";
+    });
+  }
   if (wallet.balance) $(".balance").text(wallet.balance);
-
-  // TODO: names and avatars of cosigners
 
   if (wallet.addresses) {
     $("#addressesTbody").html($(".addressesUnfilled").clone());
 
-    // TODO: amount and comments
     Object.keys(wallet.addresses).forEach(function(address) {
+      if (typeof wallet.addresses[address].amount === "undefined")
+        wallet.addresses[address].amount = "";
+
       $(".addressesUnfilled")
         .clone()
         .find(".address")
         .text(address)
         .end()
         .find(".amount")
-        .text("-")
+        .text(wallet.addresses[address].amount)
+        .end()
+        .find(".comments")
+        .html(getAddressComments(wallet.addresses[address], wallet))
         .end()
         .attr("class", "filled")
         .insertAfter(".addressesUnfilled");
     });
-  }
 
-  if (wallet.addresses) {
     $("#requestsTbody").html($(".requestsUnfilled").clone());
     Object.keys(wallet.addresses).forEach(function(address) {
       if (wallet.addresses[address].comments) {
-        var commentList = "";
-        if (typeof wallet.addresses[address].comments === "undefined")
-          wallet.addresses[address].comments = [];
-
-        wallet.addresses[address].comments.forEach(function(comment) {
-          // possibly with avatar image
-          commentList += "<p>";
-          if (typeof wallet.cosigners[comment.author] != "undefined")
-            if (typeof wallet.cosigners[comment.author].name != "undefined") {
-              commentList += "<b>";
-              commentList += wallet.cosigners[comment.author].name;
-              commentList += ":</b> ";
-            }
-          commentList += comment.comment;
-          commentList += "</p>";
-        });
-
         $(".requestsUnfilled")
           // TODO: theres more info that could be added here
           .clone()
@@ -58,7 +69,7 @@ electronInterface.displayWalletInfo = function(wallet) {
           .text(address)
           .end()
           .find(".memo")
-          .html(commentList)
+          .html(getAddressComments(wallet.addresses[address], wallet))
           .end()
           .attr("class", "filled")
           .insertAfter(".requestsUnfilled");
@@ -86,10 +97,18 @@ electronInterface.displayPayments = function(wallet, server, callback) {
       if (typeof payments[index].amount === "undefined")
         payments[index].amount = "Unknown";
 
-      if (typeof payments[index].initiatedBy === "undefined")
-        payments[index].initiatedBy = "";
-      if (typeof payments[index].signedBy === "undefined")
-        payments[index].signedBy = "";
+      if (typeof payments[index].initiatedBy === "undefined") {
+        var initiatedBy = "";
+      } else {
+        var initiatedBy = wallet.cosigners[payments[index].initiatedBy].name;
+      }
+
+      // TODO: this is wrong.  signedBy should be an array.
+      //if (typeof payments[index].signedBy === "undefined")
+      var signedBy = "";
+      // } else {
+      //   var signedBy = wallets.cosigners[payments[index].signedBy].name
+      // }
 
       payments[index].comments.forEach(function(comment) {
         // possibly with avatar image
@@ -121,7 +140,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .text(dateDisplay)
           .end()
           .find(".cosigners")
-          .text("")
+          .text("") // TODO
           .end()
           .find(".comment")
           .html(commentList)
@@ -141,7 +160,9 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .end()
           .find(".options")
           .find(".details")
-          .click(detailsFunctioncreator(server,wallet,index,payments,commentList) )
+          .click(
+            detailsFunctioncreator(server, wallet, index, payments, commentList)
+          )
           .end()
           .end()
           .attr("class", "filled")
@@ -154,10 +175,10 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .text(dateDisplay)
           .end()
           .find(".initiatedBy")
-          .text(payments[index].initiatedBy)
+          .text(initiatedBy)
           .end()
           .find(".cosigners")
-          .text(payments[index].signedBy)
+          .html(signedBy)
           .end()
           .find(".comment")
           .html(commentList)
@@ -173,7 +194,9 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .end()
           .find(".options")
           .find(".details")
-          .click(detailsFunctioncreator(server,wallet,index,payments,commentList) )
+          .click(
+            detailsFunctioncreator(server, wallet, index, payments, commentList)
+          )
           .end()
           .end()
           .attr("class", "filled")
@@ -252,31 +275,59 @@ function addCommentFunctionCreator(server, wallet, index, callback) {
     };
 }
 
-function detailsFunctioncreator(server,wallet,index,payments,commentList) {
+function detailsFunctioncreator(server, wallet, index, payments, commentList) {
   return function() {
-            $("#txid").text(index);
-            // TODO: add more transaction details from the deserialised transaction
-            $("#transactionDetailsAmount").text(payments[index].amount);
+    var payment = payments[index];
+    $("#txid").text(index);
 
-            // this should be wallet.cosigners[payments[index].initiatedBy].name
-            $("#initiatedBy").text(payments[index].initiatedBy);
-            $("#signedBy").text(payments[index].signedBy);
-            //"outputs"
-            $("#comments").html(commentList);
+    // TODO: add more transaction details from the deserialised transaction
+    $("#transactionDetailsAmount").text(payment.amount);
+    // TODO: DRY
+    if (typeof payments[index].initiatedBy === "undefined") {
+      var intitatedBy = "";
+    } else {
+      var initiatedBy = wallet.cosigners[payments[index].initiatedBy].name;
+    }
+    var status = "";
+    if (payment.broadcast) {
+      status = "Complete and broadcast, ";
+      status += payment.confirmations;
+      status += " confirmations.";
+    } else {
+      status = "Incomplete. ";
+      if (typeof payment.signatures != "undefined") {
+        status += payments.sinatures.length;
+        status += " of ";
+        status += wallet.requiredCosigners;
+        status += " signatures.";
+      }
+    }
+    $("#status").text(status);
+    $("#initiatedBy").text(initiatedBy);
+    // $("#signedBy").text(payments[index].signedBy);
+    var outputs = "";
+    if (typeof payment.outputs != "undefined") {
+      payment.outputs.forEach(function(anOutput) {
+        outputs += "<p>";
+        outputs += anOutput.address; // check isMine?
+        outputs += ", ";
+        outputs += anOutput.value / 10000000; // convert to BTC
+        outputs += " BTC</p>";
+      });
+    }
+    $("#outputs").html(outputs);
+    $("#comments").html(commentList);
 
+    $("#addComment").click(
+      addCommentFunctionCreator(server, wallet, index, function(
+        err,
+        updatedData
+      ) {
+        callback(err, updatedData);
+      })
+    );
 
-            $("#addComment").click(
-              addCommentFunctionCreator(server, wallet, index, function(
-                err,
-                updatedData
-              ) {
-                callback(err, updatedData);
-              })
-            );
-
-            $("#transactionTables").attr("class", "invisible");
-            $("#transactionDetails").attr("class", "visible");
-          }
-
+    $("#transactionTables").attr("class", "invisible");
+    $("#transactionDetails").attr("class", "visible");
+  };
 }
-
