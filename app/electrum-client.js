@@ -54,17 +54,18 @@ electrumRequest = function(method, params, callback) {
   //       This needs to be automated.
 
   var options = {
-      method: 'POST',
-      json: {"id":"curltext","method":method,"params": params},
-      url: 'http://127.0.0.1:8888',
-      auth: {
-          username: 'spinach',
-          password: 'test'
-      }
-  }
-  request(options, function(err,response,body) {
+    method: "POST",
+    json: { id: "curltext", method: method, params: params },
+    url: "http://127.0.0.1:8888",
+    auth: {
+      username: "spinach",
+      password: "test"
+    }
+  };
+  request(options, function(err, response, body) {
     // todo: display this error message on the html page
-    if (err) console.log("Error from electrum.  Is the electrum daemon running?",err)
+    if (err)
+      console.log("Error from electrum.  Is the electrum daemon running?", err);
 
     callback(err, body);
   });
@@ -80,32 +81,6 @@ ec.setupElectrum = function(walletFile, callback) {
   //electrum --testnet setconfig rpcport 8888
   //electrum --testnet setconfig rpcuser spinach
   //electrum --testnet setconfig rpcpassword test
-<<<<<<< HEAD
-=======
-
-
-  console.log('Starting electrum daemon')
-  var child = exec(baseCommand + 'daemon start', function(err, stdout, stderr) {
-      if (err) throw err
-      else {
-        console.log(stdout)
-        console.log('Electrum daemon stopped')
-      }
-  })
-
-  // '~/.electrum/testnet/wallets/testnetw daemon'
-
-  var child = exec(baseCommand + '-w '+walletFile+' daemon load_wallet', function(err, stdout, stderr) {
-      if (err) throw err
-      else {
-        console.log(stdout)
-        console.log('Wallet '+walletFile+' loaded successfully')
-        callback(err,stdout)
-      }
-  })
-}
-
->>>>>>> b392057bbe9a1a9c0ad77407540480775eb95639
 
   console.log("Starting electrum daemon");
   var child = exec(baseCommand + "daemon start", function(err, stdout, stderr) {
@@ -127,7 +102,6 @@ ec.setupElectrum = function(walletFile, callback) {
         console.log("Wallet " + walletFile + " loaded successfully");
         callback(err, stdout);
       }
-<<<<<<< HEAD
     }
   );
 };
@@ -149,17 +123,6 @@ ec.checkVersion = function(requiredVersion, callback) {
   // todo: remove dots from version number, convert to int and do >
   electrumRequest("version", [], function(err, output) {
     var check = false;
-=======
-  })
-}
-
-// should this be run as an external command so that we know even before
-// starting daemon?
-ec.checkVersion = function (requiredVersion, callback) {
-  // todo: remove dots from version number, convert to int and do >
-  electrumRequest("version", [], function (err,output) {
-    var check = false
->>>>>>> b392057bbe9a1a9c0ad77407540480775eb95639
     // are we actually connected to electrum?
     if (output) if (output.result) check = output.result === requiredVersion;
     callback(err, check);
@@ -248,7 +211,6 @@ ec.extractDataFromTx = function(tx, callback) {
 
 // note this wont work with older electrum versions, but we kind of need it for building
 // transactions
-<<<<<<< HEAD
 ec.getFeeRate = function(callback) {
   electrumRequest("getfeerate", [], function(err, output) {
     callback(err, output.result);
@@ -265,8 +227,12 @@ ec.addRequest = function(amount, memo, expiration, callback) {
 };
 
 ec.payTo = function(destination, amount, fee, password, callback) {
-  var payData = { destination: destination, amount: amount, fee: fee };
-  if (password && password != "") payData.password = password;
+  let payData = { "destination": destination, "amount": amount }
+  if(!!fee) {
+    payData["fee"] = fee;
+  }
+  if (!!password && password !== '') payData.password = password
+  
   electrumRequest("payto", payData, function(err, output) {
     if (typeof output.result !== "undefined") output = output.result;
     callback(err, output);
@@ -373,113 +339,3 @@ ec.getWalletInfo = function(callback) {
     });
   });
 };
-=======
-ec.getFeeRate = function (callback) {
-  electrumRequest("getfeerate", [], function (err,output) {
-    callback(err,output.result)
-  })
-}
-
-ec.addRequest = function (amount,memo,expiration, callback) {
-  var p = { "amount": amount }
-  if (memo) p["memo"] = memo
-  if (expiration) p["expiration"] = expiration
-  electrumRequest("addrequest", p, function (err,output) {
-    callback(err,output.result)
-  })
-}
-
-ec.payTo = function (destination, amount, fee, password, callback) {
-  let payData = { "destination": destination, "amount": amount }
-  if(!!fee) {
-    payData["fee"] = fee;
-  }
-  if (!!password && password !== '') payData.password = password
-  electrumRequest("payto", payData, function (err,output) {
-    if (typeof output.result !== 'undefined') output = output.result
-    callback(err,output)
-  })
-}
-
-ec.payToMany = function (outputs, callback) {
-  // TODO: ouputs must be list of ["address", amount] --test this
-  electrumRequest("payto", { "outputs": outputs }, function (err,output) {
-    if (typeof output.result !== 'undefined') output = output.result
-    callback(err,output)
-  })
-}
-
-ec.getBalance = function (callback) {
-  electrumRequest("getbalance", [], function (err,output) {
-    if ((output) && output.result)
-      callback(err,output.result)
-    else
-      callback(1,null)
-  })
-}
-
-ec.history = function (callback) {
-  electrumRequest("history", [], function (err,output) {
-    // JSON.parse is needed with electrum version 3.1.3
-    if (typeof output.result !== 'undefined') output = JSON.parse(output.result)
-    callback(err,output)
-  })
-}
-
-ec.parseHistory = function (wallet, callback) {
-  ec.history( function(err,output) {
-      // note: electrums history formatting varies greatly with electrum versions
-      //       this requires electrum version 3.1.3
-      if (output.transactions)
-        output.transactions.forEach(function(transaction) {
-          if (typeof wallet.payments === 'undefined')
-            wallet.payments = {}
-          if (typeof wallet.payments[transaction.txid] === 'undefined')
-            wallet.payments[transaction.txid] = {}
-
-          // TODO: value is a string eg "1.0 BTC" - convert to int
-          wallet.payments[transaction.txid].amount = transaction.value
-
-          wallet.payments[transaction.txid].confirmations = transaction.confirmations
-
-          wallet.payments[transaction.txid].broadcast = true
-
-          // convert timestamp to seconds to use as javascript date
-          wallet.payments[transaction.txid].timestamp = transaction.timestamp * 1000
-          // copy transaction.label as comment?
-
-        })
-      // could store balance as
-      //output.summary.end_balance.value
-      // or get it from getBalance
-
-    callback(err,wallet)
- })
-}
-
-
-
-// test
-// ec.checkVersion("3.1.3", function(err, output) {
-//   if (err) {
-//     console.log("Error connecting to electrum")
-//   } else {
-//     if (output) {
-//       console.log("electrum version ok")
-//     } else {
-//       console.log("electrum version 3.1.3 required")
-//     }
-//   }
-// })
-
-
-
-
-
-// deserialize a tx
-//getTransaction('dc4c9bf17b2dff0fff82e2b7cc98b343c14479586a4b8099dc0c52c825176647',function (err,output) {
-//  if (err) console.error(err)
-//  console.log(JSON.stringify(output,null,4))
-//} )
-
->>>>>>> b392057bbe9a1a9c0ad77407540480775eb95639

@@ -264,7 +264,8 @@ function aboutCallbackCreator(server, me) {
         } else {
           mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
           cosignerInfo(ssbAbout);
-          //TODO: get image with something like: server.blobs.get(wallet.cosigners[me].image)
+          //TODO: get image with something like: 
+          //server.blobs.get(wallet.cosigners[me].image)
           
           // Specify some event handlers.  This needs to be done here where we can
           // pass server 

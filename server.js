@@ -7,6 +7,7 @@ Server
   .use(require('scuttlebot/plugins/master'))
   .use(require('ssb-private'))
   .use(require('ssb-about'))
+  .use(require('ssb-blobs'))
   // our new plugin
   .use(require('./plugin/ssb-mmt-metadata'))
 
