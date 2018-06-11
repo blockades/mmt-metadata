@@ -313,13 +313,19 @@ ec.getWalletInfo = function(callback) {
     ec.listAddresses(function(err, output) {
       if (err) console.error(err);
       //console.log('addresses ', JSON.stringify(output,null,4))
-      wallet.addresses = output;
-      // TODO: this should be:  (so that we can add more info about each address)
-      // output.forEach(function(address) { wallet.addresses[address] = {} })
+      //wallet.addresses = output;
+      if (typeof wallet.addresses === 'undefined') wallet.addresses = {}
+      output.forEach(function(address) { 
+        if (typeof wallet.addresses[address] === 'undefined') wallet.addresses[address] = {} 
+      })
 
       ec.listRequests(function(err, output) {
         if (err) console.error(err);
-        wallet.requests = output;
+        
+        output.forEach(function(request) {
+          wallet.addresses[request.address] = request; 
+        })
+        
         ec.getUnusedAddress(function(err, output) {
           wallet.firstUnusedAddress = output;
           // TODO: qr code

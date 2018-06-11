@@ -16,7 +16,7 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#addressesTbody").html($(".addressesUnfilled").clone());
 
     // TODO: amount and comments
-    wallet.addresses.forEach(function(address) {
+    Object.keys(wallet.addresses).forEach(function(address) {
       $(".addressesUnfilled")
         .clone()
         .find(".address")
@@ -30,20 +30,39 @@ electronInterface.displayWalletInfo = function(wallet) {
     });
   }
 
-  if (wallet.requests) {
+  if (wallet.addresses) {
     $("#requestsTbody").html($(".requestsUnfilled").clone());
-    wallet.requests.forEach(function(request) {
-      $(".requestsUnfilled")
-        .clone()
-        .find(".address")
-        .text(request.address)
-        .end()
-        // TODO: add author
-        .find(".memo")
-        .text(request.memo)
-        .end()
-        .attr("class", "filled")
-        .insertAfter(".requestsUnfilled");
+    Object.keys(wallet.addresses).forEach(function(address) {
+      if (wallet.addresses[address].comments) {
+        var commentList = "";
+        if (typeof wallet.addresses[address].comments === "undefined")
+          wallet.addresses[address].comments = [];
+
+        wallet.addresses[address].comments.forEach(function(comment) {
+          // possibly with avatar image
+          commentList += "<p>";
+          if (typeof wallet.cosigners[comment.author] != "undefined")
+            if (typeof wallet.cosigners[comment.author].name != "undefined") {
+              commentList += "<b>";
+              commentList += wallet.cosigners[comment.author].name;
+              commentList += ":</b> ";
+            }
+          commentList += comment.comment;
+          commentList += "</p>";
+        });
+
+        $(".requestsUnfilled")
+          // TODO: theres more info that could be added here
+          .clone()
+          .find(".address")
+          .text(address)
+          .end()
+          .find(".memo")
+          .html(commentList)
+          .end()
+          .attr("class", "filled")
+          .insertAfter(".requestsUnfilled");
+      }
     });
   }
 
@@ -51,11 +70,7 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#recieveAddress").text(wallet.firstUnusedAddress);
 };
 
-electronInterface.displayPayments = function(
-  wallet,
-  server,
-  callback
-) {
+electronInterface.displayPayments = function(wallet, server, callback) {
   // this would be the place to create a snazzy html table
   if (wallet.transactions) {
     var payments = wallet.transactions;
@@ -99,7 +114,7 @@ electronInterface.displayPayments = function(
           var dateDisplay = new Date(payments[index].timestamp);
           dateDisplay = dateDisplay.toUTCString();
         }
-
+        // TODO: this looks ugly with my indenting formatter
         $(".paymentsUnfilled")
           .clone()
           .find(".date")
@@ -126,33 +141,7 @@ electronInterface.displayPayments = function(
           .end()
           .find(".options")
           .find(".details")
-          .click(function() {
-            $("#txid").text(index);
-            // TODO: add more transaction details from the deserialised transaction
-            $("#transactionDetailsAmount").text(payments[index].amount);
-
-            // this should be wallet.cosigners[payments[index].initiatedBy].name
-            $("#initiatedBy").text(payments[index].initiatedBy);
-            $("#signedBy").text(payments[index].signedBy);
-            //"outputs"
-            $("#comments").html(commentList);
-
-            $("#addComment").click();
-
-            $("#addComment").click(
-              addCommentFunctionCreator(
-                server,
-                wallet,
-                index,
-                function(err, updatedData) {
-                  callback(err, updatedData);
-                }
-              )
-            );
-            
-            $("#transactionTables").attr("class", "invisible");
-            $("#transactionDetails").attr("class", "visible");
-          })
+          .click(detailsFunctioncreator(server,wallet,index,payments,commentList) )
           .end()
           .end()
           .attr("class", "filled")
@@ -184,29 +173,7 @@ electronInterface.displayPayments = function(
           .end()
           .find(".options")
           .find(".details")
-          .click(function() {
-            $("#txid").text(index);
-            // TODO: add more transaction details from the deserialised transaction
-            $("#transactionDetailsAmount").text(payments[index].amount);
-            //"initiatedBy"
-            //"signedBy"
-            //"outputs"
-            $("#comments").html(commentList);
-
-            $("#addComment").click(
-              addCommentFunctionCreator(
-                server,
-                wallet,
-                index,
-                function(err, updatedData) {
-                  callback(err, updatedData);
-                }
-              )
-            );
-
-            $("#transactionTables").attr("class", "invisible");
-            $("#transactionDetails").attr("class", "visible");
-          })
+          .click(detailsFunctioncreator(server,wallet,index,payments,commentList) )
           .end()
           .end()
           .attr("class", "filled")
@@ -256,15 +223,10 @@ electronInterface.createRecieveMemo = function() {
 
   // TODO: get new unused address, update display
 
-  return { memo: memo };
+  return { comment: memo };
 };
 
-function addCommentFunctionCreator(
-  server,
-  wallet,
-  index,
-  callback
-) {
+function addCommentFunctionCreator(server, wallet, index, callback) {
   if (wallet.walletId)
     return function() {
       var transactionComment = $("input#addTransactionComment").val();
@@ -289,3 +251,32 @@ function addCommentFunctionCreator(
       );
     };
 }
+
+function detailsFunctioncreator(server,wallet,index,payments,commentList) {
+  return function() {
+            $("#txid").text(index);
+            // TODO: add more transaction details from the deserialised transaction
+            $("#transactionDetailsAmount").text(payments[index].amount);
+
+            // this should be wallet.cosigners[payments[index].initiatedBy].name
+            $("#initiatedBy").text(payments[index].initiatedBy);
+            $("#signedBy").text(payments[index].signedBy);
+            //"outputs"
+            $("#comments").html(commentList);
+
+
+            $("#addComment").click(
+              addCommentFunctionCreator(server, wallet, index, function(
+                err,
+                updatedData
+              ) {
+                callback(err, updatedData);
+              })
+            );
+
+            $("#transactionTables").attr("class", "invisible");
+            $("#transactionDetails").attr("class", "visible");
+          }
+
+}
+

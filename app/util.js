@@ -50,7 +50,7 @@ function findIncompleteWallets(allWallets) {
 function concatArrays(objValue, srcValue) {
   if (objValue && objValue.constructor === Array)
     // concatonate only unique values
-    if (objVale.indexOf(srcValue) < 0)
+    if (objValue.indexOf(srcValue) < -1)
       return objValue.concat(srcValue);
 }
 

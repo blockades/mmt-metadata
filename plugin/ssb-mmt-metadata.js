@@ -17,7 +17,7 @@ module.exports = {
   },
   init: function(ssbServer, config) {
     console.log('*** Loading mmtMetadata ***');
-    var view = ssbServer._flumeUse('mmtMetadata', flumeView(2.9, reduce, map,null,{}));
+    var view = ssbServer._flumeUse('mmtMetadata', flumeView(3.0, reduce, map,null,{}));
     return { 
       get: view.get,
       stream: view.stream,
@@ -36,8 +36,6 @@ module.exports = {
 function reduce(result, item) {
 
   if (Object.keys(item).length > 0) {
-    // console.log('!!!!!!! item', JSON.stringify(item, null, 4));
-    // console.log('!!!!!!! result', JSON.stringify(result, null, 4));
     mergeWith(result, item, util.concatArrays);
   }
   return result;
@@ -64,7 +62,7 @@ function map(msg) {
   switch (msg.value.content.type) {
     case 'initiateMmtMultisigTest':
       key = msg.key;
-      // todo: can we set cosigners to the other recipients of this message?
+      // TODO: can we set cosigners to be the other recipients of this message?
       wallet = content;
       wallet.xpub = {[wallet.xpub]: author};
 
@@ -100,10 +98,12 @@ function map(msg) {
       };
       break;
     case 'addMmtRecieveCommentTest':
-      const address = content.address;
+      var address = content.address;
       delete content.address;
-      content.author = author;
-      wallet.recieveAddress = {[content.address]: [content]};
+      //content.author = author;
+      content.comments = [{author, comment: content.comment}];
+      delete content.comment;
+      wallet.addresses = {[address]: content};
   }
 
   // deserialize all transactions
