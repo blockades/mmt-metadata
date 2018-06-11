@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>mmt payment metadata app</title>
+    <title>Better Multisig Wallet</title>
 
     <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="./assets/css/jquery-ui.min.css">
@@ -54,11 +54,11 @@
   <body>
     <div id="root">
       <div class = "container">
-        <h1>mmt payment metadata app</h1>
+        <h1>better multisig wallet</h1>
         <div id="notifications"></div>
         <div id="walletInfo">
           <b><span id="walletName"></span></b> -
-          <span id="requiredCosigners"></span> of <span id="numberCosigners"></span> multisig. -
+          <span id="requiredCosigners"></span> of <span id="numberCosigners"></span> signatures required.
           Confirmed balance: <span class="balance"></span> BTC
         </div>
         <div id="tabs">
@@ -137,7 +137,7 @@
               <h5> Details for transaction <span id="txid"></span> </h5>
               <p> Amount <span id="transactionDetailsAmount"></span> </p>
               <p> Initiated by: <span id="initiatedBy"></span></p>
-              <p> Signed by: <span id="initiatedBy"></span></p>
+              <p> Signed by: <span id="signedBy"></span></p>
               <p> Outputs: <span id="outputs"></span></p>
               <p> Comments: <span id="comments"></span></p>
               <p> Add a comment: <input type="text" name="addTransactionComment" id="addTransactionComment" ></p> 

@@ -16,7 +16,8 @@
   "devDependencies": {
     "electron": "=1.8.6",
     "electron-rebuild": "=1.7.0",
-    "electron-reload": "^1.2.2"
+    "electron-reload": "^1.2.2",
+    "tape": "^4.9.0"
   },
   "dependencies": {
     "bip32": "^0.1.0",
@@ -27,13 +28,14 @@
     "deepmerge": "^2.1.1",
     "electron-default-menu": "^1.0.1",
     "fs": "0.0.1-security",
+    "lodash.mergewith": "^4.6.1",
     "pull-stream": "^3.6.8",
     "request": "^2.87.0",
     "scuttlebot": "^11.2.2",
+    "ssb-about": "^0.1.2",
     "ssb-client": "^4.5.7",
     "ssb-config": "^2.2.0",
     "ssb-keys": "^7.0.16",
-    "ssb-about": "^0.1.2",
     "ssb-private": "^0.2.1"
   }
 }
