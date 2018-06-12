@@ -95,7 +95,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
       if (typeof payments[index].comments === "undefined")
         payments[index].comments = [];
       if (typeof payments[index].amount === "undefined")
-        payments[index].amount = "Unknown";
+        payments[index].amount = "";
 
       if (typeof payments[index].initiatedBy === "undefined") {
         var initiatedBy = "";
@@ -110,6 +110,11 @@ electronInterface.displayPayments = function(wallet, server, callback) {
       //   var signedBy = wallets.cosigners[payments[index].signedBy].name
       // }
 
+      if (typeof payments[index].initialComment != 'undefined') {
+        commentList += "<b>"
+        commentList += payments[index].initialComment
+        commentList += "</b>"
+      }
       payments[index].comments.forEach(function(comment) {
         // possibly with avatar image
         commentList += "<p>";
@@ -156,7 +161,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .text(payments[index].confirmations)
           .end()
           .find(".recipients")
-          .text("recipeintsFromBlockchain")
+          .text("")
           .end()
           .find(".options")
           .find(".details")
@@ -190,7 +195,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .text(payments[index].amount)
           .end()
           .find(".recipients")
-          .text("recipeintsFromBlockchain")
+          .text("")
           .end()
           .find(".options")
           .find(".details")
@@ -263,11 +268,13 @@ function addCommentFunctionCreator(server, wallet, index, callback) {
       };
       console.log(JSON.stringify(wallet.cosigners, null, 4));
       var recipients = Object.keys(wallet.cosigners);
+      
       util.publishMessage(
         server,
         "addMmtPaymentCommentTest",
         paymentComment,
         recipients,
+        wallet.walletId,
         function(err, updatedData) {
           callback(err, updatedData);
         }

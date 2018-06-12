@@ -134,7 +134,7 @@ function createPayTo(server) {
 
 function recieveMemo(server) {
   var recieveMemoData = electronInterface.createRecieveMemo();
-  console.log('firstunsed', wallet.firstUnusedAddress)
+  console.log("firstunsed", wallet.firstUnusedAddress);
   if (recieveMemoData) {
     recieveMemoData.walletId = wallet.walletId;
     recieveMemoData.address = wallet.firstUnusedAddress;
@@ -151,7 +151,7 @@ function recieveMemo(server) {
         recieveMemoData,
         recipients,
         wallet.walletId,
-        function (err, updatedData,server) {
+        function(err, updatedData, server) {
           mergeWith(wallet, updatedData, util.concatArrays);
           electronInterface.displayWalletInfo(wallet);
         }
@@ -186,21 +186,17 @@ function whoAmICallbackCreator(server) {
   };
 }
 
-function mergeAndDisplay(err, updatedData,server) {
+function mergeAndDisplay(err, updatedData, server) {
   // never ending loop. This looks dangerous
   mergeWith(wallet, updatedData, util.concatArrays);
-  electronInterface.displayPayments(
-    wallet,
-    server,
-    mergeAndDisplay
-  );
+  electronInterface.displayPayments(wallet, server, mergeAndDisplay);
 }
 
 function updateWalletInfo() {
-    ec.getWalletInfo(function(err, output) {
-      mergeWith(wallet, output);
-      electronInterface.displayWalletInfo(wallet);
-    });
+  ec.getWalletInfo(function(err, output) {
+    mergeWith(wallet, output);
+    electronInterface.displayWalletInfo(wallet);
+  });
 }
 
 function aboutCallbackCreator(server, me) {
@@ -223,7 +219,7 @@ function aboutCallbackCreator(server, me) {
       }
     });
 
-    wallet.walletId = null
+    wallet.walletId = null;
 
     server.mmtMetadata.get(function(err, dataFromSsb) {
       // console.log(
@@ -251,7 +247,7 @@ function aboutCallbackCreator(server, me) {
           $("#notifications").append(
             "Cannot find this wallet on ssb. Do you want to initiate it?"
           );
-          
+
           // first check if there are any incomplete wallets we could possibly join
           // then allow user to choose cosigners from ssb friends, and to
           // give the wallet a name and set number of required cosigners
@@ -263,25 +259,47 @@ function aboutCallbackCreator(server, me) {
           // todo: provide a way to initiate it
         } else {
           mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
+
+          // deserialize all transactions
+          for (transaction in wallet.transactions) {
+            if (typeof wallet.transactions[transaction].rawTransaction != 'undefined') {
+              ec.extractDataFromTx(wallet.transactions[transaction].rawTransaction, function(
+                err,
+                transactionData
+              ) {
+                //console.log('---------txdata',JSON.stringify(transactionData,null,4))
+                // TODO: calculate total outgoing value of transaction (need isMine)
+                // transactionData.totalvalue = 0
+                // transactionData.outputs.forEach(function(anOutput){
+                //   if ! ismine anOutput.address
+                //   transactionData.totalvalue += anOutput.value
+                //})
+                mergeWith(wallet.transactions[transaction], transactionData, util.concatArrays);
+
+
+                electronInterface.displayPayments(
+                  wallet,
+                  server,
+                  mergeAndDisplay
+                );
+              });
+            }
+          }
           cosignerInfo(ssbAbout);
-          //TODO: get image with something like: 
+          //TODO: get image with something like:
           //server.blobs.get(wallet.cosigners[me].image)
-          
+
           // Specify some event handlers.  This needs to be done here where we can
-          // pass server 
+          // pass server
           $("#recieveMemo").click(function() {
             recieveMemo(server);
           });
           $("#createTransaction").click(function() {
             createPayTo(server);
           });
-          electronInterface.displayPayments(
-            wallet,
-            server,
-            mergeAndDisplay
-          );
+          electronInterface.displayPayments(wallet, server, mergeAndDisplay);
 
-          updateWalletInfo()
+          updateWalletInfo();
         }
       });
     });
@@ -298,8 +316,8 @@ function aboutCallbackCreator(server, me) {
     // Have scrapped this for now but it was an attempt to automate loading the wallet
     // will only work with unencrypted wallet
     //ec.setupElectrum(walletFile, function (err,output) { })
-    
-    updateWalletInfo()
+
+    updateWalletInfo();
 
     ec.parseHistory(function(err, output) {
       if (err) console.error(err);
@@ -309,11 +327,7 @@ function aboutCallbackCreator(server, me) {
       });
 
       console.log(JSON.stringify(wallet, null, 4));
-      electronInterface.displayPayments(
-        wallet,
-        server,
-        mergeAndDisplay
-      );
+      electronInterface.displayPayments(wallet, server, mergeAndDisplay);
     });
   };
 }

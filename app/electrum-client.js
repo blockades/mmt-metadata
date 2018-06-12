@@ -196,6 +196,7 @@ ec.extractDataFromTx = function(tx, callback) {
     err,
     output
   ) {
+    if (err) return callback(err,null)
     var txData = output.result
     var transaction = {};
 
