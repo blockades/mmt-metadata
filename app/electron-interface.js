@@ -303,11 +303,20 @@ function detailsFunctioncreator(server, wallet, index, payments, commentList) {
     } else {
       status = "Incomplete. ";
       if (typeof payment.signatures != "undefined") {
-        status += payments.sinatures.length;
+        //TODO: for sure there is a handy lodash function that strips
+        //      falsey values from arrays
+        var numSigs = 0
+        payment.signatures.forEach( function(sig) {
+          if (sig) numSigs += 1
+        })
+        status += numSigs;
         status += " of ";
         status += wallet.requiredCosigners;
-        status += " signatures.";
+        status += " required signatures.";
       }
+      // TODO: make sign button visible
+      // add sign function here
+      // if we are the last required signer, broadcast
     }
     $("#status").text(status);
     $("#initiatedBy").text(initiatedBy);

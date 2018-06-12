@@ -106,13 +106,6 @@ function map(msg) {
       wallet.addresses = {[address]: content};
   }
 
-  // deserialize all transactions
-  for (transaction in wallet.transactions) {
-    if (transaction.rawTransaction)
-      ec.extractDataFromTx(transaction.rawTransaction, function(err, transactionData) {
-        mergeWith(transaction,transactionData,util.concatArrays)
-      } )
-  }
 
   wallet.cosigners = {}
   // console.log(JSON.stringify(msg,null,4))
