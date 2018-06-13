@@ -1,6 +1,7 @@
 const bitcoinUtils = require("./bitcoin-utils");
 const electronInterface = (module.exports = {});
 const util = require("./util");
+const ec = require("./electrum-client");
 
 function getAddressComments(address, wallet) {
   var commentList = "";
@@ -96,7 +97,9 @@ electronInterface.displayPayments = function(wallet, server, callback) {
         payments[index].comments = [];
       if (typeof payments[index].amount === "undefined") {
         var displayAmount = "";
-      } else { var displayAmount = payments[index].amount; }
+      } else {
+        var displayAmount = payments[index].amount;
+      }
 
       if (typeof payments[index].initiatedBy === "undefined") {
         var initiatedBy = "";
@@ -167,7 +170,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .find(".options")
           .find(".details")
           .click(
-            detailsFunctioncreator(server, wallet, index, payments, commentList)
+            detailsFunctioncreator(server, wallet, index, payments, commentList,callback)
           )
           .end()
           .end()
@@ -201,7 +204,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .find(".options")
           .find(".details")
           .click(
-            detailsFunctioncreator(server, wallet, index, payments, commentList)
+            detailsFunctioncreator(server, wallet, index, payments, commentList,callback)
           )
           .end()
           .end()
@@ -267,7 +270,6 @@ function addCommentFunctionCreator(server, wallet, index, callback) {
         key: index,
         comment: transactionComment
       };
-      console.log(JSON.stringify(wallet.cosigners, null, 4));
       var recipients = Object.keys(wallet.cosigners);
 
       util.publishMessage(
@@ -283,7 +285,63 @@ function addCommentFunctionCreator(server, wallet, index, callback) {
     };
 }
 
-function detailsFunctioncreator(server, wallet, index, payments, commentList) {
+function signFunctionCreator(server, wallet, index, callback) {
+  if (wallet.walletId)
+    return function() {
+      var signComment = $("input#addTransactionComment").val();
+
+      $("input#addTransactionComment").val("");
+      // TODO: password
+      var password = "test";
+
+      ec.signTransaction(
+        wallet.transactions[index].rawTransaction,
+        password,
+        function(err, output) {
+          console.log(
+            "Output from signTransaction",
+            JSON.stringify(output, null, 4)
+          );
+
+          // Should we broadcast?
+          // signTransaction gives us two boolean outputs,
+          // 'complete' and 'final'.  Im gonna guess that
+          // 'complete' is what we want here.
+          if (output.complete) {
+            // TODO: should we ask the user if they want to broadcast?
+            ec.broadcast(output.hex, function(err, output) {
+              console.log(
+                "Output from broadcast ",
+                JSON.stringify(output, null, 4)
+              );
+            });
+          }
+
+          var signPaymentData = {
+            walletId: wallet.walletId,
+            key: index,
+            rawTransaction: output.hex,
+            comment: signComment
+          };
+
+          var recipients = Object.keys(wallet.cosigners);
+
+          util.publishMessage(
+            server,
+            "signMmtPaymentCommentTest",
+            signPaymentData,
+            recipients,
+            wallet.walletId,
+            function(err, updatedData) {
+              callback(err, updatedData);
+            }
+          );
+        }
+      );
+    };
+}
+
+function detailsFunctioncreator(server, wallet, index, payments, commentList,callback) {
   return function() {
     var payment = payments[index];
     $("#txid").text(index);
@@ -301,6 +359,9 @@ function detailsFunctioncreator(server, wallet, index, payments, commentList) {
       status = "Complete and broadcast, ";
       status += payment.confirmations;
       status += " confirmations.";
+
+      // get rid of sign button
+      $("#signButton").html("");
     } else {
       status = "Incomplete. ";
       if (typeof payment.signatures != "undefined") {
@@ -315,7 +376,13 @@ function detailsFunctioncreator(server, wallet, index, payments, commentList) {
         status += wallet.requiredCosigners;
         status += " required signatures.";
       }
-      // TODO: make sign button visible
+      // make sign button visible
+      $("#signButton").html('<button id="theSignButton">Sign</button>');
+      $("#theSignButton").click(
+        signFunctionCreator(server, wallet, index, function(err, updatedData) {
+          callback(err, updatedData);
+        })
+      );
       // add sign function here
       // if we are the last required signer, broadcast
     }

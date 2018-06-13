@@ -128,6 +128,14 @@ ec.checkVersion = function(requiredVersion, callback) {
   });
 };
 
+ec.broadcast = function(tx, callback) {
+  // TODO: broadcast optionally takes 'timeout' in seconds
+  //       is this useful?
+  electrumRequest("broadcast", { tx }, function(err, output) {
+    callback(err, output);
+  });
+};
+
 ec.getUnusedAddress = function(callback) {
   electrumRequest("getunusedaddress", [], function(err, output) {
     callback(err, output.result);
@@ -147,10 +155,7 @@ ec.listRequests = function(callback) {
 };
 
 ec.signTransaction = function(tx, password, callback) {
-  electrumRequest("getmpk", { tx: tx, password: password }, function(
-    err,
-    output
-  ) {
+  electrumRequest("signtransaction", { tx, password }, function(err, output) {
     callback(err, output.result);
   });
 };
@@ -191,12 +196,9 @@ ec.deserialize = function(tx, callback) {
 };
 
 ec.extractDataFromTx = function(tx, callback) {
-  electrumRequest("deserialize", { tx }, function(
-    err,
-    output
-  ) {
-    if (err) return callback(err,null)
-    var txData = output.result
+  electrumRequest("deserialize", { tx }, function(err, output) {
+    if (err) return callback(err, null);
+    var txData = output.result;
     var transaction = {};
 
     // todo: take from signatures from all inputs?
@@ -227,12 +229,12 @@ ec.addRequest = function(amount, memo, expiration, callback) {
 };
 
 ec.payTo = function(destination, amount, fee, password, callback) {
-  let payData = { "destination": destination, "amount": amount }
-  if(!!fee) {
+  let payData = { destination: destination, amount: amount };
+  if (!!fee) {
     payData["fee"] = fee;
   }
-  if (!!password && password !== '') payData.password = password
-  
+  if (!!password && password !== "") payData.password = password;
+
   electrumRequest("payto", payData, function(err, output) {
     if (typeof output.result !== "undefined") output = output.result;
     callback(err, output);
@@ -292,9 +294,18 @@ ec.parseHistory = function(callback) {
 
         // TODO: what to do about the date for partially signed transactions? what is locktime?
 
-        electrumRequest("gettransaction", { txid: transaction.txid }, function(err, rawTx) {
-          ec.extractDataFromTx(rawTx.result.hex, function(err, moreTransactionData) {
-            mergeWith(wallet.transactions[transaction.txid], moreTransactionData);
+        electrumRequest("gettransaction", { txid: transaction.txid }, function(
+          err,
+          rawTx
+        ) {
+          ec.extractDataFromTx(rawTx.result.hex, function(
+            err,
+            moreTransactionData
+          ) {
+            mergeWith(
+              wallet.transactions[transaction.txid],
+              moreTransactionData
+            );
             callback(err, wallet);
           });
         });
@@ -309,7 +320,7 @@ ec.parseHistory = function(callback) {
 };
 
 ec.getWalletInfo = function(callback) {
-  var wallet = {}
+  var wallet = {};
   // the pyramid of doom!  (fix this)
   ec.getBalance(function(err, output) {
     if (!err) wallet.balance = parseFloat(output.confirmed);
@@ -318,22 +329,23 @@ ec.getWalletInfo = function(callback) {
       if (err) console.error(err);
       //console.log('addresses ', JSON.stringify(output,null,4))
       //wallet.addresses = output;
-      if (typeof wallet.addresses === 'undefined') wallet.addresses = {}
-      output.forEach(function(address) { 
-        if (typeof wallet.addresses[address] === 'undefined') wallet.addresses[address] = {} 
-      })
+      if (typeof wallet.addresses === "undefined") wallet.addresses = {};
+      output.forEach(function(address) {
+        if (typeof wallet.addresses[address] === "undefined")
+          wallet.addresses[address] = {};
+      });
 
       ec.listRequests(function(err, output) {
         if (err) console.error(err);
-        
+
         output.forEach(function(request) {
-          wallet.addresses[request.address] = request; 
-        })
-        
+          wallet.addresses[request.address] = request;
+        });
+
         ec.getUnusedAddress(function(err, output) {
           wallet.firstUnusedAddress = output;
           // TODO: qr code
-          callback(err,wallet)
+          callback(err, wallet);
         });
       });
     });
