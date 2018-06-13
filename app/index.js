@@ -192,10 +192,29 @@ function mergeAndDisplay(err, updatedData, server) {
   electronInterface.displayPayments(wallet, server, mergeAndDisplay);
 }
 
-function updateWalletInfo() {
+function calculateOutgoingAmount() {
+  for (transaction in wallet.transactions) {
+    // Calculate total outgoing value of transaction
+    // Here we have just checked if it is an address of ours we know about.
+    // we could use electrums isMine to do this, im not sure if this would
+    // give a better indication (eg: notice if its an address of our we havent
+    // generated yet).
+    if (typeof wallet.transactions[transaction].amount === "undefined")
+      if (typeof wallet.transactions[transaction].outputs != "undefined") {
+        wallet.transactions[transaction].amount = 0;
+        wallet.transactions[transaction].outputs.forEach(function(anOutput) {
+          if (Object.keys(wallet.addresses).indexOf(anOutput.address) < 0)
+            wallet.transactions[transaction].amount -= anOutput.value;
+        });
+      }
+  }
+}
+function updateWalletInfo(server) {
   ec.getWalletInfo(function(err, output) {
     mergeWith(wallet, output);
+    calculateOutgoingAmount();
     electronInterface.displayWalletInfo(wallet);
+    electronInterface.displayPayments(wallet, server, mergeAndDisplay);
   });
 }
 
@@ -262,27 +281,26 @@ function aboutCallbackCreator(server, me) {
 
           // deserialize all transactions
           for (transaction in wallet.transactions) {
-            if (typeof wallet.transactions[transaction].rawTransaction != 'undefined') {
-              ec.extractDataFromTx(wallet.transactions[transaction].rawTransaction, function(
-                err,
-                transactionData
-              ) {
-                //console.log('---------txdata',JSON.stringify(transactionData,null,4))
-                // TODO: calculate total outgoing value of transaction (need isMine)
-                // transactionData.totalvalue = 0
-                // transactionData.outputs.forEach(function(anOutput){
-                //   if ! ismine anOutput.address
-                //   transactionData.totalvalue += anOutput.value
-                //})
-                mergeWith(wallet.transactions[transaction], transactionData, util.concatArrays);
+            if (
+              typeof wallet.transactions[transaction].rawTransaction !=
+              "undefined"
+            ) {
+              ec.extractDataFromTx(
+                wallet.transactions[transaction].rawTransaction,
+                function(err, transactionData) {
+                  mergeWith(
+                    wallet.transactions[transaction],
+                    transactionData,
+                    util.concatArrays
+                  );
 
-
-                electronInterface.displayPayments(
-                  wallet,
-                  server,
-                  mergeAndDisplay
-                );
-              });
+                  electronInterface.displayPayments(
+                    wallet,
+                    server,
+                    mergeAndDisplay
+                  );
+                }
+              );
             }
           }
           cosignerInfo(ssbAbout);
@@ -299,7 +317,7 @@ function aboutCallbackCreator(server, me) {
           });
           electronInterface.displayPayments(wallet, server, mergeAndDisplay);
 
-          updateWalletInfo();
+          updateWalletInfo(server);
         }
       });
     });
@@ -317,7 +335,7 @@ function aboutCallbackCreator(server, me) {
     // will only work with unencrypted wallet
     //ec.setupElectrum(walletFile, function (err,output) { })
 
-    updateWalletInfo();
+    updateWalletInfo(server);
 
     ec.parseHistory(function(err, output) {
       if (err) console.error(err);

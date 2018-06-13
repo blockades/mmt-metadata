@@ -94,8 +94,9 @@ electronInterface.displayPayments = function(wallet, server, callback) {
 
       if (typeof payments[index].comments === "undefined")
         payments[index].comments = [];
-      if (typeof payments[index].amount === "undefined")
-        payments[index].amount = "";
+      if (typeof payments[index].amount === "undefined") {
+        var displayAmount = "";
+      } else { var displayAmount = payments[index].amount; }
 
       if (typeof payments[index].initiatedBy === "undefined") {
         var initiatedBy = "";
@@ -110,10 +111,10 @@ electronInterface.displayPayments = function(wallet, server, callback) {
       //   var signedBy = wallets.cosigners[payments[index].signedBy].name
       // }
 
-      if (typeof payments[index].initialComment != 'undefined') {
-        commentList += "<b>"
-        commentList += payments[index].initialComment
-        commentList += "</b>"
+      if (typeof payments[index].initialComment != "undefined") {
+        commentList += "<b>";
+        commentList += payments[index].initialComment;
+        commentList += "</b>";
       }
       payments[index].comments.forEach(function(comment) {
         // possibly with avatar image
@@ -154,7 +155,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .text(payments[index].rate)
           .end()
           .find(".amount")
-          .text(payments[index].amount)
+          .text(displayAmount)
           .end()
           // TODO: make a thingy that goes from red to green with under 6 confimations
           .find(".confirmations")
@@ -192,7 +193,7 @@ electronInterface.displayPayments = function(wallet, server, callback) {
           .text(payments[index].rate)
           .end()
           .find(".amount")
-          .text(payments[index].amount)
+          .text(displayAmount)
           .end()
           .find(".recipients")
           .text("")
@@ -268,7 +269,7 @@ function addCommentFunctionCreator(server, wallet, index, callback) {
       };
       console.log(JSON.stringify(wallet.cosigners, null, 4));
       var recipients = Object.keys(wallet.cosigners);
-      
+
       util.publishMessage(
         server,
         "addMmtPaymentCommentTest",
@@ -305,10 +306,10 @@ function detailsFunctioncreator(server, wallet, index, payments, commentList) {
       if (typeof payment.signatures != "undefined") {
         //TODO: for sure there is a handy lodash function that strips
         //      falsey values from arrays
-        var numSigs = 0
-        payment.signatures.forEach( function(sig) {
-          if (sig) numSigs += 1
-        })
+        var numSigs = 0;
+        payment.signatures.forEach(function(sig) {
+          if (sig) numSigs += 1;
+        });
         status += numSigs;
         status += " of ";
         status += wallet.requiredCosigners;
@@ -326,6 +327,9 @@ function detailsFunctioncreator(server, wallet, index, payments, commentList) {
       payment.outputs.forEach(function(anOutput) {
         outputs += "<p>";
         outputs += anOutput.address; // check isMine?
+        if (Object.keys(wallet.addresses).indexOf(anOutput.address) > -1) {
+          outputs += " (Change address)";
+        }
         outputs += ", ";
         outputs += anOutput.value / 10000000; // convert to BTC
         outputs += " BTC</p>";

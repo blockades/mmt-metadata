@@ -1,5 +1,4 @@
 // functions for talking to electrum via http
-
 const request = require("request");
 const mergeWith = require("lodash.mergewith");
 
