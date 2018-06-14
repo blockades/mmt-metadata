@@ -8,6 +8,7 @@ Server
   .use(require('ssb-private'))
   .use(require('ssb-about'))
   .use(require('ssb-blobs'))
+  .use(require('ssb-ws'))
   // our new plugin
   .use(require('./plugin/ssb-mmt-metadata'))
 
