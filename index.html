@@ -14,6 +14,9 @@
       .incompleteUnfilled {
         display: none;
       }
+      .chooseCosigner {
+        display: none;
+      }
       .paymentsUnfilled {
         display: none;
       }
@@ -52,6 +55,18 @@
       function displayNumCosigners(value) {
         $('#displayNumCosigners').text(value)
         $('#inputRequiredCosigners').attr("max",value)
+        displayCosignerFields(value)
+      }
+      function displayCosignerFields(num) {  
+        $("#chooseCosignerSection").html($(".chooseCosigner").clone())
+        for (var i = num; i >= 1; i--){ 
+          $(".chooseCosigner").clone()
+          .find(".cosignerNumber")
+          .text(i)
+          .end()
+          .attr("class","chooseCosignerReady")
+          .insertAfter(".chooseCosigner")
+        }
       }
       function displayReqCosigners(value) {
         $('#displayReqCosigners').text(value)
@@ -69,7 +84,12 @@
           <input type="range" id="inputNumberCosigners" max="7" min="1" value="3" oninput="displayNumCosigners(this.value)" onchange="displayNumCosigners(this.value)"><span id="displayNumCosigners">3</span></p>
           <p>Required cosigners: 
           <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2" oninput="displayReqCosigners(this.value)" onchange="displayReqCosigners(this.value)"><span id="displayReqCosigners">2</span></p>
-          <div id="chooseCosigner">Choose cosigner: <input id="chooseCosignerKey"></div>
+          <div id="chooseCosignerSection">
+            <div class="chooseCosigner">
+              Choose cosigner <span class = "cosignerNumber"></span>: 
+              <input id="chooseCosignerKey">
+            </div>
+          </div>
           <button id="initiateWalletConfirm">Initiate Wallet</button><button id="initiateWalletCancel"></button>
         </div>
         <div id="sharePubKey" class="invisible">
@@ -179,7 +199,7 @@
 
           <div id="recieve">
             <p> Recieve address: <span id="recieveAddress"></span><button id="addressToClipboard" onclick="">Copy to clipboard</button></p>
-            <canvas id="qrCode"></canvas>
+            <div id="qrCode"></div>
             <p> Memo <input type="text" name="memo" id="memo" oninput='' ></p>
             <p> Requested Amount (optional) <input type="text" name="requestedAmount" id="requestedAmount" oninput=''></p>
             <p> Expires: (drop down box?) </p>

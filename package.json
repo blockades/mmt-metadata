@@ -30,6 +30,7 @@
     "fs": "0.0.1-security",
     "lodash.mergewith": "^4.6.1",
     "pull-stream": "^3.6.8",
+    "qrcode": "^1.2.0",
     "request": "^2.87.0",
     "scuttlebot": "^11.2.2",
     "ssb-about": "^0.1.2",

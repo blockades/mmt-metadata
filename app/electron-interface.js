@@ -1,7 +1,18 @@
+const QRCode = require("qrcode")
+
 const bitcoinUtils = require("./bitcoin-utils");
-const electronInterface = (module.exports = {});
 const util = require("./util");
 const ec = require("./electrum-client");
+
+const electronInterface = (module.exports = {});
+
+
+displayRecieveQRCode = function (code) {
+  QRCode.toCanvas(code, function (error,canvas){
+    if (error) throw(error) 
+    $("#qrCode").html(canvas) 
+  })
+}
 
 function getAddressComments(address, wallet) {
   var commentList = "";
@@ -78,8 +89,10 @@ electronInterface.displayWalletInfo = function(wallet) {
     });
   }
 
-  if (wallet.firstUnusedAddress)
+  if (wallet.firstUnusedAddress) {
     $("#recieveAddress").text(wallet.firstUnusedAddress);
+    displayRecieveQRCode(wallet.firstUnusedAddress) 
+  }
 };
 
 electronInterface.displayPayments = function(wallet, server, callback) {
@@ -252,8 +265,6 @@ electronInterface.createRecieveMemo = function() {
   var memo = $("input#memo").val();
 
   $("input#memo").val("");
-
-  // TODO: get new unused address, update display
 
   return { comment: memo };
 };
