@@ -49,6 +49,13 @@
         $('#transactionDetails').attr("class","invisible")
         $('#transactionTables').attr("class","visible")
       }
+      function displayNumCosigners(value) {
+        $('#displayNumCosigners').text(value)
+        $('#inputRequiredCosigners').attr("max",value)
+      }
+      function displayReqCosigners(value) {
+        $('#displayReqCosigners').text(value)
+      }
     </script>
   </head>
   <body>
@@ -58,8 +65,10 @@
         <div id="notifications"></div>
         <div id="initiateWallet" class="invisible">
           <p>Wallet name : <input type="text" name="inputWalletName" id="inputWalletName"></p>
-          <p>Number cosigners: <input type="range" id="inputNumberCosigners" max="7" min="1" value="3"></p>
-          <p>Required cosigners: <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2"></p>
+          <p>Number cosigners: 
+          <input type="range" id="inputNumberCosigners" max="7" min="1" value="3" oninput="displayNumCosigners(this.value)" onchange="displayNumCosigners(this.value)"><span id="displayNumCosigners">3</span></p>
+          <p>Required cosigners: 
+          <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2" oninput="displayReqCosigners(this.value)" onchange="displayReqCosigners(this.value)"><span id="displayReqCosigners">2</span></p>
           <div id="chooseCosigner">Choose cosigner: <input id="chooseCosignerKey"></div>
           <button id="initiateWalletConfirm">Initiate Wallet</button><button id="initiateWalletCancel"></button>
         </div>
