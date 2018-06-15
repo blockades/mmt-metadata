@@ -8,6 +8,11 @@ const electronInterface = (module.exports = {});
 
 
 displayRecieveQRCode = function (code) {
+  code = "bitcoin:" + code
+  // TODO: electrum updates this as you type, with amount and 
+  // message as so:
+  // code += "?amount" + amount + "&message="+message
+  // i guess we also need to escape special characters in message
   QRCode.toCanvas(code, function (error,canvas){
     if (error) throw(error) 
     $("#qrCode").html(canvas) 
