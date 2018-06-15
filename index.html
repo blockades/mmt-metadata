@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="./assets/css/jquery-ui.min.css">
     <style>
-/* TODO: put this somewhere else */
-.invisible {
-  display: none;
-}
+       /* TODO: put this somewhere else */
+       .invisible {
+         display: none;
+       } 
       .incompleteUnfilled {
         display: none;
       }
@@ -56,10 +56,22 @@
       <div class = "container">
         <h1>better multisig wallet</h1>
         <div id="notifications"></div>
+        <div id="initiateWallet" class="invisible">
+          <p>Wallet name : <input type="text" name="inputWalletName" id="inputWalletName"></p>
+          <p>Number cosigners: <input type="range" id="inputNumberCosigners" max="7" min="1" value="3"></p>
+          <p>Required cosigners: <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2"></p>
+          <div id="chooseCosigner">Choose cosigner: <input id="chooseCosignerKey"></div>
+          <button id="initiateWalletConfirm">Initiate Wallet</button><button id="initiateWalletCancel"></button>
+        </div>
+        <div id="sharePubKey" class="invisible">
+          <button>Share public key with cosigners</button>
+          <button id="ignoreInvitation"> Ignore invitation</button>
+        </div>
         <div id="walletInfo">
           <b><span id="walletName"></span></b> -
           <span id="requiredCosigners"></span> of <span id="numberCosigners"></span> signatures required.
           Confirmed balance: <span class="balance"></span> BTC
+          <p>Cosigners: <span id="displayCosigners"></span></p>
         </div>
         <div id="tabs">
           <ul>
@@ -158,6 +170,7 @@
 
           <div id="recieve">
             <p> Recieve address: <span id="recieveAddress"></span><button id="addressToClipboard" onclick="">Copy to clipboard</button></p>
+            <canvas id="qrCode"></canvas>
             <p> Memo <input type="text" name="memo" id="memo" oninput='' ></p>
             <p> Requested Amount (optional) <input type="text" name="requestedAmount" id="requestedAmount" oninput=''></p>
             <p> Expires: (drop down box?) </p>

@@ -258,7 +258,7 @@ function aboutCallbackCreator(server, me) {
       ec.getMpk(function(err, mpk) {
         //var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk));
         console.log("-----mpk", mpk);
-        wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
+        //wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
         if (!wallet.walletId) {
           console.log(
             "Cannot find this wallet on ssb. Do you want to initiate it"
@@ -266,7 +266,10 @@ function aboutCallbackCreator(server, me) {
           $("#notifications").append(
             "Cannot find this wallet on ssb. Do you want to initiate it?"
           );
+          
 
+          $("#initiateWallet").attr("class", "visible")
+         
           // first check if there are any incomplete wallets we could possibly join
           // then allow user to choose cosigners from ssb friends, and to
           // give the wallet a name and set number of required cosigners
