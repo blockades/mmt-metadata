@@ -20,7 +20,8 @@ function publishMessage(server, type, content, recipients,currentWallet,callback
       // re-call plugin to get the updated data
       server.mmtMetadata.get(function(err, dataFromSsb) {
         if (err) return callback(err, null)
-        callback(null,dataFromSsb[currentWallet])
+        if (currentWallet) callback(null,dataFromSsb[currentWallet])
+        else callback(null,dataFromSsb)
       } )
     }
   );

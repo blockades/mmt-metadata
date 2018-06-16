@@ -44,13 +44,14 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#requiredCosigners").text(wallet.requiredCosigners);
   if (wallet.cosigners) {
     $("#numberCosigners").text(Object.keys(wallet.cosigners).length);
-    // TODO: names and avatars of cosigners
+    // TODO: avatars of cosigners
     var cosignerList = "";
     // should this be for...in?
     Object.keys(wallet.cosigners).forEach(function(cosigner) {
       cosignerList += wallet.cosigners[cosigner].name;
       cosignerList += " ";
     });
+    $("#displayCosigners").text(cosignerList)
   }
   if (wallet.balance) $(".balance").text(wallet.balance);
 
