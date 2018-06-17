@@ -142,6 +142,7 @@ function recieveMemo(server) {
   }
 }
 
+// TODO: this is duplicated in util
 function cosignerInfo(ssbAbout) {
   Object.keys(wallet.cosigners).forEach(function(cosigner) {
     // not sure if this is the most reliable way to get self-identified name but works for me
@@ -214,6 +215,11 @@ function aboutCallbackCreator(server, me) {
 
       //var incompleteWallets = util.findIncompleteWallets(dataFromSsb);
       var walletInvitations = util.findWalletsNotSignedBy(me,dataFromSsb);
+      
+      // Get cosigner info for each wallet
+      for (eachWallet in dataFromSsb) {
+        dataFromSsb[eachWallet] = util.cosignerInfo(dataFromSsb[eachWallet],ssbAbout)
+      }
 
       ec.checkVersion(requiredElectrumVersion, function(err, output) {
         if (err) {

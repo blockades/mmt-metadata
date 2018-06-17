@@ -82,11 +82,12 @@
         <h1>better multisig wallet</h1>
         <h5><div id="notifications"></div></h5>
         <div id="initiateWallet" class="invisible">
-          <p>Wallet name : <input type="text" name="inputWalletName" id="inputWalletName"></p>
-          <p>Number cosigners: 
+          <p>Give the wallet a name: <input type="text" name="inputWalletName" id="inputWalletName"></p>
+          <p>How many cosigners? 
           <input type="range" id="inputNumberCosigners" max="7" min="1" value="3" oninput="displayNumCosigners(this.value)" onchange="displayNumCosigners(this.value)"><span id="displayNumCosigners">3</span></p>
-          <p>Required cosigners: 
+          <p>How many are required to sign a payment? 
           <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2" oninput="displayReqCosigners(this.value)" onchange="displayReqCosigners(this.value)"><span id="displayReqCosigners">2</span></p>
+          <p> Find cosigners by entering part of their ssb name or public key:</p> 
           <div id="chooseCosignerSection">
               <!-- TODO: this is ugly, use clone() -->
               <div id="chooseCosigner1" class = "visible">Choose cosigner 
@@ -105,6 +106,7 @@
                 <span class = "cosignerNumber">7</span>: <input id="chooseCosignerKey7"></div>
           </div>
           <div id="noMpkButtons" class="invisible">
+             <p> Master Public Key for the wallet:</p>
              <p><button id="enterMpk">I have a master public key and want to enter it here</button>
              <input id="mpkTextBox" class="invisible">
              </p>

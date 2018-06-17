@@ -531,19 +531,21 @@ electronInterface.sharePubKeyForm = function (walletInvitations,mpk) {
   // display info on each invite
   // TODO: clone "#displayInvitation"
   walletInvitations.forEach( function(incompleteWallet){
-   $("#displayInvitationWalletName").text(incompleteWallet.walletName)
-   $("#displayInvitationRequiredCosigners").text(incompleteWallet.requiredCosigners)
-   $("#displayInvitationNumCosigners").text(incompleteWallet.cosigners.length)
-   var cosignerList = ""
-   //foreach cosigners
-   // cosignerList += "<p>"
-   // cosignerList += cosigner + ": "
-   // if we have already their mpk:
-   // cosignerList += xpub
-  // else
-  // cosignerList += "Not yet signed"
-   // cosignerList += "</p>"
-   $("#displayInvitationCosigners").html(cosignerList)
+    $("#displayInvitationWalletName").text(incompleteWallet.walletName)
+    $("#displayInvitationRequiredCosigners").text(incompleteWallet.requiredCosigners)
+    $("#displayInvitationNumCosigners").text(incompleteWallet.cosigners.length)
+    var cosignerList = ""
+    incompleteWallet.cosigners.forEach( function(cosigner){
+      cosignerList += "<p>"
+      cosignerList += cosigner.name + ": "
+      var xpubPosition = Object.values(incompleteWallet.xpub).indexOf(cosigner) 
+      if (xpubPosition > -1)
+        cosignerList += Object.keys(incompleteWallet.xpub)[xpubPosition]
+      else
+        cosignerList += "Not yet signed"
+      cosignerList += "</p>"
+    })
+    $("#displayInvitationCosigners").html(cosignerList)
   } )
 
   if (mpk) {
