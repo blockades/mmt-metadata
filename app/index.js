@@ -37,17 +37,6 @@ module.exports = function(root, server) {
   else console.error("Unable to connect to server.  Is server running?");
 };
 
-// TODO: sort this out
-function initiateWallet(server, mpk) {
-  var recipients = Object.keys(wallet.cosigners);
-
-  var initWallet = {
-    walletName: "cucumber",
-    requiredCosigners: 2,
-    xpub: mpk
-  };
-}
-
 function shareXpub(server, mpk) {
   var pubKey = {
     // walletId is the key of the initiateMmtMultisig message as above
@@ -70,7 +59,6 @@ function createPayTo(server) {
   var payToData = electronInterface.createTransaction(wallet);
   if (payToData) {
     // TODO: ask for password in a secure way. (password here is hard coded to 'test')
-    // TODO fix the hardcoded fee of 0.01
 
     // TODO: we should already display a fee estimation on the 'send' tab somewhere
     ec.getFeeRate(function(err, feeRate) {
@@ -113,7 +101,6 @@ function createPayTo(server) {
                 wallet.walletId,
                 mergeAndDisplay
               );
-              // todo: add this as an imcomplete tx and display it
             });
           }
         }
@@ -209,83 +196,6 @@ function updateWalletInfo(server) {
 }
 
 
-function initateWalletForm (server,ssbAbout,mpk) {
-
-          console.log(
-            "Cannot find this wallet on ssb. Do you want to initiate it"
-          );
-          $("#notifications").append(
-            "Cannot find this wallet on ssb. If the are no pending invites, initiate it"
-          );
-          
-
-          $("#initiateWallet").attr("class", "visible")
-          //$("#everythingElse").attr("class", "invisible")
-          $("#needSsbInfo").attr("class", "invisible")
-          
-          // we want only friends, not everyone.
-          var everyone = []
-          //better way to do this?
-          for (person in ssbAbout) {
-             if (ssbAbout[person].name != null)
-               if (ssbAbout[person].name[person] != null)
-                 if (ssbAbout[person].name[person][0] != null)
-                   if (everyone.length < 4000) {
-                     var nameKey = ssbAbout[person].name[person][0]
-                     nameKey += ', '
-                     nameKey += person
-                     everyone.push(nameKey)
-                   }
-          }
-          //$("#inputNumberCosigners").on('input',console.log('ffff')) 
-          var numCosigners = $("#inputNumberCosigners").val() 
-          //$("#inputNumberCosigners").attr("oninput", "displayNumCosigners(this.value,everyone)") 
-          // $("#inputNumberCosigners").on('change', displayNumCosigners(this.value,everyone)) 
-          
-          for (var i = 1;i<= numCosigners;i++){
-            $( "#chooseCosignerKey"+i ).autocomplete({
-               source: everyone 
-            });
-          }
-
-          $("#initiateWalletConfirm").click( function(){
-            // TODO validation  
-            var initWallet = {
-              xpub: mpk
-            };
-            initWallet.walletName = $("input#inputWalletName").val()
-            $("input#inputWalletName").val("") 
-            initWallet.requiredCosigners = $("#inputRequiredCosigners").val()          
-            //"chooseCosignerKeyReady"
-            var recipients = []
-            for (var i = 1; i <= numCosigners; i++ ) {
-              //recipients.push($(".chooseCosignerKeyReady").find("input[name=" + i + "]").val())
-              recipients.push($("#chooseCosignerKey" + i).val().split(", ",2)[1])
-            }
-
-            console.log("recipients: ", JSON.stringify(recipients,null,4))
-            // util.publishMessage(
-            //   server,
-            //   "initiateMmtMultisigTest",
-            //   initWallet,
-            //   recipients,
-            //   null,
-            //   function (err,dataFromSsb) { console.log('successfully initiated wallet') }
-            // );
-            // TODO: re-try to identify wallet 
-          })
-
-          //"initiateWalletCancel"
-          
-          // first check if there are any incomplete wallets we could possibly join
-          // then allow user to choose cosigners from ssb friends, and to
-          // give the wallet a name and set number of required cosigners
-          // wallet.cosigners = {
-          //   "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {},
-          //   "@DQ1HPdrTi6iUUlU22CRqZlEnbxWm6XjjdFQs+4fy+HY=.ed25519": {}
-          // }
-          // initiateWallet(server, mpk)
-}
 
 function aboutCallbackCreator(server, me) {
   return function aboutCallback(err, ssbAbout) {
@@ -334,7 +244,7 @@ function aboutCallbackCreator(server, me) {
         console.log("-----mpk", mpk);
         wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
         if (!wallet.walletId) {
-          initateWalletForm (server,ssbAbout,mpk) 
+          electronInterface.initateWalletForm (server,ssbAbout,mpk)
         } else {
           mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
 
@@ -386,9 +296,7 @@ function aboutCallbackCreator(server, me) {
     // not sure if this is the most reliable way to get self-identified name but works for me
     wallet.cosigners[me].name = ssbAbout[me].name[me][0];
     wallet.cosigners[me].image = ssbAbout[me].image[me][0];
-    // TODO: this gives image location, we still need to actually get the image from ssb
 
-    // console.log("-----cosigners:", JSON.stringify(wallet.cosigners, null, 4));
 
     // Have scrapped this for now but it was an attempt to automate loading the wallet
     // will only work with unencrypted wallet

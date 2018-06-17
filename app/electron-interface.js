@@ -435,3 +435,71 @@ function detailsFunctioncreator(server, wallet, index, payments, commentList,cal
     $("#transactionDetails").attr("class", "visible");
   };
 }
+
+
+electronInterface.initateWalletForm = function(server,ssbAbout,mpk) {
+  console.log(
+    "Cannot find this wallet on ssb. Do you want to initiate it"
+  );
+  $("#notifications").append(
+    "Cannot find this wallet on ssb. If the are no pending invites, initiate it"
+  );
+  
+
+  $("#initiateWallet").attr("class", "visible")
+  //$("#everythingElse").attr("class", "invisible")
+  $("#needSsbInfo").attr("class", "invisible")
+  
+  // TODO: we want only friends, not everyone.
+  var everyone = []
+  //better way to do this?
+  for (person in ssbAbout) {
+     if (ssbAbout[person].name != null)
+       if (ssbAbout[person].name[person] != null)
+         if (ssbAbout[person].name[person][0] != null)
+           // limit to 4000 people.   
+           if (everyone.length < 4000) { 
+             var nameKey = ssbAbout[person].name[person][0]
+             nameKey += ', '
+             nameKey += person
+             everyone.push(nameKey)
+           }
+  }
+  var numCosigners = $("#inputNumberCosigners").val() 
+  // $("#inputNumberCosigners").on('change', displayNumCosigners(this.value,everyone)) 
+  
+  for (var i = 1;i<= numCosigners;i++){
+    $( "#chooseCosignerKey"+i ).autocomplete({
+       source: everyone 
+    });
+  }
+
+  $("#initiateWalletConfirm").click( function(){
+    // TODO: validation (empty fields,etc) 
+    var initWallet = {
+      xpub: mpk
+    };
+    initWallet.walletName = $("input#inputWalletName").val()
+    $("input#inputWalletName").val("") 
+    initWallet.requiredCosigners = $("#inputRequiredCosigners").val()          
+    //"chooseCosignerKeyReady"
+    var recipients = []
+    for (var i = 1; i <= numCosigners; i++ ) {
+      //recipients.push($(".chooseCosignerKeyReady").find("input[name=" + i + "]").val())
+      recipients.push($("#chooseCosignerKey" + i).val().split(", ",2)[1])
+    }
+
+    console.log("recipients: ", JSON.stringify(recipients,null,4))
+    util.publishMessage(
+      server,
+      "initiateMmtMultisigTest",
+      initWallet,
+      recipients,
+      null,
+      function (err,dataFromSsb) { 
+        console.log('Successfully initiated wallet') 
+        // TODO: re-try to identify wallet 
+      }
+    );
+  })
+}
