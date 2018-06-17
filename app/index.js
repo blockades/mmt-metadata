@@ -212,13 +212,7 @@ function aboutCallbackCreator(server, me) {
       // tidyWalletInfo()
 
       var incompleteWallets = util.findIncompleteWallets(dataFromSsb);
-      if (incompleteWallets.length > 0) {
-        console.log("Wallet Invite Found.  Do you want to join?");
-        $("#notifications").append(
-          "Wallet Invite Found."
-        );
-        // form where you can enter and publish public key (for now)
-      }
+        
 
       ec.checkVersion(requiredElectrumVersion, function(err, output) {
         if (err) {
@@ -226,7 +220,9 @@ function aboutCallbackCreator(server, me) {
           $("#notifications").append(
             "Error connecting to electrum.  Is the electrum daemon running, with a wallet loaded?"
           );
-          // offer to set up a new wallet 
+          if (incompleteWallets.length > 0) electronInterface.sharePubKeyForm(incompleteWallets,null)
+          //else
+          // offer to set up a new wallet (initWallet) 
         } else {
           if (output) {
             console.log("electrum version ok");
@@ -240,6 +236,8 @@ function aboutCallbackCreator(server, me) {
       });
       // Get master public key
       ec.getMpk(function(err, mpk) {
+        // TODO: handle the situation the daemon is running with no wallet loaded
+        if (err) throw (err)
         //var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk));
         console.log("-----mpk", mpk);
         wallet.walletId = util.identifyWallet(dataFromSsb, mpk);

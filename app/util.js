@@ -35,8 +35,9 @@ function identifyWallet(allWallets, mpk) {
 
 // todo: should this query be done within the ssb plugin?
 function findIncompleteWallets(allWallets) {
+  // should this better be an object, not array?
   var incompleteWallets = [];
-  console.log("allWallets", JSON.stringify(allWallets, null, 4));
+  // console.log("allWallets", JSON.stringify(allWallets, null, 4));
   Object.keys(allWallets).forEach(function(aWallet) {
     //TODO: should we do validation of correct keys here?
     if (

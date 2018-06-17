@@ -503,3 +503,28 @@ electronInterface.initateWalletForm = function(server,ssbAbout,mpk) {
     );
   })
 }
+
+
+electronInterface.sharePubKeyForm = function (incompleteWallets,mpk) {
+  var numInvites = incompleteWallets.length
+  console.log(numInvites, " wallet Invite(s) Found.  Do you want to join?");
+  $("#notifications").append(
+    numInvites + "wallet invite(s) found."
+  );
+  // form where you can enter and publish public key (for now)
+  $("#sharePubKey").attr("class", "visible")
+  // display info on each invite
+  incompleteWallets.forEach( function(incompleteWallet){
+    //incompleteWallet.walletName
+    //incompleteWallet.requiredCosigners
+    //incompleteWallet.cosigners.length
+    //incompleteWallet.cosigners ( get names, and who has joined and who not)
+    //xpubs
+    //
+  } )
+  if (mpk) {
+    // if we have a wallet loaded, offer to join with this wallet
+  } else {
+    // offer to set up a new seed etc.
+  }
+}
