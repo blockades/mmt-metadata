@@ -49,6 +49,23 @@ function findIncompleteWallets(allWallets) {
   return incompleteWallets;
 }
 
+
+// todo: should this query be done within the ssb plugin?
+function findWalletsNotSignedBy(me,allWallets) {
+  // should this better be an object, not array?
+  var unsignedWallets = [];
+  Object.keys(allWallets).forEach(function(aWallet) {
+    // Check its incomplete
+    if (
+      Object.keys(allWallets[aWallet].xpub).length <
+      allWallets[aWallet].cosigners.length
+    )  
+      if (Object.values(allWallets[aWallet].xpub).indexOf(me) < 0)
+        unsignedWallets.push(aWallet);
+  });
+  return unsignedWallets;
+}
+
 function concatArrays(objValue, srcValue) {
   if (objValue && objValue.constructor === Array)
     // concatonate only unique values
@@ -60,6 +77,7 @@ module.exports = {
   publishMessage,
   identifyWallet,
   findIncompleteWallets,
+  findWalletsNotSignedBy,
   messageTypes,
   concatArrays
 };

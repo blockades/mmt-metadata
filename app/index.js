@@ -211,7 +211,8 @@ function aboutCallbackCreator(server, me) {
 
       // tidyWalletInfo()
 
-      var incompleteWallets = util.findIncompleteWallets(dataFromSsb);
+      //var incompleteWallets = util.findIncompleteWallets(dataFromSsb);
+      var walletInvitations = util.findWalletsNotSignedBy(me,dataFromSsb);
         
 
       ec.checkVersion(requiredElectrumVersion, function(err, output) {
@@ -220,7 +221,7 @@ function aboutCallbackCreator(server, me) {
           $("#notifications").append(
             "Cannot connect to electrum.  Is the electrum daemon running, with a wallet loaded?"
           );
-          if (incompleteWallets.length > 0) electronInterface.sharePubKeyForm(incompleteWallets,null)
+          if (walletInvitations.length > 0) electronInterface.sharePubKeyForm(walletInvitations,null)
           else electronInterface.initateWalletForm (server,ssbAbout,null)
         } else {
           if (output) {

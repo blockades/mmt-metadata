@@ -509,8 +509,8 @@ electronInterface.initateWalletForm = function(server,ssbAbout,mpk) {
 }
 
 
-electronInterface.sharePubKeyForm = function (incompleteWallets,mpk) {
-  var numInvites = incompleteWallets.length
+electronInterface.sharePubKeyForm = function (walletInvitations,mpk) {
+  var numInvites = walletInvitations.length
   console.log(numInvites, " wallet Invite(s) Found.  Do you want to join?");
   $("#notifications").append(
     numInvites + "wallet invite(s) found."
@@ -518,14 +518,23 @@ electronInterface.sharePubKeyForm = function (incompleteWallets,mpk) {
   // form where you can enter and publish public key (for now)
   $("#sharePubKey").attr("class", "visible")
   // display info on each invite
-  incompleteWallets.forEach( function(incompleteWallet){
-    //incompleteWallet.walletName
-    //incompleteWallet.requiredCosigners
-    //incompleteWallet.cosigners.length
-    //incompleteWallet.cosigners ( get names, and who has joined and who not)
-    //xpubs
-    //
+  // TODO: clone "#displayInvitation"
+  walletInvitations.forEach( function(incompleteWallet){
+   $("#displayInvitationWalletName").text(incompleteWallet.walletName)
+   $("#displayInvitationRequiredCosigners").text(incompleteWallet.requiredCosigners)
+   $("#displayInvitationNumCosigners").text(incompleteWallet.cosigners.length)
+   var cosignerList = ""
+   //foreach cosigners
+   // cosignerList += "<p>"
+   // cosignerList += cosigner + ": "
+   // if we have already their mpk:
+   // cosignerList += xpub
+  // else
+  // cosignerList += "Not yet signed"
+   // cosignerList += "</p>"
+   $("#displayInvitationCosigners").html(cosignerList)
   } )
+
   if (mpk) {
     // if we have a wallet loaded, offer to join with this wallet
   } else {
