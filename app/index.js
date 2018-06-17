@@ -46,16 +46,6 @@ function initiateWallet(server, mpk) {
     requiredCosigners: 2,
     xpub: mpk
   };
-  console.log("publishing");
-  util.publishMessage(
-    server,
-    "initiateMmtMultisigTest",
-    initWallet,
-    recipients,
-    wallet.walletId,
-    mergeAndDisplay
-  );
-  // TODO: we need the id of this message
 }
 
 function shareXpub(server, mpk) {
@@ -218,29 +208,92 @@ function updateWalletInfo(server) {
   });
 }
 
+
+function initateWalletForm (server,ssbAbout,mpk) {
+
+          console.log(
+            "Cannot find this wallet on ssb. Do you want to initiate it"
+          );
+          $("#notifications").append(
+            "Cannot find this wallet on ssb. If the are no pending invites, initiate it"
+          );
+          
+
+          $("#initiateWallet").attr("class", "visible")
+          //$("#everythingElse").attr("class", "invisible")
+          $("#needSsbInfo").attr("class", "invisible")
+          
+          // we want only friends, not everyone.
+          var everyone = []
+          //better way to do this?
+          for (person in ssbAbout) {
+             if (ssbAbout[person].name != null)
+               if (ssbAbout[person].name[person] != null)
+                 if (ssbAbout[person].name[person][0] != null)
+                   if (everyone.length < 4000) {
+                     var nameKey = ssbAbout[person].name[person][0]
+                     nameKey += ', '
+                     nameKey += person
+                     everyone.push(nameKey)
+                   }
+          }
+          //$("#inputNumberCosigners").on('input',console.log('ffff')) 
+          var numCosigners = $("#inputNumberCosigners").val() 
+          //$("#inputNumberCosigners").attr("oninput", "displayNumCosigners(this.value,everyone)") 
+          // $("#inputNumberCosigners").on('change', displayNumCosigners(this.value,everyone)) 
+          
+          for (var i = 1;i<= numCosigners;i++){
+            $( "#chooseCosignerKey"+i ).autocomplete({
+               source: everyone 
+            });
+          }
+
+          $("#initiateWalletConfirm").click( function(){
+            // TODO validation  
+            var initWallet = {
+              xpub: mpk
+            };
+            initWallet.walletName = $("input#inputWalletName").val()
+            $("input#inputWalletName").val("") 
+            initWallet.requiredCosigners = $("#inputRequiredCosigners").val()          
+            //"chooseCosignerKeyReady"
+            var recipients = []
+            for (var i = 1; i <= numCosigners; i++ ) {
+              //recipients.push($(".chooseCosignerKeyReady").find("input[name=" + i + "]").val())
+              recipients.push($("#chooseCosignerKey" + i).val().split(", ",2)[1])
+            }
+
+            console.log("recipients: ", JSON.stringify(recipients,null,4))
+            // util.publishMessage(
+            //   server,
+            //   "initiateMmtMultisigTest",
+            //   initWallet,
+            //   recipients,
+            //   null,
+            //   function (err,dataFromSsb) { console.log('successfully initiated wallet') }
+            // );
+            // TODO: re-try to identify wallet 
+          })
+
+          //"initiateWalletCancel"
+          
+          // first check if there are any incomplete wallets we could possibly join
+          // then allow user to choose cosigners from ssb friends, and to
+          // give the wallet a name and set number of required cosigners
+          // wallet.cosigners = {
+          //   "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {},
+          //   "@DQ1HPdrTi6iUUlU22CRqZlEnbxWm6XjjdFQs+4fy+HY=.ed25519": {}
+          // }
+          // initiateWallet(server, mpk)
+}
+
 function aboutCallbackCreator(server, me) {
   return function aboutCallback(err, ssbAbout) {
-    ec.checkVersion(requiredElectrumVersion, function(err, output) {
-      if (err) {
-        console.log("Error connecting to electrum");
-        $("#notifications").append(
-          "Error connecting to electrum.  Is the electrum daemon running, with a wallet loaded?"
-        );
-      } else {
-        if (output) {
-          console.log("electrum version ok");
-        } else {
-          var errmsg =
-            "electrum version" + requiredElectrumVersion + "required";
-          console.log(errmsg);
-          $("#notifications").append(errmsg);
-        }
-      }
-    });
 
     wallet.walletId = null;
 
     server.mmtMetadata.get(function(err, dataFromSsb) {
+      if (err) throw (err)
       // console.log(
       //   "Output from mmtMetadata plugin: ",
       //   JSON.stringify(dataFromSsb, null, 4)
@@ -251,31 +304,37 @@ function aboutCallbackCreator(server, me) {
       var incompleteWallets = util.findIncompleteWallets(dataFromSsb);
       if (incompleteWallets.length > 0) {
         console.log("Wallet Invite Found.  Do you want to join?");
+        $("#notifications").append(
+          "Wallet Invite Found."
+        );
         // form where you can enter and publish public key (for now)
       }
 
+      ec.checkVersion(requiredElectrumVersion, function(err, output) {
+        if (err) {
+          console.log("Error connecting to electrum");
+          $("#notifications").append(
+            "Error connecting to electrum.  Is the electrum daemon running, with a wallet loaded?"
+          );
+          // offer to set up a new wallet 
+        } else {
+          if (output) {
+            console.log("electrum version ok");
+          } else {
+            var errmsg =
+              "electrum version" + requiredElectrumVersion + "required";
+            console.log(errmsg);
+            $("#notifications").append(errmsg);
+          }
+        }
+      });
       // Get master public key
       ec.getMpk(function(err, mpk) {
         //var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk));
         console.log("-----mpk", mpk);
         wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
         if (!wallet.walletId) {
-          console.log(
-            "Cannot find this wallet on ssb. Do you want to initiate it"
-          );
-          $("#notifications").append(
-            "Cannot find this wallet on ssb. Do you want to initiate it?"
-          );
-
-          // first check if there are any incomplete wallets we could possibly join
-          // then allow user to choose cosigners from ssb friends, and to
-          // give the wallet a name and set number of required cosigners
-          // wallet.cosigners = {
-          //   "@vEJe4hdnbHJl549200IytOeA3THbnP0oM+JQtS1u+8o=.ed25519": {},
-          //   "@DQ1HPdrTi6iUUlU22CRqZlEnbxWm6XjjdFQs+4fy+HY=.ed25519": {}
-          // }
-          // initiateWallet(server, mpk)
-          // todo: provide a way to initiate it
+          initateWalletForm (server,ssbAbout,mpk) 
         } else {
           mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
 

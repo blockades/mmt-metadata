@@ -7,10 +7,10 @@
     <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="./assets/css/jquery-ui.min.css">
     <style>
-/* TODO: put this somewhere else */
-.invisible {
-  display: none;
-}
+       /* TODO: put this somewhere else */
+       .invisible {
+         display: none;
+       } 
       .incompleteUnfilled {
         display: none;
       }
@@ -49,6 +49,31 @@
         $('#transactionDetails').attr("class","invisible")
         $('#transactionTables').attr("class","visible")
       }
+      function displayNumCosigners(value) {
+        $('#displayNumCosigners').text(value)
+        $('#inputRequiredCosigners').attr("max",value)
+        displayCosignerFields(value)
+      }
+      function displayCosignerFields(num) {  
+        //$("#chooseCosignerSection").html($(".chooseCosigner").clone())
+        for (var i = 1; i <= num; i++){ 
+          // $(".chooseCosigner").clone()
+          // .find(".cosignerNumber")
+          // .text(i)
+          // .end()
+          // .find(".chooseCosignerKey")
+          // .attr("name",i)
+          // .attr("class", "chooseCosignerKeyReady")
+          // .end()
+          // .attr("class","chooseCosignerReady")
+          // .insertAfter(".chooseCosigner")
+          $("#chooseCosigner"+i).attr("class","visible")
+        }
+        for (var i = 7; i > (num); i--) $("#chooseCosigner"+i).attr("class","invisible")
+      }
+      function displayReqCosigners(value) {
+        $('#displayReqCosigners').text(value)
+      }
     </script>
   </head>
   <body>
@@ -56,10 +81,36 @@
       <div class = "container">
         <h1>better multisig wallet</h1>
         <div id="notifications"></div>
+        <div id="initiateWallet" class="invisible">
+          <p>Wallet name : <input type="text" name="inputWalletName" id="inputWalletName"></p>
+          <p>Number cosigners: 
+          <input type="range" id="inputNumberCosigners" max="7" min="1" value="3" oninput="displayNumCosigners(this.value)" onchange="displayNumCosigners(this.value)"><span id="displayNumCosigners">3</span></p>
+          <p>Required cosigners: 
+          <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2" oninput="displayReqCosigners(this.value)" onchange="displayReqCosigners(this.value)"><span id="displayReqCosigners">2</span></p>
+          <div id="chooseCosignerSection">
+              <div id="chooseCosigner1" class = "visible">Choose cosigner <span class = "cosignerNumber">1</span>: <input id="chooseCosignerKey1" ></div>
+              <div id="chooseCosigner2" class = "visible">Choose cosigner <span class = "cosignerNumber">2</span>: <input id="chooseCosignerKey2" ></div>
+              <div id="chooseCosigner3" class = "visible">Choose cosigner <span class = "cosignerNumber">3</span>: <input id="chooseCosignerKey3" ></div>
+              <div id="chooseCosigner4" class = "invisible">Choose cosigner <span class = "cosignerNumber">4</span>: <input id="chooseCosignerKey4"></div>
+              <div id="chooseCosigner5" class = "invisible">Choose cosigner <span class = "cosignerNumber">5</span>: <input id="chooseCosignerKey5"></div>
+              <div id="chooseCosigner6" class = "invisible">Choose cosigner <span class = "cosignerNumber">6</span>: <input id="chooseCosignerKey6"></div>
+              <div id="chooseCosigner7" class = "invisible">Choose cosigner <span class = "cosignerNumber">7</span>: <input id="chooseCosignerKey7"></div>
+
+          </div>
+          <button id="initiateWalletConfirm">Initiate Wallet</button>
+        </div>
+        <div id="sharePubKey" class="invisible">
+          <button>Share public key with cosigners</button>
+          <button id="ignoreInvitation"> Ignore invitation</button>
+        </div>
+        <div id="everythingElse">
         <div id="walletInfo">
-          <b><span id="walletName"></span></b> -
-          <span id="requiredCosigners"></span> of <span id="numberCosigners"></span> signatures required.
+          <div id="needSsbInfo">
+            <b><span id="walletName"></span></b> -
+            <span id="requiredCosigners"></span> of <span id="numberCosigners"></span> signatures required.
+          </div>
           Confirmed balance: <span class="balance"></span> BTC
+          <p>Cosigners: <span id="displayCosigners"></span></p>
         </div>
         <div id="tabs">
           <ul>
@@ -157,7 +208,8 @@
           </div>
 
           <div id="recieve">
-            <p> Recieve address: <span id="recieveAddress"></span><button id="addressToClipboard" onclick="">Copy to clipboard</button></p>
+            <p> Recieve address: <span id="recieveAddress"></span><button id="addressToClipboard">Copy to clipboard</button></p>
+            <div id="qrCode"></div>
             <p> Memo <input type="text" name="memo" id="memo" oninput='' ></p>
             <p> Requested Amount (optional) <input type="text" name="requestedAmount" id="requestedAmount" oninput=''></p>
             <p> Expires: (drop down box?) </p>
@@ -208,6 +260,7 @@
             <p>coming soon</p>
           </div>
 
+        </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,23 @@
+const QRCode = require("qrcode")
+
 const bitcoinUtils = require("./bitcoin-utils");
-const electronInterface = (module.exports = {});
 const util = require("./util");
 const ec = require("./electrum-client");
+
+const electronInterface = (module.exports = {});
+
+
+displayRecieveQRCode = function (code) {
+  code = "bitcoin:" + code
+  // TODO: electrum updates this as you type, with amount and 
+  // message as so:
+  // code += "?amount" + amount + "&message="+message
+  // i guess we also need to escape special characters in message
+  QRCode.toCanvas(code, function (error,canvas){
+    if (error) throw(error) 
+    $("#qrCode").html(canvas) 
+  })
+}
 
 function getAddressComments(address, wallet) {
   var commentList = "";
@@ -28,13 +44,14 @@ electronInterface.displayWalletInfo = function(wallet) {
     $("#requiredCosigners").text(wallet.requiredCosigners);
   if (wallet.cosigners) {
     $("#numberCosigners").text(Object.keys(wallet.cosigners).length);
-    // TODO: names and avatars of cosigners
+    // TODO: avatars of cosigners
     var cosignerList = "";
     // should this be for...in?
     Object.keys(wallet.cosigners).forEach(function(cosigner) {
       cosignerList += wallet.cosigners[cosigner].name;
       cosignerList += " ";
     });
+    $("#displayCosigners").text(cosignerList)
   }
   if (wallet.balance) $(".balance").text(wallet.balance);
 
@@ -78,8 +95,10 @@ electronInterface.displayWalletInfo = function(wallet) {
     });
   }
 
-  if (wallet.firstUnusedAddress)
+  if (wallet.firstUnusedAddress) {
     $("#recieveAddress").text(wallet.firstUnusedAddress);
+    displayRecieveQRCode(wallet.firstUnusedAddress) 
+  }
 };
 
 electronInterface.displayPayments = function(wallet, server, callback) {
@@ -252,8 +271,6 @@ electronInterface.createRecieveMemo = function() {
   var memo = $("input#memo").val();
 
   $("input#memo").val("");
-
-  // TODO: get new unused address, update display
 
   return { comment: memo };
 };
