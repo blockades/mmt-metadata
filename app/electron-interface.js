@@ -442,13 +442,15 @@ electronInterface.initateWalletForm = function(server,ssbAbout,mpk) {
     "Cannot find this wallet on ssb. Do you want to initiate it"
   );
   $("#notifications").append(
-    "Cannot find this wallet on ssb. If the are no pending invites, initiate it"
+    "Cannot find this wallet on ssb. If the are no pending invites, you can iniate it now"
   );
   
 
   $("#initiateWallet").attr("class", "visible")
-  //$("#everythingElse").attr("class", "invisible")
-  $("#needSsbInfo").attr("class", "invisible")
+  if (mpk) 
+    $("#needSsbInfo").attr("class", "invisible")
+  else
+    $("#everythingElse").attr("class", "invisible")
   
   // TODO: we want only friends, not everyone.
   var everyone = []
@@ -475,10 +477,19 @@ electronInterface.initateWalletForm = function(server,ssbAbout,mpk) {
   }
   // if we dont yet have a mpk, generate one
   if (!mpk) {
-    mpk = electronInterface.generateMpk()
+    $("#noMpkButtons").attr("class","visible")
+    $("#enterMpk").click( function() {
+      $("#mpkTextBox").attr("class","visible")
+      mpk = "fromTextBox"
+    } )
+    $("#generateMpkButton").click( function (){
+      mpk = electronInterface.generateMpk()
+    } )
   }
   // TODO: disable this until mpk is generated
   $("#initiateWalletConfirm").click( function(){
+    if (mpk === "fromTextBox") mpk = $("#mpkTextBox").val()
+    //if (mpk === "").... 
     // TODO: validation (empty fields,etc) 
     var initWallet = {
       xpub: mpk
@@ -538,18 +549,21 @@ electronInterface.sharePubKeyForm = function (walletInvitations,mpk) {
   if (mpk) {
     // if we have a wallet loaded, offer to join with this wallet
   } else {
+
     // offer to set up a new seed etc.
     //make button visible, connect this function to button
+    
     mpk = electronInterface.generateMpk()
   }
 }
 
 
 electronInterface.generateMpk = function() {
+  $("#generateMpk").attr("class","visible")
   // dangers of storing in memory?  swap space?
   var seed = bitcoinUtils.getSeed()
   // this is the place to connect to dark crystal!
-  var mpk = bitcoinUtils.bip32xpub(mnemonic) 
+  var mpk = bitcoinUtils.bip32xpub(seed) 
   $("#displaySeed").text(seed)
   $("#displayMpk").text(mpk)
   return mpk

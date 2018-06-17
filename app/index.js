@@ -202,6 +202,7 @@ function aboutCallbackCreator(server, me) {
 
     wallet.walletId = null;
 
+    var electrumRunning = false;
     server.mmtMetadata.get(function(err, dataFromSsb) {
       if (err) throw (err)
       // console.log(
@@ -213,17 +214,17 @@ function aboutCallbackCreator(server, me) {
 
       //var incompleteWallets = util.findIncompleteWallets(dataFromSsb);
       var walletInvitations = util.findWalletsNotSignedBy(me,dataFromSsb);
-        
 
       ec.checkVersion(requiredElectrumVersion, function(err, output) {
         if (err) {
           console.log("Error connecting to electrum");
           $("#notifications").append(
-            "Cannot connect to electrum.  Is the electrum daemon running, with a wallet loaded?"
+            "Cannot connect to electrum.  Is the electrum daemon running, with a wallet loaded? <BR>"
           );
           if (walletInvitations.length > 0) electronInterface.sharePubKeyForm(walletInvitations,null)
           else electronInterface.initateWalletForm (server,ssbAbout,null)
         } else {
+          electrumRunning = true;
           if (output) {
             console.log("electrum version ok");
           } else {
@@ -234,83 +235,87 @@ function aboutCallbackCreator(server, me) {
           }
         }
       });
-      // Get master public key
-      ec.getMpk(function(err, mpk) {
-        // TODO: handle the situation the daemon is running with no wallet loaded
-        if (err) throw (err)
-        //var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk));
-        console.log("-----mpk", mpk);
-        wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
-        if (!wallet.walletId) {
-          electronInterface.initateWalletForm (server,ssbAbout,mpk)
-        } else {
-          mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
 
-          // deserialize all transactions
-          for (transaction in wallet.transactions) {
-            if (
-              typeof wallet.transactions[transaction].rawTransaction !=
-              "undefined"
-            ) {
-              ec.extractDataFromTx(
-                wallet.transactions[transaction].rawTransaction,
-                function(err, transactionData) {
-                  mergeWith(
-                    wallet.transactions[transaction],
-                    transactionData,
-                    util.concatArrays
-                  );
+      if (electrumRunning) {
+        // Get master public key
+        ec.getMpk(function(err, mpk) {
+          // TODO: handle the situation the daemon is running with no wallet loaded
+          if (err) throw (err)
+          //var hashMpk = bitcoin.crypto.sha256(Buffer.from(mpk));
+          console.log("-----mpk", mpk);
+          wallet.walletId = util.identifyWallet(dataFromSsb, mpk);
+          if (!wallet.walletId) {
+            electronInterface.initateWalletForm (server,ssbAbout,mpk)
+          } else {
+            mergeWith(wallet, dataFromSsb[wallet.walletId], util.concatArrays);
 
-                  electronInterface.displayPayments(
-                    wallet,
-                    server,
-                    mergeAndDisplay
-                  );
-                }
-              );
+            // deserialize all transactions
+            for (transaction in wallet.transactions) {
+              if (
+                typeof wallet.transactions[transaction].rawTransaction !=
+                "undefined"
+              ) {
+                ec.extractDataFromTx(
+                  wallet.transactions[transaction].rawTransaction,
+                  function(err, transactionData) {
+                    mergeWith(
+                      wallet.transactions[transaction],
+                      transactionData,
+                      util.concatArrays
+                    );
+
+                    electronInterface.displayPayments(
+                      wallet,
+                      server,
+                      mergeAndDisplay
+                    );
+                  }
+                );
+              }
             }
+            cosignerInfo(ssbAbout);
+            //TODO: get image with something like:
+            //server.blobs.get(wallet.cosigners[me].image)
+
+            // Specify some event handlers.  This needs to be done here where we can
+            // pass server
+            $("#recieveMemo").click(function() {
+              recieveMemo(server);
+            });
+            $("#createTransaction").click(function() {
+              createPayTo(server);
+            });
+            electronInterface.displayPayments(wallet, server, mergeAndDisplay);
+
+            updateWalletInfo(server);
           }
-          cosignerInfo(ssbAbout);
-          //TODO: get image with something like:
-          //server.blobs.get(wallet.cosigners[me].image)
-
-          // Specify some event handlers.  This needs to be done here where we can
-          // pass server
-          $("#recieveMemo").click(function() {
-            recieveMemo(server);
-          });
-          $("#createTransaction").click(function() {
-            createPayTo(server);
-          });
-          electronInterface.displayPayments(wallet, server, mergeAndDisplay);
-
-          updateWalletInfo(server);
+        });
         }
       });
-    });
+      if (electrumRunning) {
+      // TODO: do we need this?  its repeated in cosignerInfo()
+      if (typeof wallet.cosigners[me] === "undefined") wallet.cosigners[me] = {};
+      // not sure if this is the most reliable way to get self-identified name but works for me
+      wallet.cosigners[me].name = ssbAbout[me].name[me][0];
+      wallet.cosigners[me].image = ssbAbout[me].image[me][0];
 
-    // TODO: do we need this?  its repeated in cosignerInfo()
-    if (typeof wallet.cosigners[me] === "undefined") wallet.cosigners[me] = {};
-    // not sure if this is the most reliable way to get self-identified name but works for me
-    wallet.cosigners[me].name = ssbAbout[me].name[me][0];
-    wallet.cosigners[me].image = ssbAbout[me].image[me][0];
 
+      // Have scrapped this for now but it was an attempt to automate loading the wallet
+      // will only work with unencrypted wallet
+      //ec.setupElectrum(walletFile, function (err,output) { })
 
-    // Have scrapped this for now but it was an attempt to automate loading the wallet
-    // will only work with unencrypted wallet
-    //ec.setupElectrum(walletFile, function (err,output) { })
+      updateWalletInfo(server);
 
-    updateWalletInfo(server);
+      ec.parseHistory(function(err, output) {
+        if (err) console.error(err);
+        // todo change this to mergeWith
+        wallet = merge(wallet, output, {
+          arrayMerge: dontMerge
+        });
 
-    ec.parseHistory(function(err, output) {
-      if (err) console.error(err);
-      // todo change this to mergeWith
-      wallet = merge(wallet, output, {
-        arrayMerge: dontMerge
+        console.log(JSON.stringify(wallet, null, 4));
+        electronInterface.displayPayments(wallet, server, mergeAndDisplay);
       });
-
-      console.log(JSON.stringify(wallet, null, 4));
-      electronInterface.displayPayments(wallet, server, mergeAndDisplay);
-    });
+  }
   };
 }
