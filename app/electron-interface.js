@@ -473,7 +473,11 @@ electronInterface.initateWalletForm = function(server,ssbAbout,mpk) {
        source: everyone 
     });
   }
-
+  // if we dont yet have a mpk, generate one
+  if (!mpk) {
+    mpk = electronInterface.generateMpk()
+  }
+  // TODO: disable this until mpk is generated
   $("#initiateWalletConfirm").click( function(){
     // TODO: validation (empty fields,etc) 
     var initWallet = {
@@ -526,5 +530,18 @@ electronInterface.sharePubKeyForm = function (incompleteWallets,mpk) {
     // if we have a wallet loaded, offer to join with this wallet
   } else {
     // offer to set up a new seed etc.
+    //make button visible, connect this function to button
+    mpk = electronInterface.generateMpk()
   }
+}
+
+
+electronInterface.generateMpk = function() {
+  // dangers of storing in memory?  swap space?
+  var seed = bitcoinUtils.getSeed()
+  // this is the place to connect to dark crystal!
+  var mpk = bitcoinUtils.bip32xpub(mnemonic) 
+  $("#displaySeed").text(seed)
+  $("#displayMpk").text(mpk)
+  return mpk
 }

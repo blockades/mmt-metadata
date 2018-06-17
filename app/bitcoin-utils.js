@@ -11,10 +11,12 @@ function validAddress(address) {
   } catch (e) { return false }
 }
 
+function getSeed() {
+ return bip39.generateMnemonic()
+}
 
-function bip32xpub() {
- // var mnemonic = bip39.generateMnemonic()
-  var mnemonic = 'praise you muffin lion enable neck grocery crumble super myself license ghost'
+function bip32xpub(mnemonic) {
+  // var mnemonic = 'praise you muffin lion enable neck grocery crumble super myself license ghost'
   var seed = bip39.mnemonicToSeed(mnemonic)
   var node = bip32.fromSeed(seed)
   return node.neutered().toBase58()
@@ -50,4 +52,4 @@ function getTransactionId(electrumTx) {
   return tx.txid;
 }
 
-module.exports = { validAddress, bip32xpub, getTransactionId }
+module.exports = { validAddress, getSeed, bip32xpub, getTransactionId }

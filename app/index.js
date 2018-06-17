@@ -218,11 +218,10 @@ function aboutCallbackCreator(server, me) {
         if (err) {
           console.log("Error connecting to electrum");
           $("#notifications").append(
-            "Error connecting to electrum.  Is the electrum daemon running, with a wallet loaded?"
+            "Cannot connect to electrum.  Is the electrum daemon running, with a wallet loaded?"
           );
           if (incompleteWallets.length > 0) electronInterface.sharePubKeyForm(incompleteWallets,null)
-          //else
-          // offer to set up a new wallet (initWallet) 
+          else electronInterface.initateWalletForm (server,ssbAbout,null)
         } else {
           if (output) {
             console.log("electrum version ok");
