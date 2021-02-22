@@ -40,7 +40,7 @@
 
 
     <script>
-      // TODO: put this somewhere else 
+      // TODO: put this script somewhere else 
       $(function() {
         $( "#tabs" ).tabs();
       });
@@ -80,28 +80,56 @@
     <div id="root">
       <div class = "container">
         <h1>better multisig wallet</h1>
-        <div id="notifications"></div>
+        <h5><div id="notifications"></div></h5>
         <div id="initiateWallet" class="invisible">
-          <p>Wallet name : <input type="text" name="inputWalletName" id="inputWalletName"></p>
-          <p>Number cosigners: 
+          <p>Give the wallet a name: <input type="text" name="inputWalletName" id="inputWalletName"></p>
+          <p>How many cosigners? 
           <input type="range" id="inputNumberCosigners" max="7" min="1" value="3" oninput="displayNumCosigners(this.value)" onchange="displayNumCosigners(this.value)"><span id="displayNumCosigners">3</span></p>
-          <p>Required cosigners: 
+          <p>How many are required to sign a payment? 
           <input type="range" id="inputRequiredCosigners" max="7" min="1" value="2" oninput="displayReqCosigners(this.value)" onchange="displayReqCosigners(this.value)"><span id="displayReqCosigners">2</span></p>
+          <p> Find cosigners by entering part of their ssb name or public key:</p> 
           <div id="chooseCosignerSection">
-              <div id="chooseCosigner1" class = "visible">Choose cosigner <span class = "cosignerNumber">1</span>: <input id="chooseCosignerKey1" ></div>
-              <div id="chooseCosigner2" class = "visible">Choose cosigner <span class = "cosignerNumber">2</span>: <input id="chooseCosignerKey2" ></div>
-              <div id="chooseCosigner3" class = "visible">Choose cosigner <span class = "cosignerNumber">3</span>: <input id="chooseCosignerKey3" ></div>
-              <div id="chooseCosigner4" class = "invisible">Choose cosigner <span class = "cosignerNumber">4</span>: <input id="chooseCosignerKey4"></div>
-              <div id="chooseCosigner5" class = "invisible">Choose cosigner <span class = "cosignerNumber">5</span>: <input id="chooseCosignerKey5"></div>
-              <div id="chooseCosigner6" class = "invisible">Choose cosigner <span class = "cosignerNumber">6</span>: <input id="chooseCosignerKey6"></div>
-              <div id="chooseCosigner7" class = "invisible">Choose cosigner <span class = "cosignerNumber">7</span>: <input id="chooseCosignerKey7"></div>
-
+              <!-- TODO: this is ugly, use clone() -->
+              <div id="chooseCosigner1" class = "visible">Choose cosigner 
+                <span class = "cosignerNumber">1</span>: <input id="chooseCosignerKey1" ></div>
+              <div id="chooseCosigner2" class = "visible">Choose cosigner 
+                <span class = "cosignerNumber">2</span>: <input id="chooseCosignerKey2" ></div>
+              <div id="chooseCosigner3" class = "visible">Choose cosigner 
+                <span class = "cosignerNumber">3</span>: <input id="chooseCosignerKey3" ></div>
+              <div id="chooseCosigner4" class = "invisible">Choose cosigner 
+                <span class = "cosignerNumber">4</span>: <input id="chooseCosignerKey4"></div>
+              <div id="chooseCosigner5" class = "invisible">Choose cosigner 
+                <span class = "cosignerNumber">5</span>: <input id="chooseCosignerKey5"></div>
+              <div id="chooseCosigner6" class = "invisible">Choose cosigner 
+                <span class = "cosignerNumber">6</span>: <input id="chooseCosignerKey6"></div>
+              <div id="chooseCosigner7" class = "invisible">Choose cosigner 
+                <span class = "cosignerNumber">7</span>: <input id="chooseCosignerKey7"></div>
+          </div>
+          <div id="noMpkButtons" class="invisible">
+             <p> Master Public Key for the wallet:</p>
+             <p><button id="enterMpk">I have a master public key and want to enter it here</button>
+             <input id="mpkTextBox" class="invisible">
+             </p>
+             <p><button id="generateMpkButton">Generate a seed and master public key now and use that</button></p>
           </div>
           <button id="initiateWalletConfirm">Initiate Wallet</button>
         </div>
         <div id="sharePubKey" class="invisible">
-          <button>Share public key with cosigners</button>
+          <div id="displayInvitation">
+            <p>Wallet name: <span id="displayInvitationWalletName"></span></p>
+            <p><span id="displayInvitationRequiredCosigners"></span> of 
+            <span id="displayInvitationNumCosigners"></span> cosigners required.</p>
+            <p> Cosigners: </p>
+            <div id="displayInvitationCosigners">
+            </div>
+          </div>
+          <button>Join this wallet! Share public key with cosigners</button>
           <button id="ignoreInvitation"> Ignore invitation</button>
+        </div>
+        <div id="generateMpk" class="invisible">
+          <p>Seed: <code><span id="displaySeed"></span></code></p>
+          <button>Shard seed with Dark Crystal (coming soon)</button>
+          <p>Master Public Key: <code><span id="displayMpk"></span></code></p>
         </div>
         <div id="everythingElse">
         <div id="walletInfo">

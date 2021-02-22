@@ -57,6 +57,7 @@ function map(msg) {
   // TODO: somewhere we need to make sure that all messages about each wallet
   // have exactly the same recipients
   
+  wallet.cosigners = {}
 
   // console.log('!!!!!!! ', JSON.stringify(msg, null, 4));
   switch (msg.value.content.type) {
@@ -107,7 +108,6 @@ function map(msg) {
   }
 
 
-  wallet.cosigners = {}
   // console.log(JSON.stringify(msg,null,4))
   
   // ignore the message if we cannot check the recipients
